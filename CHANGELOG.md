@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.1 — 2026-10-27
+
+- **Yellow mistletoe left out of Whangārā** (*Alepis flavida*, 2 records),
+  added to `gbif.exclude` in its catchment.json.
+- The "All catchments" button is gone from the map and About pages, and the
+  logo from the top of the home page.
+- The names step keeps the names it has looked up in `data/names.json` and
+  reuses them, so re-fetching a catchment's records no longer spends ~10
+  minutes on iNaturalist names.
+
 ## v0.4.0 — 2026-10-27
 
 - **No NIWA data left: boundaries and rivers now CC BY 4.0.** NIWA's REC2 is

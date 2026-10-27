@@ -2,6 +2,9 @@
 // preferred name for New Zealand first (e.g. Tūī, Chaffinch), then GBIF's
 // NZ-sourced English name, then any GBIF English name that isn't a code
 // like "COST". Māori: GBIF's Māori name.
+// Names already looked up are kept in data/names.json and reused, so a
+// re-fetched snapshot only looks up species it hasn't seen (iNaturalist allows
+// about one request a second). Delete that file to look every name up again.
 // usage: node engine/steps/names.mjs <catchment folder>   (names in data/gbif.json, in place)
 import fs from 'node:fs';
 import { loadCatchment } from '../lib.mjs';
@@ -40,8 +43,16 @@ export async function commonNames(taxa) {
 }
 
 if (process.argv[1] && process.argv[1].endsWith('names.mjs')) {
-  const file = loadCatchment(process.argv[2]).path('data/gbif.json'), data = JSON.parse(fs.readFileSync(file, 'utf8'));
-  await commonNames(data.taxa);
+  const { path } = loadCatchment(process.argv[2]);
+  const file = path('data/gbif.json'), cacheFile = path('data/names.json');
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const cache = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf8')) : {};
+  const species = data.taxa.filter(t => t.rank === 'SPECIES'), fresh = species.filter(t => !(t.key in cache));
+  species.forEach(t => { const c = cache[t.key]; if (c) { t.en = c.en || undefined; t.mi = c.mi || undefined; } });
+  console.error((species.length - fresh.length) + ' names reused, ' + fresh.length + ' to look up');
+  await commonNames(fresh);
+  species.forEach(t => { cache[t.key] = { en: t.en || null, mi: t.mi || null }; });
+  fs.writeFileSync(cacheFile, JSON.stringify(cache));
   fs.writeFileSync(file, JSON.stringify(data));
   console.error('wrote', file);
 }
