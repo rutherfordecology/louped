@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.4.2 — 2026-10-27
+
+- **Dot colours as in Occurd.** Threatened-species dots are coloured by
+  taxon group with Occurd's colours and grouping (`TAXON_COLOURS` and
+  `getTaxonGroup`, copied): birds blue, insects red, flowering plants green,
+  fish teal and so on. Threat status stays on the badges. The species list's
+  group colours use the same palette.
+- **Land cover as a pie chart.** The land cover summary has Bars and Pie
+  buttons; the pie shows the eight largest classes and the rest as "Other",
+  with hectares and percentages, for the whole area or a drawn one. The
+  choice is remembered.
+- The button that clears a drawn area now reads "✕ Delete drawn area"
+  (it said "Back to whole area", which didn't read as a way to remove it).
+- Drawing an area no longer breaks when a click lands on a record dot: the
+  dot used to open its popup, which then covered the map and caught the
+  next clicks. Starting a drawing also closes any open popup.
+- **Each layer's key sits under that layer** in the menu while it's on
+  (land cover, land use capability, each erosion overlay, the LiDAR layers
+  and the species dots), instead of all together at the bottom.
+
 ## v0.4.1 — 2026-10-27
 
 - **Yellow mistletoe left out of Whangārā** (*Alepis flavida*, 2 records),

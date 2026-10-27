@@ -17,7 +17,7 @@
   --bg: #f3f2ee; --panel: #fbfaf7; --ink: #1c1b18; --ink2: #56544c; --ink3: #8a877e;
   --line: #dddbd3; --hover: #e8f4ef; --sel: #1a5940; --accent: #2a7a58; --brand: #1a5940;
   --river: #2f7fd0; --sched: #0f9d8a; --wet: #17a2a2; --qeii: #c96a00; --pma: #7348c9; --doc: #1f5fd1; --draw: #e0218a;
-  --g-bird: #d6336c; --g-plant: #2f9e44; --g-fungi: #9c5d2e; --g-insect: #f08c00; --g-mammal: #6741d9; --g-herp: #0ca678; --g-fish: #1c7ed6; --g-inv: #e8590c; --g-other: #868e96;
+  --g-bird: #2563EB; --g-plant: #16A34A; --g-fungi: #D97706; --g-insect: #DC2626; --g-mammal: #7C3AED; --g-herp: #D97706; --g-fish: #0891B2; --g-inv: #7E22CE; --g-other: #6B7280; /* Occurd's taxon colours */
   --mapbg: #dfe5df;
   --f-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --f-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
@@ -86,6 +86,7 @@ input[type=search] { width: 100%; }
 .lswatch { display: grid; place-items: center; }
 .layer input[type=range] { width: 64px; min-width: 0; margin: 0; }
 .legend { display: grid; gap: 6px; font-size: 11.5px; color: var(--ink2); }
+.layer-key { padding: 4px 0 8px 32px; border-bottom: 1px solid var(--line); gap: 4px; }
 .legend .lg { display: grid; gap: 3px; }
 .legend .keys { display: flex; flex-wrap: wrap; gap: 3px 10px; }
 .legend .keys span { display: inline-flex; gap: 5px; align-items: center; }
@@ -142,6 +143,17 @@ input[type=checkbox] { accent-color: var(--accent); margin: 0; cursor: pointer; 
 .sp-name i { font-size: 11.5px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-n { font: 11px var(--f-data); color: var(--ink3); text-align: right; font-variant-numeric: tabular-nums; }
 .bars { display: grid; gap: 4px; font-size: 12px; }
+/* Land cover: bars or a pie, switched by the buttons beside the heading */
+.lc-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mini[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.pie { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; align-items: center; }
+.pie svg { width: 132px; height: 132px; display: block; }
+.pie svg path { stroke: var(--panel); stroke-width: 1.5; }
+.pie .keys { display: grid; gap: 3px; font-size: 11.5px; min-width: 0; }
+.pie .keys div { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.pie .keys span:nth-child(2) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pie .keys .v { font: 10.5px var(--f-data); color: var(--ink2); text-align: right; }
+@media (max-width: 380px) { .pie { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
 .barrow { display: grid; grid-template-columns: minmax(0, 1fr) 56px; gap: 8px; align-items: center; }
 .barrow .lab { display: flex; gap: 6px; align-items: center; min-width: 0; }
 .barrow .lab span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -185,7 +197,6 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
         <details class="layers-box" open>
           <summary class="eyebrow">Layers</summary>
           <div id="layerGroups"></div>
-          <div class="legend" id="legend"></div>
         </details>
       </section>
 
@@ -194,7 +205,7 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
           <h2 id="areaTitle">Whole area</h2>
           <div class="row">
             <button class="btn" type="button" id="drawBtn" aria-pressed="false">Draw an area</button>
-            <button class="btn" type="button" id="clearDraw" hidden>Back to whole area</button>
+            <button class="btn" type="button" id="clearDraw" hidden title="Remove the drawn area and go back to the whole catchment">✕ Delete drawn area</button>
           </div>
         </div>
         <div class="note" id="drawHelp" hidden>Click around your property or block. Double-click, or click the first point, to finish.</div>
@@ -336,6 +347,43 @@ document.getElementById('ver').textContent = APP_VERSION;
     }
     t.threat = t.nz.status === '__ambiguous__' || NZ_TH.includes(t.nz.status);
   });
+  // Dot colours: Occurd's taxon groups and colours (TAXON_COLOURS and getTaxonGroup, copied as they are)
+  const TAXON_COLOURS = { Aves: ['#2563EB', 'Birds'], Mammalia: ['#7C3AED', 'Mammals'], Reptilia: ['#D97706', 'Reptiles'], Amphibia: ['#059669', 'Amphibians'], Fish: ['#0891B2', 'Fish'], Insecta: ['#DC2626', 'Insects'], Arachnida: ['#92400E', 'Spiders & mites'], Crustacea: ['#0E7490', 'Crustaceans'], Mollusca: ['#7E22CE', 'Molluscs'], Echinodermata: ['#BE185D', 'Echinoderms'], Cnidaria: ['#0369A1', 'Cnidarians'], Annelida: ['#854D0E', 'Worms'], Angiosperms: ['#16A34A', 'Flowering plants'], Gymnosperms: ['#166534', 'Conifers'], Ferns: ['#4ADE80', 'Ferns & allies'], Bryophytes: ['#86EFAC', 'Mosses & liverworts'], Algae: ['#06B6D4', 'Algae'], Fungi: ['#D97706', 'Fungi & lichens'], Other: ['#6B7280', 'Other'] };
+  const O_FISH_ORDERS = new Set(['myxiniformes', 'petromyzontiformes', 'heterodontiformes', 'orectolobiformes', 'carcharhiniformes', 'lamniformes', 'hexanchiformes', 'squaliformes', 'squatiniformes', 'pristiophoriformes', 'rajiformes', 'rhinopristiformes', 'torpediniformes', 'myliobatiformes', 'chimaeriformes', 'polypteriformes', 'acipenseriformes', 'lepisosteiformes', 'amiiformes', 'osteoglossiformes', 'hiodontiformes', 'elopiformes', 'albuliformes', 'notacanthiformes', 'anguilliformes', 'saccopharyngiformes', 'clupeiformes', 'gonorynchiformes', 'cypriniformes', 'characiformes', 'gymnotiformes', 'siluriformes', 'salmoniformes', 'esociformes', 'osmeriformes', 'argentiniformes', 'galaxiiformes', 'ateleopodiformes', 'stomiiformes', 'aulopiformes', 'myctophiformes', 'lampriformes', 'polymixiiformes', 'percopsiformes', 'batrachoidiformes', 'lophiiformes', 'gadiformes', 'ophidiiformes', 'mugiliformes', 'atheriniformes', 'beloniformes', 'cetomimiformes', 'cyprinodontiformes', 'stephanoberyciformes', 'beryciformes', 'trachichthyiformes', 'holocentriformes', 'zeiformes', 'gobiesociformes', 'gasterosteiformes', 'syngnathiformes', 'synbranchiformes', 'scorpaeniformes', 'perciformes', 'pleuronectiformes', 'tetraodontiformes', 'coelacanthiformes', 'ceratodontiformes', 'lepidosireniformes', 'gobiiformes', 'carangiformes', 'labriformes', 'spariformes', 'acanthuriformes', 'scombriformes', 'istiophoriformes', 'blenniiformes', 'uranoscopiformes', 'trachiniformes', 'callionymiformes', 'kurtiformes', 'pempheriformes', 'centrarchiformes', 'moroniformes', 'acropomatiformes', 'priacanthiformes', 'malacanthiformes', 'mulliformes', 'chaetodontiformes', 'lobotiformes', 'gerreiformes', 'lutjaniformes', 'haemuliformes', 'lethriniformes', 'nemipteriformes', 'ephippiformes', 'anabantiformes', 'cichliformes']);
+  const O_FISH_CLASSES = new Set(['Actinopterygii', 'Actinopteri', 'Chondrichthyes', 'Elasmobranchii', 'Holocephali', 'Myxini', 'Petromyzontida', 'Cephalaspidomorphi']);
+  const O_NON_FISH = new Set(['Mammalia', 'Aves', 'Reptilia', 'Squamata', 'Lepidosauria', 'Amphibia', 'Testudines', 'Crocodylia', 'Rhynchocephalia', 'Archelosauria']);
+  const O_CRUST = new Set(['Malacostraca', 'Maxillopoda', 'Branchiopoda', 'Ostracoda', 'Cirripedia', 'Copepoda']);
+  const O_ANGIO = new Set(['Magnoliopsida', 'Liliopsida', 'Equisetopsida']), O_FERN = new Set(['Polypodiopsida', 'Marattiopsida', 'Psilotopsida', 'Equisetopsida']);
+  const O_BRYO = new Set(['Bryopsida', 'Jungermanniopsida', 'Marchantiopsida', 'Anthocerotopsida', 'Polytrichopsida', 'Sphagnopsida']), O_GYMNO = new Set(['Pinopsida', 'Cycadopsida', 'Gnetopsida', 'Ginkgoopsida']);
+  const O_ALGAE = new Set(['Ochrophyta', 'Phaeophyta', 'Rhodophyta', 'Chlorophyta', 'Charophyta', 'Cyanobacteria', 'Bacillariophyta']);
+  const O_FUNGI_PHYLA = new Set(['Basidiomycota', 'Ascomycota', 'Zygomycota', 'Chytridiomycota', 'Glomeromycota', 'Mucoromycota', 'Blastocladiomycota', 'Microsporidia', 'Rozellomycota', 'Neocallimastigomycota', 'Zoopagomycota', 'Entomophthoromycota', 'Kickxellomycota', 'Mortierellomycota', 'Calcarisporiellomycota']);
+  function occurdGroup(t) {
+    const cls = (t.cls || '').trim(), phylum = (t.phylum || '').trim(), kingdom = (t.kingdom || '').trim(), ord = (t.order || '').trim();
+    if (cls === 'Aves') return 'Aves';
+    if (cls === 'Mammalia') return 'Mammalia';
+    if (['Reptilia', 'Squamata', 'Lepidosauria', 'Testudines', 'Crocodylia', 'Rhynchocephalia', 'Archelosauria'].includes(cls)) return 'Reptilia';
+    if (cls === 'Amphibia') return 'Amphibia';
+    if (ord && O_FISH_ORDERS.has(ord.toLowerCase())) return 'Fish';
+    if (O_FISH_CLASSES.has(cls)) return 'Fish';
+    if (['Squamata', 'Testudines', 'Crocodylia', 'Crocodilia', 'Rhynchocephalia'].includes(ord)) return 'Reptilia';
+    if (O_NON_FISH.has(cls)) return 'Reptilia';
+    if (cls === 'Insecta') return 'Insecta';
+    if (cls === 'Arachnida') return 'Arachnida';
+    if (O_CRUST.has(cls)) return 'Crustacea';
+    if (phylum === 'Mollusca') return 'Mollusca';
+    if (phylum === 'Echinodermata') return 'Echinodermata';
+    if (phylum === 'Cnidaria') return 'Cnidaria';
+    if (phylum === 'Annelida') return 'Annelida';
+    if (O_ANGIO.has(cls)) return 'Angiosperms';
+    if (O_GYMNO.has(cls)) return 'Gymnosperms';
+    if (O_FERN.has(cls)) return 'Ferns';
+    if (O_BRYO.has(cls)) return 'Bryophytes';
+    if (kingdom === 'Chromista' || O_ALGAE.has(phylum)) return 'Algae';
+    if (kingdom === 'Fungi' || O_FUNGI_PHYLA.has(phylum)) return 'Fungi';
+    if (kingdom === 'Plantae') return 'Angiosperms';
+    return 'Other';
+  }
+  gbif.taxa.forEach(t => { t.og = occurdGroup(t); });
   const nzBadge = (t) => t.nz ? '<span class="nztcs-badge nb-' + t.nz.cls + '" title="' + esc(t.nz.tip) + '">' + esc(t.nz.label) + '</span>' : '';
 
   // Land cover classes shown (all to start); the dropdown under the layer ticks them
@@ -391,7 +439,7 @@ document.getElementById('ver').textContent = APP_VERSION;
 
   // Layers list: name, swatch, on, opacity; grouped, top of the map first
   const GROUPS_UI = [
-    ['Species', [['records', 'Threatened & at-risk species', '<span class="dot" style="background: #C0006E"></span>', true, 1]]],
+    ['Species', [['records', 'Threatened & at-risk species', '<span class="dot" style="background: #2563EB"></span>', true, 1]]],
     ['Water and protection', [
       ['rivers', 'Rivers and streams', '<span class="swatch" style="border-color: var(--river)"></span>', true, 1],
       ['scheduled', 'Scheduled rivers (council plan)', '<span class="swatch" style="border-top-width: 5px; border-color: var(--sched); opacity: .6"></span>', false, 1],
@@ -461,19 +509,27 @@ document.getElementById('ver').textContent = APP_VERSION;
     lcBox.addEventListener('change', e => { const c = e.target.dataset.c; if (c == null) return; e.target.checked ? lcOn.add(c) : lcOn.delete(c); sync(); });
     lcBox.addEventListener('click', e => { const p = e.target.dataset.pick; if (!p) return; lcOn.clear(); classes.forEach(c => { if (p === 'all' || (p === 'native' && NATIVE.has(c))) lcOn.add(c); }); sync(); });
     const more = document.querySelector('.lc-more');
-    more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', String(open)); lcBox.hidden = !open; });
+    more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', String(open)); lcBox.hidden = !open; renderLegend(); });
   }
 
-  // Legend for the coloured layers that are on
+  // Each coloured layer's key sits right under it in the layer list, while it's on
   function renderLegend() {
-    const out = [], on = (k) => !!LSTATE[k]?.on;
-    if (on('records')) out.push('<div class="lg"><span>Threatened & at-risk species (NZTCS)</span><div class="keys">' + [['nc', 'Nationally Critical'], ['ne', 'Nationally Endangered'], ['nv', 'Nationally Vulnerable'], ['rc', 'Increasing or Recovering'], ['ar', 'At Risk'], ['conflict', 'Subspecies not settled']].map(([c, l]) => '<span><i class="dot" style="background:' + NZ_COL[c] + '"></i>' + l + '</span>').join('') + '</div></div>');
-    if (on('chm')) out.push('<div class="lg"><span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div></div>');
-    if (on('change')) out.push('<div class="lg"><span>Height change since ' + esc(lidar.surveys.before) + ', m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div></div>');
-    if (on('landcover')) { const present = [...lcOn]; out.push('<div class="lg"><span>Land cover 2023</span><div class="keys">' + present.sort().map(c => '<span><i class="lfill" style="background:' + lcCol(c) + '"></i>' + esc(c) + '</span>').join('') + '</div></div>'); }
-    if (on('luc')) out.push('<div class="lg"><span>Land use capability class (1 = most versatile, 8 = least)</span><div class="keys">' + Object.entries(LUC_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k + '</span>').join('') + '</div></div>');
-    if (on('overlays') || on('overlay3a')) out.push('<div class="lg"><span>Council erosion overlays</span><div class="keys">' + (on('overlay3a') ? '<span><i class="lfill" style="background:#d7301f"></i>3A, highly erodible</span>' : '') + (on('overlays') ? Object.entries(OV_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k.replace('Land ', 'Overlay ') + '</span>').join('') : '') + '</div></div>');
-    document.getElementById('legend').innerHTML = out.join('');
+    const key = {};
+    key.records = () => { const present = Object.keys(TAXON_COLOURS).filter(g => gbif.taxa.some(t => t.threat && t.og === g)); return '<div class="keys">' + present.map(g => '<span><i class="dot" style="background:' + TAXON_COLOURS[g][0] + '"></i>' + TAXON_COLOURS[g][1] + '</span>').join('') + '</div><span>NZTCS Threatened and At Risk species, coloured by group as in Occurd</span>'; };
+    key.chm = () => '<span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div>';
+    key.change = () => '<span>Height change since ' + esc(lidar.surveys.before) + ', m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div>';
+    // The classes dropdown already shows land cover colours, so the key only shows while it's shut
+    key.landcover = () => document.getElementById('lcClasses') && !document.getElementById('lcClasses').hidden ? '' : '<div class="keys">' + [...lcOn].sort().map(c => '<span><i class="lfill" style="background:' + lcCol(c) + '"></i>' + esc(c) + '</span>').join('') + '</div>';
+    key.luc = () => '<span>Class 1 is the most versatile land, 8 the least</span><div class="keys">' + Object.entries(LUC_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k + '</span>').join('') + '</div>';
+    key.overlay3a = () => '<div class="keys"><span><i class="lfill" style="background:#d7301f"></i>Overlay 3A, highly erodible land</span></div>';
+    key.overlays = () => '<div class="keys">' + Object.entries(OV_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k.replace('Land ', 'Overlay ') + '</span>').join('') + '</div>';
+    for (const [k, make] of Object.entries(key)) {
+      const li = document.querySelector('.layer[data-key="' + k + '"]'); if (!li) continue;
+      let box = document.querySelector('.layer-key[data-for="' + k + '"]');
+      if (!box) { box = document.createElement('li'); box.className = 'layer-key legend'; box.dataset.for = k; li.after(box); }
+      const html = LSTATE[k].on ? make() : '';
+      box.innerHTML = html; box.hidden = !html;
+    }
   }
 
   // Species filters. Ticked species show on the map (all to start); groups
@@ -506,8 +562,8 @@ document.getElementById('ver').textContent = APP_VERSION;
     const op = LSTATE.records.op;
     scoped.filter(onMap).forEach(r => {
       const t = gbif.taxa[r[2]];
-      L.circleMarker([r[1], r[0]], { renderer: pointR, radius: fState.taxon != null ? 6 : 4.5, color: '#fff', weight: 1, opacity: op, fillColor: NZ_COL[t.nz.cls], fillOpacity: .95 * op })
-        .on('click', (e) => { L.DomEvent.stop(e); showAt(e.latlng, r); }).addTo(recLayer);
+      L.circleMarker([r[1], r[0]], { renderer: pointR, radius: fState.taxon != null ? 6 : 4.5, color: '#fff', weight: 1, opacity: op, fillColor: TAXON_COLOURS[t.og][0], fillOpacity: .95 * op })
+        .on('click', (e) => { L.DomEvent.stop(e); if (drawing) drawClick(e); else showAt(e.latlng, r); }).addTo(recLayer); // while drawing, a dot is just another point
     });
   }
 
@@ -580,6 +636,26 @@ document.getElementById('ver').textContent = APP_VERSION;
   // Area summary: size, protection, wetlands, land cover
   const shapeArea = drawnShape => drawnShape || area.outline;
   function sumArea(fc, clip) { let s = 0; for (const f of fc.features) { try { const c = clip === area.outline ? f : turf.intersect(f, clip); if (c) s += turf.area(c); } catch (e) {} } return s; }
+  // Land cover as a pie: the eight largest classes, the rest together as "Other"
+  let lcView = 'bars'; try { lcView = localStorage.getItem('lcView') === 'pie' ? 'pie' : 'bars'; } catch (e) {}
+  function pieHtml(rows, tot) {
+    const top = rows.slice(0, 8), rest = rows.slice(8).reduce((a, [, v]) => a + v, 0);
+    const parts = top.map(([k, v]) => [k, v, lcCol(k)]); if (rest > 0) parts.push(['Other', rest, '#b9b6ad']);
+    const sum = parts.reduce((a, p) => a + p[1], 0) || 1, R = 64, r = 34, c = 66;
+    let a0 = -Math.PI / 2;
+    const pt = (ang, rad) => (c + rad * Math.cos(ang)).toFixed(2) + ' ' + (c + rad * Math.sin(ang)).toFixed(2);
+    const paths = parts.map(([k, v, col]) => {
+      const a1 = a0 + 2 * Math.PI * v / sum, big = a1 - a0 > Math.PI ? 1 : 0;
+      const d = (a1 - a0 >= 2 * Math.PI - 1e-6) ? 'M' + pt(0, R) + 'A' + R + ' ' + R + ' 0 1 1 ' + pt(Math.PI, R) + 'A' + R + ' ' + R + ' 0 1 1 ' + pt(0, R) + 'M' + pt(0, r) + 'A' + r + ' ' + r + ' 0 1 0 ' + pt(Math.PI, r) + 'A' + r + ' ' + r + ' 0 1 0 ' + pt(0, r) + 'Z'
+        : 'M' + pt(a0, R) + 'A' + R + ' ' + R + ' 0 ' + big + ' 1 ' + pt(a1, R) + 'L' + pt(a1, r) + 'A' + r + ' ' + r + ' 0 ' + big + ' 0 ' + pt(a0, r) + 'Z';
+      a0 = a1;
+      return '<path d="' + d + '" fill="' + col + '"><title>' + esc(k) + ': ' + fmtHa(v) + ' (' + Math.round(100 * v / tot) + '%)</title></path>';
+    }).join('');
+    const pct = (v) => { const p = 100 * v / tot; return p >= 1 ? Math.round(p) + '%' : '<1%'; };
+    return '<div class="pie"><svg viewBox="0 0 132 132" role="img" aria-label="Land cover pie chart">' + paths + '</svg><div class="keys">' +
+      parts.map(([k, v, col]) => '<div><i class="lfill" style="background:' + col + '"></i><span title="' + esc(k) + '">' + esc(k) + '</span><span class="v">' + fmtHa(v) + ' · ' + pct(v) + '</span></div>').join('') + '</div></div>';
+  }
+  document.getElementById('coverBars').addEventListener('click', e => { const b = e.target.closest('[data-lcview]'); if (!b) return; lcView = b.dataset.lcview; try { localStorage.setItem('lcView', lcView); } catch (err) {} renderArea(); });
   function renderArea() {
     const shp = shapeArea(drawn), tot = turf.area(shp);
     const prot = sumArea(V.qeii, shp) + sumArea(V.pma, shp) + sumArea(V.doc, shp), wet = sumArea(V.wetlands, shp);
@@ -588,7 +664,8 @@ document.getElementById('ver').textContent = APP_VERSION;
     const stat = (k, v) => '<div class="stat"><b>' + v + '</b><span>' + k + '</span></div>';
     document.getElementById('areaStats').innerHTML = stat('Area', fmtHa(tot)) + stat('Native cover', Math.round(100 * nat / tot) + '%') + stat('Protected', fmtHa(prot)) + stat('Wetlands mapped', fmtHa(wet)) + stat('Rivers', (V.rivers.features.filter(f => !drawn || turf.booleanPointInPolygon(turf.along(f, turf.length(f) / 2), shp)).reduce((s, f) => s + turf.length(f), 0)).toFixed(0) + ' km') + stat('Species', new Set(scoped.filter(r => gbif.taxa[r[2]].rank === 'SPECIES').map(r => r[2])).size.toLocaleString()) + stat('Threatened & at risk', new Set(scoped.filter(r => gbif.taxa[r[2]].threat).map(r => r[2])).size.toLocaleString());
     const rows = Object.entries(lc).sort((a, b) => b[1] - a[1]), max = rows.length ? rows[0][1] : 1;
-    document.getElementById('coverBars').innerHTML = '<span class="eyebrow">Land cover 2023</span>' + rows.slice(0, 8).map(([k, v]) => '<div class="barrow"><span class="lab"><i class="lfill" style="background:' + lcCol(k) + '"></i><span>' + esc(k) + '</span></span><span class="v">' + fmtHa(v) + '</span><span class="track"><i style="width:' + (100 * v / max).toFixed(1) + '%;background:' + lcCol(k) + '"></i></span></div>').join('');
+    const head = '<div class="lc-head"><span class="eyebrow">Land cover 2023</span><span class="row"><button class="mini" type="button" data-lcview="bars" aria-pressed="' + (lcView === 'bars') + '">Bars</button><button class="mini" type="button" data-lcview="pie" aria-pressed="' + (lcView === 'pie') + '">Pie</button></span></div>';
+    document.getElementById('coverBars').innerHTML = head + (lcView === 'pie' ? pieHtml(rows, tot) : rows.slice(0, 8).map(([k, v]) => '<div class="barrow"><span class="lab"><i class="lfill" style="background:' + lcCol(k) + '"></i><span>' + esc(k) + '</span></span><span class="v">' + fmtHa(v) + '</span><span class="track"><i style="width:' + (100 * v / max).toFixed(1) + '%;background:' + lcCol(k) + '"></i></span></div>').join(''));
     document.getElementById('areaLinks').innerHTML = '<button class="btn" type="button" id="dlSpecies">Species list (CSV)</button><button class="btn" type="button" id="dlRecords">Records (CSV)</button>' + (drawn ? '<button class="btn" type="button" id="dlShape">Drawn area (GeoJSON)</button>' : '');
     document.getElementById('dlSpecies').addEventListener('click', downloadSpecies);
     document.getElementById('dlRecords').addEventListener('click', downloadRecords);
@@ -613,6 +690,7 @@ document.getElementById('ver').textContent = APP_VERSION;
   const drawBtn = document.getElementById('drawBtn'), clearBtn = document.getElementById('clearDraw');
   function setDrawing(on) {
     drawing = on; pts = []; if (guide) { drawnLayer.removeLayer(guide); guide = null; }
+    if (on) map.closePopup(); // an open popup would sit over the map and catch the clicks
     drawBtn.setAttribute('aria-pressed', String(on)); drawBtn.textContent = on ? 'Cancel drawing' : (drawn ? 'Draw again' : 'Draw an area');
     document.getElementById('drawHelp').hidden = !on; document.querySelector('.app').classList.toggle('drawing', on);
     on ? map.doubleClickZoom.disable() : map.doubleClickZoom.enable();
@@ -626,13 +704,13 @@ document.getElementById('ver').textContent = APP_VERSION;
     L.geoJSON(drawn, { renderer: lineR, interactive: false, style: () => ({ color: css('--draw'), weight: 3, fillColor: css('--draw'), fillOpacity: .06 }) }).addTo(drawnLayer);
     setDrawing(false); clearBtn.hidden = false; fState.taxon = null; scope(); refresh(true);
   }
-  map.on('click', (e) => {
-    if (!drawing) { showAt(e.latlng); return; }
+  map.on('click', (e) => { if (drawing) drawClick(e); else showAt(e.latlng); });
+  function drawClick(e) {
     if (pts.length > 2 && map.latLngToContainerPoint(pts[0]).distanceTo(e.containerPoint) < 12) { finishDraw(); return; }
     pts.push(e.latlng);
     if (guide) drawnLayer.removeLayer(guide);
     guide = L.polyline(pts, { renderer: lineR, color: css('--draw'), weight: 2, dashArray: '4 4', interactive: false }).addTo(drawnLayer);
-  });
+  }
   map.on('dblclick', (e) => { if (drawing) { L.DomEvent.stop(e); finishDraw(); } });
   clearBtn.addEventListener('click', () => { drawn = null; drawnLayer.clearLayers(); clearBtn.hidden = true; setDrawing(false); fState.taxon = null; scope(); refresh(true); });
 
