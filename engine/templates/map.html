@@ -220,6 +220,7 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
           <label>Since <select id="sinceSel"><option value="0">any year</option><option value="2000">2000</option><option value="2010">2010</option><option value="2020">2020</option></select></label>
           <label>Location within <select id="precSel"><option value="0">any distance</option><option value="1000">1 km</option><option value="100">100 m</option></select></label>
         </div>
+        <div class="legend" id="spKey"></div>
         <div class="nzchips" id="nzChips" role="group" aria-label="Threat status (NZTCS)"></div>
         <input type="search" id="spSearch" placeholder="Find a species" aria-label="Find a species">
         <div class="row" style="justify-content: space-between;"><span class="eyebrow" id="spCount"></span><span class="row"><button class="btn" type="button" id="spClear" hidden>Show all species</button><button class="btn" type="button" id="llBtn" title="Photos of the ticked species in LookLike">Photos in LookLike</button></span></div>
@@ -514,7 +515,6 @@ document.getElementById('ver').textContent = APP_VERSION;
   // Each coloured layer's key sits right under it in the layer list, while it's on
   function renderLegend() {
     const key = {};
-    key.records = () => { const present = Object.keys(TAXON_COLOURS).filter(g => gbif.taxa.some(t => t.threat && t.og === g)); return '<div class="keys">' + present.map(g => '<span><i class="dot" style="background:' + TAXON_COLOURS[g][0] + '"></i>' + TAXON_COLOURS[g][1] + '</span>').join('') + '</div><span>NZTCS Threatened and At Risk species, coloured by group as in Occurd</span>'; };
     key.chm = () => '<span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div>';
     key.change = () => '<span>Height change since ' + esc(lidar.surveys.before) + ', m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div>';
     // The classes dropdown already shows land cover colours, so the key only shows while it's shut
@@ -593,6 +593,8 @@ document.getElementById('ver').textContent = APP_VERSION;
     document.querySelectorAll('.spg-cb[data-mixed]').forEach(cb => { cb.indeterminate = true; });
     document.getElementById('spClear').hidden = fState.taxon == null;
   }
+  // Key for the dots: the Occurd taxon groups among the threatened and at-risk species
+  { const present = Object.keys(TAXON_COLOURS).filter(g => gbif.taxa.some(t => t.threat && t.og === g)); document.getElementById('spKey').innerHTML = '<span>On the map: threatened and at-risk species (NZTCS), coloured by group as in Occurd</span><div class="keys">' + present.map(g => '<span><i class="dot" style="background:' + TAXON_COLOURS[g][0] + '"></i>' + TAXON_COLOURS[g][1] + '</span>').join('') + '</div>'; }
   // NZTCS chips: all species, all threatened & at risk, then each status present (as Occurd)
   function renderChips(list) {
     const n = (f) => list.filter(x => x.t.rank === 'SPECIES' && f(x)).length, th = n(x => x.t.threat);

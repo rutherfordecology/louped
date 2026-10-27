@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.4 — 2026-10-27
+
+- The colour key for the species dots moved from the layers list to the
+  Species records section, under its heading; in the layers list the species
+  layer is just an on/off switch.
+
 ## v0.4.3 — 2026-10-27
 
 - **No licence filter.** The map is a dashboard onto GBIF, so the species
