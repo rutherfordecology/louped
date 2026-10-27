@@ -42,8 +42,9 @@ const licSummary = (nc.length ? 'Non-commercial only: ' + nc.join(', ') + '. ' :
 const excluded = (cfg.gbif?.exclude || []).length ? ' (' + cfg.gbif.exclude.map(n => '<i>' + esc(n) + '</i>').join(', ') + ')' : '';
 fs.writeFileSync(path('about.html'), fill('about.html', {
   NAME: esc(cfg.name), TITLE: esc(cfg.title), BOUNDARY_NOTE: esc(cfg.boundaryNote), AREA_HA: Math.round(area.km2 * 100).toLocaleString(),
-  GBIF_SUMMARY: esc(gbif.rows.length.toLocaleString() + ' public records of ' + nSpecies.toLocaleString() + ' species from GBIF.org, snapshot ' + gbif.fetched + '.' + licText),
+  GBIF_SUMMARY: esc(gbif.rows.length.toLocaleString() + ' public records of ' + nSpecies.toLocaleString() + ' species from GBIF.org' + (gbif.fromYear ? ', from ' + gbif.fromYear + ' on' : '') + ', snapshot ' + gbif.fetched + '.' + licText),
   MAX_UNC_KM: String((cfg.gbif?.maxUncertaintyM ?? 5000) / 1000), EXCLUDED: excluded,
+  YEARS_NOTE: cfg.gbif?.years ? '    <li>Only records from the last ' + cfg.gbif.years + ' years (' + gbif.fromYear + ' on) are included, so the map shows what has been seen recently. Older records, mostly herbarium specimens and surveys, are left out.</li>\n' : '',
   CHECKED: '27 October 2026', SOURCES_ROWS: rows, LICENCE_SUMMARY: esc(licSummary),
   YEAR: gbif.fetched.slice(0, 4), VERSION: ENGINE_VERSION, GBIF_DATE: gbif.fetched
 }));

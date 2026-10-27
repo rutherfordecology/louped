@@ -5,7 +5,7 @@
   "title": "Whangārā catchments biodiversity map",
   "pageTitle": "Whangārā Biodiversity Map",
   "mapLabel": "the Whangārā catchments",
-  "description": "Layers for the Whangārā community catchments, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
+  "description": "Layers for the Whangārā community catchments, Tairāwhiti: species records, LiDAR, land cover, wetlands, rivers, protection and land use.",
   "areaText": "The Turihaua, Pouawa, Waiomoko and Pakarae catchments and the coastal streams between them",
   "card": "Turihaua, Pouawa, Waiomoko and Pakarae catchments",
   "boundaryNote": "The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal catchments between them, from Gisborne District Council's River Catchments layer. Check the boundary with the catchment group.",
@@ -59,7 +59,8 @@
       "Cookia sulcata",
       "Maoricolpus roseus",
       "Alepis flavida"
-    ]
+    ],
+    "years": 20
   },
   "basemap": {
     "aerialLayer": 121749,

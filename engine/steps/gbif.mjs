@@ -1,6 +1,8 @@
 // Snapshot of public GBIF occurrence records inside the area, at the
 // coordinates GBIF publishes (nothing blurred or gridded here).
-// Settings in catchment.json: "gbif": { "exclude": [species...], "maxUncertaintyM": 5000 }
+// Settings in catchment.json: "gbif": { "exclude": [species...], "maxUncertaintyM": 5000, "years": 20 }
+// "years": only records from the last that many years (counted from this
+// year); records with no year are then left out too. Leave it out for all years.
 // usage: node engine/steps/gbif.mjs <catchment folder>
 import * as turf from '@turf/turf';
 import fs from 'node:fs';
@@ -17,7 +19,9 @@ const get = async (url) => { for (let i = 0; ; i++) { try { const r = await fetc
 // GBIF's search stalls past an offset of about 10,000, so any box holding
 // more than 8,000 records is split into quarters until each is small enough.
 const recs = [], seen = new Set();
-const q = (b) => API + 'occurrence/search?hasCoordinate=true&hasGeospatialIssue=false&occurrenceStatus=PRESENT' +
+const fromYear = cfg.gbif?.years ? new Date().getFullYear() - cfg.gbif.years : null;
+if (fromYear) console.error('records from ' + fromYear + ' on');
+const q = (b) => API + 'occurrence/search?hasCoordinate=true&hasGeospatialIssue=false&occurrenceStatus=PRESENT' + (fromYear ? '&year=' + fromYear + ',' + new Date().getFullYear() : '') +
   '&decimalLongitude=' + b[0].toFixed(5) + ',' + b[2].toFixed(5) + '&decimalLatitude=' + b[1].toFixed(5) + ',' + b[3].toFixed(5);
 async function fetchBox(b) {
   if (!turf.booleanIntersects(turf.bboxPolygon(b), area)) return;
@@ -71,5 +75,5 @@ const rows = inside.map(r => {
 // Common names: the names step, next
 for (const d of datasets) if (!d.name) { try { d.name = (await get(API + 'dataset/' + d.key)).title; } catch (err) {} }
 
-fs.writeFileSync(outFile, JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), cols: ['lng', 'lat', 'taxon', 'year', 'uncertainty_m', 'basis', 'dataset', 'gbifID', 'date', 'licence'], rows, taxa, datasets, bases, licences }));
+fs.writeFileSync(outFile, JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), fromYear, cols: ['lng', 'lat', 'taxon', 'year', 'uncertainty_m', 'basis', 'dataset', 'gbifID', 'date', 'licence'], rows, taxa, datasets, bases, licences }));
 console.error('wrote', outFile, rows.length + ' records,', taxa.length + ' taxa,', Math.round(fs.statSync(outFile).size / 1024) + ' KB');

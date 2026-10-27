@@ -1,5 +1,6 @@
 // LiDAR images for the area from LINZ's 1 m elevation COGs (2018-20 and 2023):
-// hillshade, canopy height (DSM - DEM) and canopy height change. One 4 m
+// hillshade and canopy height change (canopy height, DSM - DEM, is worked out
+// for the change but not saved as a layer of its own). One 4 m
 // image per LINZ 1:10k tile, plus a 16 m overview of the whole area; all
 // warped to Web Mercator and cut to the area outline.
 // Settings in catchment.json (LINZ nz-elevation region and survey names):
@@ -128,12 +129,12 @@ for (const t of tiles) {
     let sum = 0, cnt = 0; for (let dy = 0; dy < k; dy++) for (let dx = 0; dx < k; dx++) { const v = g[key][(r * k + dy) * W + c * k + dx]; if (v === v) { sum += v; cnt++; } }
     if (cnt > k * k / 4) ov[key][(r0 + r) * ow + c0 + c] = sum / cnt;
   }
-  const pngs = warp(g, RES, W, H, t.tx, t.ty, t.bb, 1300);
+  const pngs = warp({ hillshade: g.hillshade, change: g.change }, RES, W, H, t.tx, t.ty, t.bb, 1300);
   let bytes = 0; for (const key in pngs) bytes += save(pngs[key], outDir + '/' + key + '/' + t.name + '.png');
   index.push({ name: t.name, bounds: [[t.bb[1], t.bb[0]], [t.bb[3], t.bb[2]]], old: !!odem });
   console.error(t.name, Math.round(bytes / 1024) + ' KB');
 }
 const obb = [w - 0.003, s - 0.003, e + 0.003, n + 0.003];
-const opng = warp(ov, OR, ow, oh, gx0, gy1, obb, 1600);
+const opng = warp({ hillshade: ov.hillshade, change: ov.change }, OR, ow, oh, gx0, gy1, obb, 1600);
 for (const key in opng) console.error('overview', key, Math.round(save(opng[key], outDir + '/' + key + '/overview.png') / 1024) + ' KB');
 fs.writeFileSync(outDir + '/index.json', JSON.stringify({ surveys: { now: cfg.lidar.nowLabel, before: OLD ? cfg.lidar.beforeLabel : null }, overview: [[obb[1], obb[0]], [obb[3], obb[2]]], tiles: index }));

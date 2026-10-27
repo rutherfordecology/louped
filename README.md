@@ -52,8 +52,8 @@ others), set its name, wording and boundary, and run `node engine/build.mjs
 - **`basemap`:** the LINZ Data Service aerial imagery layer for the region,
   e.g. `{ "aerialLayer": 121749, "aerialName": "Gisborne 0.1m Rural Aerial Photos (2024–2025)" }`.
 - **`gbif`:** `maxUncertaintyM` (records that could be further off are left
-  out) and `exclude` (species to leave out, e.g. marine species recorded at
-  the coast).
+  out), `exclude` (species to leave out, e.g. marine species recorded at
+  the coast) and `years` (only records from the last that many years).
 
 ## The engine
 - `engine/build.mjs` runs the steps in `engine/steps/`, each taking the

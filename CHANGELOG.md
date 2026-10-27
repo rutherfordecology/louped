@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.4.6 — 2026-10-27
+
+- **Canopy height layer removed:** it didn't add enough. The LiDAR step still
+  works out canopy height for the height change layer but no longer saves it,
+  which drops about 25 MB of images per catchment. Height change and
+  hillshade stay.
+
+## v0.4.5 — 2026-10-27
+
+- **Species records from the last 20 years only** (2006 on). A new
+  `gbif.years` setting in catchment.json limits the GBIF fetch to the last
+  that many years, counted from the current year; records with no year drop
+  out too. The old records were mostly herbarium specimens and surveys from
+  the 1890s to the 1990s. The map's Since filter now offers 2010, 2015 and
+  2020, and the About page says which years are included.
+
 ## v0.4.4 — 2026-10-27
 
 - The colour key for the species dots moved from the layers list to the

@@ -37,7 +37,7 @@ export const SOURCES = [
     url: 'https://www.doc.govt.nz/', used: 'DOC land.' },
   { key: 'lidar', uses: (c) => !!c.lidar, name: 'LiDAR 1 m elevation models (DEM and DSM)', by: (c) => (c.lidar.credit ? c.lidar.credit + ', ' : '') + 'via Toitū Te Whenua Land Information New Zealand',
     licence: 'CC BY 4.0', commercial: 'yes', short: 'LINZ LiDAR', attr: 'LINZ',
-    url: 'https://registry.opendata.aws/nz-elevation/', used: 'Canopy height, height change and hillshade.' },
+    url: 'https://registry.opendata.aws/nz-elevation/', used: 'Height change and hillshade.' },
   { key: 'nztcs', uses: () => true, name: 'New Zealand Threat Classification System (NZTCS)', by: 'Department of Conservation, as compiled for Occurd',
     licence: 'DOC states CC BY 4.0, but some NZTCS documents link to CC BY-NC-ND 4.0', commercial: 'check', short: 'NZTCS (DOC)', attr: 'NZTCS',
     url: 'https://nztcs.org.nz/', used: 'Threat status of each species; which species are shown on the map.' },
