@@ -182,7 +182,7 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const APP_VERSION = 'v0.2.1';
+const APP_VERSION = 'v0.2.2';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17.3 17.3 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 document.getElementById('ver').textContent = APP_VERSION;
@@ -239,7 +239,15 @@ document.getElementById('ver').textContent = APP_VERSION;
   const groupOf = (t) => t.kingdom === 'Plantae' ? 'plant' : t.kingdom === 'Fungi' ? 'fungi' : t.kingdom !== 'Animalia' ? 'other'
     : t.cls === 'Aves' ? 'bird' : t.cls === 'Insecta' ? 'insect' : t.cls === 'Mammalia' ? 'mammal' : (t.cls === 'Reptilia' || t.cls === 'Amphibia' || t.cls === 'Squamata') ? 'herp'
     : (['Actinopterygii', 'Teleostei', 'Chondrichthyes', 'Elasmobranchii', 'Petromyzonti', 'Cephalaspidomorphi'].includes(t.cls) || (t.phylum === 'Chordata' && !t.cls && FISH_ORDERS.has(t.order))) ? 'fish' : t.phylum === 'Chordata' ? 'other' : 'inv';
-  gbif.taxa.forEach(t => { if (NAME_FIX[t.name]) t.en = NAME_FIX[t.name]; t.g = groupOf(t); t.label = t.en || t.mi || t.name; });
+  gbif.taxa.forEach(t => {
+    if (NAME_FIX[t.name]) t.en = NAME_FIX[t.name];
+    // Genus and family names can carry their author ("Anarhynchus Quoy & Gaimard, 1832")
+    if (t.rank !== 'SPECIES') t.name = t.name.split(' ')[0];
+    t.g = groupOf(t); t.label = t.en || t.mi || t.name;
+    // Show the Māori name beside the English one, unless the name already has
+    // one: iNaturalist's "Taranui (Caspian Tern)" beats GBIF's "Kāhawai"
+    t.miExtra = t.mi && t.en && !/\(.+\)$/.test(t.en) && !t.en.toLowerCase().includes(t.mi.toLowerCase()) ? t.mi : '';
+  });
   gbif.rows = gbif.rows.filter(r => gbif.taxa[r[2]].name); // unnamed records say nothing about what was found
 
   // Vector layers (not clickable themselves: a map click reports everything at that spot)
@@ -394,7 +402,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     const nSp = [...counts.keys()].filter(i => gbif.taxa[i].rank === 'SPECIES').length;
     document.getElementById('spCount').textContent = nSp.toLocaleString() + ' species · ' + [...counts.values()].reduce((s, c) => s + c.n, 0).toLocaleString() + ' records';
     document.getElementById('spList').innerHTML = list.slice(0, fState.shown).map(x => '<li class="sp" tabindex="0" data-i="' + x.i + '"' + (fState.taxon === x.i ? ' aria-current="true"' : '') + '><span class="dot" style="background:' + GCOL[x.t.g] + '"></span>' +
-      '<span class="sp-name"><b>' + esc(x.t.label) + '</b><i>' + esc(x.t.label !== x.t.name ? x.t.name : (x.t.family || x.t.order || '')) + (x.t.mi && x.t.en ? ' · ' + esc(x.t.mi) : '') + (x.t.iucn && !['LC', 'NE', 'DD', 'NA'].includes(x.t.iucn) ? ' · IUCN ' + x.t.iucn : '') + '</i></span>' +
+      '<span class="sp-name"><b>' + esc(x.t.label) + '</b><i>' + esc(x.t.label !== x.t.name ? x.t.name : (x.t.family || x.t.order || '')) + (x.t.miExtra ? ' · ' + esc(x.t.miExtra) : '') + (x.t.iucn && !['LC', 'NE', 'DD', 'NA'].includes(x.t.iucn) ? ' · IUCN ' + x.t.iucn : '') + '</i></span>' +
       '<span class="sp-n">' + x.n + (x.last ? '<br>' + x.last : '') + '</span></li>').join('');
     document.getElementById('spMore').hidden = list.length <= fState.shown;
     document.getElementById('spClear').hidden = fState.taxon == null;

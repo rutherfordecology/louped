@@ -36,6 +36,8 @@ River"), so the trace stops at the confluence.
   protection management areas, DOC land, the council wetland assessment
   (2022), NZLRI land use capability, council Land Overlays 1–3 and 3A, and
   REC2 rivers.
+- `names.mjs <data/gbif.json>` re-picks the common names in a snapshot
+  (iNaturalist's NZ name first, then GBIF's); `gbif.mjs` uses it too.
 - `gbif.mjs` snapshots the public GBIF records in the area at the coordinates
   GBIF publishes, with English and Māori common names where GBIF has them.
   Left out: records with no name, records whose location was obscured or

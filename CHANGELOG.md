@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.2 — 2026-10-27
+
+- **Better common names.** Species now take iNaturalist's preferred name for
+  New Zealand (Tūī, Chaffinch, Southern Black-backed Gull), then GBIF's
+  NZ-sourced English name. Codes and initials GBIF sometimes lists as English
+  names ("COST", "C F") are skipped. `scripts/names.mjs` re-picks names in an
+  existing snapshot without refetching records.
+- The Māori name isn't repeated when the English name already includes it
+  ("Tauhou (Silvereye)"), and genus and family names no longer show their
+  author ("Anarhynchus", not "Anarhynchus Quoy & Gaimard, 1832").
+
 ## v0.2.1 — 2026-10-27
 
 - **Waimata stops at the Taruheru confluence.** The Waimata area is now the

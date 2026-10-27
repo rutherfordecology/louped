@@ -3,6 +3,7 @@
 // usage: node scripts/gbif.mjs <data/layers/area.json> <out.json>
 import * as turf from '@turf/turf';
 import fs from 'node:fs';
+import { commonNames } from './names.mjs';
 
 const [areaFile, outFile] = process.argv.slice(2);
 const area = JSON.parse(fs.readFileSync(areaFile, 'utf8')).outline;
@@ -56,27 +57,14 @@ const idx = (arr, map, key, make) => { if (!map.has(key)) { map.set(key, arr.len
 const taxa = [], taxaM = new Map(), datasets = [], dsM = new Map(), bases = [], bM = new Map();
 const rows = inside.map(r => {
   const key = r.speciesKey || r.genusKey || r.familyKey || r.taxonKey;
-  const t = idx(taxa, taxaM, key, () => ({ key, name: r.species || r.scientificName, rank: r.speciesKey ? 'SPECIES' : (r.taxonRank || ''), kingdom: r.kingdom || '', phylum: r.phylum || '', cls: r.class || '', order: r.order || '', family: r.family || '', iucn: r.iucnRedListCategory || '' }));
+  const t = idx(taxa, taxaM, key, () => ({ key, name: r.species || r.scientificName.split(' ')[0], rank: r.speciesKey ? 'SPECIES' : (r.taxonRank || ''), kingdom: r.kingdom || '', phylum: r.phylum || '', cls: r.class || '', order: r.order || '', family: r.family || '', iucn: r.iucnRedListCategory || '' }));
   const d = idx(datasets, dsM, r.datasetKey, () => ({ key: r.datasetKey, name: r.datasetName || '' }));
   const b = idx(bases, bM, r.basisOfRecord, () => r.basisOfRecord);
   return [+r.decimalLongitude.toFixed(5), +r.decimalLatitude.toFixed(5), t, r.year || 0, r.coordinateUncertaintyInMeters || 0, b, d, r.key, (r.eventDate || '').slice(0, 10)];
 });
 
-// Common names (English and Māori where GBIF has them), species only
-const species = taxa.filter(t => t.rank === 'SPECIES');
-let done = 0;
-async function names() {
-  while (species.length) {
-    const t = species.pop();
-    try {
-      const v = (await get(API + 'species/' + t.key + '/vernacularNames?limit=50')).results;
-      const pick = (lang) => (v.find(x => x.language === lang && /new zealand|nz/i.test(x.source || '')) || v.find(x => x.language === lang) || {}).vernacularName;
-      t.en = pick('eng'); t.mi = pick('mri');
-    } catch (err) {}
-    if (++done % 100 === 0) console.error(done + ' names');
-  }
-}
-await Promise.all(Array.from({ length: 6 }, names));
+// Common names (see names.mjs)
+await commonNames(taxa);
 for (const d of datasets) if (!d.name) { try { d.name = (await get(API + 'dataset/' + d.key)).title; } catch (err) {} }
 
 fs.writeFileSync(outFile, JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), cols: ['lng', 'lat', 'taxon', 'year', 'uncertainty_m', 'basis', 'dataset', 'gbifID', 'date'], rows, taxa, datasets, bases }));
