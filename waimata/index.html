@@ -218,7 +218,6 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
         <div class="row2">
           <label>Since <select id="sinceSel"><option value="0">any year</option><option value="2000">2000</option><option value="2010">2010</option><option value="2020">2020</option></select></label>
           <label>Location within <select id="precSel"><option value="0">any distance</option><option value="1000">1 km</option><option value="100">100 m</option></select></label>
-          <label>Licence <select id="licSel"><option value="0">any</option><option value="1">commercial use allowed</option></select></label>
         </div>
         <div class="nzchips" id="nzChips" role="group" aria-label="Threat status (NZTCS)"></div>
         <input type="search" id="spSearch" placeholder="Find a species" aria-label="Find a species">
@@ -246,7 +245,7 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const APP_VERSION = 'v0.4.2';
+const APP_VERSION = 'v0.4.3';
 const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
 const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -533,13 +532,10 @@ document.getElementById('ver').textContent = APP_VERSION;
 
   // Species filters. Ticked species show on the map (all to start); groups
   // fold away like Occurd's checklist.
-  const fState = { since: 0, prec: 0, noNC: false, taxon: null, search: '', nz: '' }; // nz: '' all species, 'th' threatened & at risk, or one status
+  const fState = { since: 0, prec: 0, taxon: null, search: '', nz: '' }; // nz: '' all species, 'th' threatened & at risk, or one status
   const hiddenTaxa = new Set(), openGroups = new Set();
-  const NC = new Set(gbif.licences ? gbif.licences.map((l, i) => l === 'CC BY-NC' ? i : -1).filter(i => i >= 0) : []);
-  if (!gbif.licences) document.getElementById('licSel').closest('label').hidden = true;
   document.getElementById('sinceSel').addEventListener('change', e => { fState.since = +e.target.value; refresh(); });
   document.getElementById('precSel').addEventListener('change', e => { fState.prec = +e.target.value; refresh(); });
-  document.getElementById('licSel').addEventListener('change', e => { fState.noNC = e.target.value === '1'; refresh(); });
   document.getElementById('spSearch').addEventListener('input', e => { fState.search = e.target.value.trim().toLowerCase(); renderSpecies(); });
   document.getElementById('spClear').addEventListener('click', () => { fState.taxon = null; refresh(); });
 
@@ -547,8 +543,8 @@ document.getElementById('ver').textContent = APP_VERSION;
   let drawn = null, drawing = false, pts = [], guide = null;
   const drawnLayer = L.layerGroup().addTo(map);
   const inDrawn = (lng, lat) => !drawn || turf.booleanPointInPolygon([lng, lat], drawn);
-  // base: the year, precision and licence filters; passes: also ticked, and the picked species
-  const base = (r) => (!fState.since || r[3] >= fState.since) && (!fState.prec || (r[4] > 0 && r[4] <= fState.prec)) && (!fState.noNC || !NC.has(r[9]));
+  // base: the year and precision filters; passes: also ticked, and the picked species
+  const base = (r) => (!fState.since || r[3] >= fState.since) && (!fState.prec || (r[4] > 0 && r[4] <= fState.prec));
   const passes = (r, ignoreTaxon) => base(r) && !hiddenTaxa.has(r[2]) && (ignoreTaxon || fState.taxon == null || r[2] === fState.taxon);
   const nzOk = (t) => !fState.nz || (fState.nz === 'th' ? t.threat : t.nz && t.nz.status === fState.nz);
   // On the map: threatened and at-risk species only

@@ -1,7 +1,7 @@
 // Shared by the engine's steps: a catchment's settings and folder paths.
 import fs from 'node:fs';
 
-export const ENGINE_VERSION = 'v0.4.2';
+export const ENGINE_VERSION = 'v0.4.3';
 
 // A catchment is a folder with a catchment.json; every step takes its folder name
 export function loadCatchment(slug) {

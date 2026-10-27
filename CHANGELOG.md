@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.3 — 2026-10-27
+
+- **No licence filter.** The map is a dashboard onto GBIF, so the species
+  records' licence filter is gone; each record still links to its GBIF page,
+  and its licence still shows in the record popup and the records download.
+
 ## v0.4.2 — 2026-10-27
 
 - **Dot colours as in Occurd.** Threatened-species dots are coloured by

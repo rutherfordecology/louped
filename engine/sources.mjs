@@ -16,7 +16,7 @@ export const SOURCES = [
     url: 'https://data.linz.govt.nz/layer/103632/', used: 'Rivers and streams; stream order worked out from the network and the LiDAR.' },
   { key: 'gbif', uses: () => true, name: 'Occurrence records', by: 'GBIF.org and the datasets published through it',
     licence: 'Per record: CC0, CC BY 4.0 or CC BY-NC 4.0', commercial: 'mixed', short: 'GBIF.org', attr: 'GBIF.org',
-    url: 'https://www.gbif.org/', used: 'Species records. The licence filter on the map leaves out the CC BY-NC records.' },
+    url: 'https://www.gbif.org/', used: 'Species records: the map is a window onto GBIF, and every record links back to its GBIF page.' },
   { key: 'names', uses: () => true, name: 'Common names', by: 'iNaturalist (preferred names for New Zealand) and GBIF',
     licence: 'iNaturalist Terms of Use; GBIF checklists under their own licences', commercial: 'check', short: 'iNaturalist and GBIF names',
     url: 'https://www.inaturalist.org/pages/terms', used: 'English and Māori names in the species list.' },
