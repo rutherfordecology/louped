@@ -1,11 +1,11 @@
 // Catchment map engine: builds a catchment's map from its catchment.json.
 // usage: node engine/build.mjs <catchment folder> [step ...]
-//   steps, in order: boundary vectors gbif names lidar page (default: all)
+//   steps, in order: boundary vectors gbif names nztcs lidar page (default: all)
 //   e.g. node engine/build.mjs waimata page   (just remake the pages)
 import { spawnSync } from 'node:child_process';
 import { loadCatchment } from './lib.mjs';
 
-const STEPS = ['boundary', 'vectors', 'gbif', 'names', 'lidar', 'page'];
+const STEPS = ['boundary', 'vectors', 'gbif', 'names', 'nztcs', 'lidar', 'page'];
 const [slug, ...asked] = process.argv.slice(2);
 const { cfg } = loadCatchment(slug);
 const bad = asked.filter(s => !STEPS.includes(s));

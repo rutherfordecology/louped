@@ -8,18 +8,16 @@
   "description": "Layers for the Waimata catchment, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
   "areaText": "The Waimata River above the Taruheru confluence",
   "card": "Waimata River, above the Taruheru confluence",
-  "boundaryNote": "The area is the Waimata River catchment above where the Taruheru joins it in Gisborne, traced from NIWA's river network (REC2). Check the boundary with the catchment group.",
+  "boundaryNote": "The area is the Waimata River catchment above where the Taruheru joins it in Gisborne, from Gisborne District Council's River Catchments layer. Check the boundary with the catchment group.",
   "boundary": {
-    "bbox": [
-      177.88,
-      -38.72,
-      178.18,
-      -38.38
-    ],
-    "rivers": [
-      "Waimata"
-    ],
-    "coast": false
+    "layer": "https://services7.arcgis.com/8G10QCd84QpdcTJ9/arcgis/rest/services/river_catchments/FeatureServer/52",
+    "field": "SubCatchment",
+    "sourceName": "River Catchments",
+    "sourceBy": "Gisborne District Council",
+    "sourceShort": "GDC catchments",
+    "parts": {
+      "Waimata": "Waimata River"
+    }
   },
   "layers": [
     "landcover",
@@ -30,7 +28,8 @@
     "luc",
     "overlay3a",
     "overlays",
-    "rivers"
+    "rivers",
+    "scheduled"
   ],
   "lidar": {
     "region": "gisborne",

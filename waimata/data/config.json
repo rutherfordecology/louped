@@ -4,7 +4,7 @@
   "title": "Waimata catchment biodiversity map",
   "mapLabel": "the Waimata catchment",
   "areaText": "The Waimata River above the Taruheru confluence",
-  "boundaryNote": "The area is the Waimata River catchment above where the Taruheru joins it in Gisborne, traced from NIWA's river network (REC2). Check the boundary with the catchment group.",
+  "boundaryNote": "The area is the Waimata River catchment above where the Taruheru joins it in Gisborne, from Gisborne District Council's River Catchments layer. Check the boundary with the catchment group.",
   "layers": [
     "landcover",
     "qeii",
@@ -14,15 +14,21 @@
     "luc",
     "overlay3a",
     "overlays",
-    "rivers"
+    "rivers",
+    "scheduled"
   ],
-  "version": "v0.3.2",
+  "version": "v0.4.0",
   "aerialLayer": 121749,
   "sources": [
     {
-      "key": "boundary",
-      "short": "NIWA REC2",
-      "attr": "NIWA"
+      "key": "catchments",
+      "short": "GDC catchments",
+      "attr": "GDC catchments"
+    },
+    {
+      "key": "rivers",
+      "short": "LINZ river lines",
+      "attr": "LINZ"
     },
     {
       "key": "gbif",
@@ -63,6 +69,11 @@
       "key": "lidar",
       "short": "LINZ LiDAR",
       "attr": "LINZ"
+    },
+    {
+      "key": "nztcs",
+      "short": "NZTCS (DOC)",
+      "attr": "NZTCS"
     },
     {
       "key": "linz-basemaps",

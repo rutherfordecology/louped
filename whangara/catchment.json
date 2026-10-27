@@ -8,21 +8,26 @@
   "description": "Layers for the Whangārā community catchments, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
   "areaText": "The Turihaua, Pouawa, Waiomoko and Pakarae catchments and the coastal streams between them",
   "card": "Turihaua, Pouawa, Waiomoko and Pakarae catchments",
-  "boundaryNote": "The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal streams between them, traced from NIWA's river network (REC2). Check the boundary with the catchment group.",
+  "boundaryNote": "The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal catchments between them, from Gisborne District Council's River Catchments layer. Check the boundary with the catchment group.",
   "boundary": {
-    "bbox": [
-      177.98,
-      -38.76,
-      178.4,
-      -38.26
-    ],
-    "rivers": [
-      "Turihaua",
-      "Pouawa",
-      "Waiomoko",
-      "Pakarae"
-    ],
-    "coast": true
+    "layer": "https://services7.arcgis.com/8G10QCd84QpdcTJ9/arcgis/rest/services/river_catchments/FeatureServer/52",
+    "field": "SubCatchment",
+    "sourceName": "River Catchments",
+    "sourceBy": "Gisborne District Council",
+    "sourceShort": "GDC catchments",
+    "parts": {
+      "Turihaua": "Turihaua River",
+      "Pouawa": "Pouawa River",
+      "Waiomoko": "Waiomoko River",
+      "Pakarae": "Pakarae River"
+    },
+    "coast": {
+      "values": [
+        "Coastal",
+        "Other"
+      ],
+      "label": "Coastal streams"
+    }
   },
   "layers": [
     "landcover",
@@ -33,7 +38,8 @@
     "luc",
     "overlay3a",
     "overlays",
-    "rivers"
+    "rivers",
+    "scheduled"
   ],
   "lidar": {
     "region": "gisborne",

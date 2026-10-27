@@ -1,0 +1,110 @@
+# Where each taxon can actually occur, for the region-aware assignment model.
+#
+# NZTCS assesses subspecies but carries no distribution field, so a bare binomial
+# in a survey has to be resolved to one of them by rule. "Most threatened" and
+# "the nominate" are both guesses that ignore the one thing the covenant record
+# does know: where it is. This table supplies the missing half.
+#
+# taxon      the NZTCS accepted name, exactly as NZTCS writes it (authority and all)
+# allow      where it occurs, comma-separated. Zones:
+#              NI            North Island land districts
+#              SI            South Island land districts
+#              Stewart       Stewart Island (inside Southland)
+#              GreatBarrier  Great Barrier / Aotea (inside Auckland)
+#              Northland     Far North, Whangarei, Kaipara
+#              Auckland      North Auckland (Rodney), Central and East, South and West
+#              Waikato       Waikato and Taupo / Central Waikato
+#              Coromandel    Hauraki - Coromandel
+#              Foveaux       Southland and Coastal Otago - South
+#              SIWest        West Coast, Nelson-Tasman, Marlborough, Southland, Waiau
+#              SIEast        Canterbury and Otago
+#              WaitomoTaranaki  the Waitomo / North Taranaki coast (Kawhia to Mohakatino)
+#              SINorthWest   Nelson-Tasman and the West Coast
+#              Marlborough   Marlborough (TS) and (CM)
+#              Fiordland     Southland and the Waiau Catchment
+#              Canterbury    North, Central and South Canterbury
+#              SouthernSI    Southland, Waiau and all three Otago regions
+#              FarNorth      the Far North QEII region only
+#              any           no restriction worth recording
+#              none          nowhere a QEII covenant in this dataset exists
+# certainty  certain -> the model withholds a status where the region disagrees
+#            check   -> the model still prefers the region-appropriate taxon but
+#                       labels the decision unconfirmed, so it can be reviewed
+# note       why, and where the knowledge came from
+# instead    optional. A record out of range is usually withheld; where the
+#            out-of-range plants are reliably a DIFFERENT taxon, name it here and
+#            that taxon is used instead. Geranium sessiliflorum outside the far
+#            south is G. brevicaule, which is what GBIF identifies in these same
+#            covenants. Leave blank to withhold.
+#
+# `none` is not a judgement about the taxon, only about this dataset: it has 33
+# QEII regions and 13 land districts, all mainland. There is no Chatham,
+# subantarctic, Kermadec, Three Kings, Poor Knights or Little Barrier covenant in
+# it, so a taxon confined to those cannot be a record here whatever its status.
+#
+taxon	allow	certainty	note	instead
+# --- birds: subspecies that a bare binomial has to choose between ---
+Poodytes punctatus vealeae	NI	certain	North Island fernbird	
+Poodytes punctatus punctatus	SI	certain	South Island fernbird	
+Poodytes punctatus stewartianus	Stewart	certain	Stewart Island fernbird	
+Poodytes punctatus caudatus	none	certain	Snares Islands only	
+Poodytes punctatus wilsoni	none	certain	Codfish Island / Whenua Hou only	
+Anarhynchus obscurus aquilonius	NI	certain	northern New Zealand dotterel	
+Anarhynchus obscurus obscurus	Stewart,SI	check	southern dotterel; breeds on Stewart Island, ranges to Southland coast	
+Petroica macrocephala toitoi	NI	certain	North Island tomtit	
+Petroica macrocephala macrocephala	SI	certain	South Island tomtit	
+Petroica macrocephala dannefaerdi	none	certain	Snares Islands only	
+Petroica macrocephala marrineri	none	certain	Auckland Islands only	
+Petroica macrocephala chathamensis	none	certain	Chatham Islands only	
+Petroica australis australis	SI	certain	South Island robin	
+Petroica australis rakiura	Stewart	certain	Stewart Island robin	
+Prosthemadera novaeseelandiae novaeseelandiae	NI,SI,Stewart	certain	mainland tui	
+Prosthemadera novaeseelandiae chathamensis	none	certain	Chatham Islands only	
+Anthornis melanura melanura	NI,SI,Stewart	certain	mainland bellbird	
+Anthornis melanura oneho	none	certain	Poor Knights Islands only	
+Anthornis melanura obscura	none	certain	Three Kings Islands only	
+Anthus novaeseelandiae novaeseelandiae	NI,SI,Stewart	certain	New Zealand pipit	
+Anthus novaeseelandiae chathamensis	none	certain	Chatham Islands only	
+Anthus novaeseelandiae aucklandicus	none	certain	Auckland Islands only	
+Anthus novaeseelandiae steindachneri	none	certain	Antipodes Islands only	
+Gallirallus australis greyi	NI	certain	North Island weka	
+Gallirallus australis australis	SIWest	certain	western weka: West Coast, Nelson, Marlborough, Southland	
+Gallirallus australis hectori	SIEast	certain	buff weka: eastern South Island, Canterbury and Otago	
+Gallirallus australis scotti	Stewart	certain	Stewart Island weka	
+Apteryx australis australis	Stewart	check	Rakiura tokoeka; NZTCS treats Fiordland tokoeka separately	
+Anarhynchus bicinctus bicinctus	NI,SI,Stewart	certain	banded dotterel	
+Anarhynchus bicinctus exilis	none	certain	Auckland Islands only	
+Microcarbo melanoleucos brevirostris	NI,SI,Stewart	certain	New Zealand little shag	
+Microcarbo melanoleucos melanoleucos	none	certain	Australian bird, vagrant here	
+Gerygone albofrontata	none	certain	Chatham Islands only	
+Hemiphaga chathamensis	none	certain	Chatham Islands only	
+Stercorarius antarctica lonnbergi	none	check	breeds subantarctic; ranges NZ coasts but not an inland covenant record	
+Anas chlorotis	NI,SINorthWest,Marlborough,Canterbury	certain	brown teal / pateke. Never the Auckland Island teal; outside the far south it is the North Island form	
+Anas chlorotis "South Island"	SouthernSI	check	the South Island brown teal, in the south of the South Island	
+Nestor meridionalis septentrionalis	NI	certain	North Island kaka	
+Nestor meridionalis meridionalis	SI,Stewart	certain	South Island kaka	
+Falco novaeseelandiae ferox	NI,SINorthWest	check	bush falcon: smallest and darkest; North Island and north-west South Island	
+Falco novaeseelandiae novaeseelandiae	SIEast,Marlborough	check	eastern falcon: largest and lightest; eastern and central South Island	
+Falco novaeseelandiae "southern"	Fiordland,Stewart	check	southern falcon: intermediate; Fiordland, Stewart Island and Auckland Island	
+# --- plants and invertebrates confined to islands ---
+Melicytus chathamicus	none	certain	Chatham Islands only	
+Coprosma chathamica	none	certain	Chatham Islands only	
+Myrsine chathamica	none	certain	Chatham Islands only	
+Macrolearia chathamica	none	certain	Chatham Islands only	
+Olearia traversiorum	none	certain	Chatham Islands only; widely planted on the mainland	
+Plagianthus regius subsp. chathamicus	none	certain	Chatham Islands only	
+Linum monogynum var. chathamicum	none	certain	Chatham Islands only	
+Cordyline obtecta	none	certain	Three Kings and Norfolk Island; planted on the mainland	
+Metrosideros kermadecensis	none	certain	Kermadec Islands only; very widely planted on the mainland	
+Alectryon excelsus subsp. grandis	none	certain	Three Kings Islands only	
+Coprosma macrocarpa subsp. macrocarpa	none	certain	Three Kings Islands only	
+Coprosma macrocarpa subsp. minor	NI	certain	northern North Island	
+Dolomedes schauinslandi	none	certain	Rangatira, Chatham Islands	
+Parsonsia praeruptis	FarNorth	certain	Surville Cliffs, North Cape; a few hectares	
+Kunzea sinclairii	GreatBarrier	certain	Great Barrier Island endemic	
+Pomaderris phylicifolia Lodd. ex Link subsp. phylicifolia	Northland,Auckland	certain	North Island; historically Northland to northern Waikato. Still at Te Paki, near Te Kao, and scattered south to near Orewa. Every iNaturalist record is north of Pukekohe, so the historic northern Waikato extent is not carried into the allow list and the Coromandel is excluded	
+Pomaderris apetala subsp. maritima	WaitomoTaranaki	certain	Tainui. Naturally from scattered sites on the western North Island coast between Kawhia Harbour and Mohakatino; now only Mokau and the Mohakatino River mouth. It has naturalised well in the drier eastern South Island, on Stewart Island and around Wellington, Napier, Hamilton and Cambridge, but NZTCS assesses the wild population, so a naturalised plant is not the Nationally Critical taxon	
+Pimelea aridula Cheeseman subsp. aridula	SI	check	eastern South Island	
+Pimelea aridula subsp. oliga	SI	check	eastern South Island	
+Alectryon excelsus subsp. excelsus	NI,SI	certain	mainland titoki	
+Geranium sessiliflorum var. arenarium	Foveaux,Stewart	certain	Endemic. South Island south of Otago Peninsula, throughout the Foveaux Strait area, and northern Stewart Island / Rakiura	Geranium brevicaule

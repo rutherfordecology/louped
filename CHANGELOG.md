@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.4.0 — 2026-10-27
+
+- **No NIWA data left: boundaries and rivers now CC BY 4.0.** NIWA's REC2 is
+  non-commercial, so:
+  - Boundaries come from Gisborne District Council's River Catchments layer
+    (a new `boundary.layer` mode in catchment.json). They match the old
+    REC2 traces to within 1–2.5%: Waimata 226.5 km², Whangārā 397 km² with
+    GDC's coastal catchments between the rivers.
+  - Rivers and streams are LINZ's NZ River Name Lines (Topo50 centrelines
+    with names, from the LINZ Data Service). LINZ's lines don't all run
+    downstream or meet at their ends, so the engine joins them into a
+    network, finds each network's outlet as its lowest end on the LiDAR,
+    and works out Strahler stream order from that.
+  - The REC2 options stay in the engine (`boundary.rivers`, layer
+    `rivers_rec2`) for non-commercial work, flagged on the About page.
+- **Scheduled rivers layer:** the rivers and streams scheduled in the
+  Tairāwhiti Resource Management Plan, with the plan schedule and species
+  (Gisborne District Council, CC BY 4.0). Clicking near a river now names it.
+- **Threatened species on the map, everything else as a list.** The map
+  shows dots only for species that are Threatened or At Risk under the NZ
+  Threat Classification System, coloured by status; the species list still
+  covers every species. A new `nztcs` engine step matches each species the
+  way Occurd does (GBIF taxon key, then name, then binomial; subspecies
+  settled by island, then the nominate), using Occurd's `nztcs.json` and
+  locality table, copied to `engine/data/nztcs/`. The list has Occurd's
+  NZTCS badges and filter chips (All species, Threatened & at risk, each
+  status, and ? where the subspecies isn't settled), the area summary counts
+  threatened and at-risk species, and the species download has their status.
+- Layers, species records and LiDAR rebuilt for the new boundaries.
+
 ## v0.3.2 — 2026-10-27
 
 - **LINZ base maps switched on, through the LINZ Data Service.** The aerial photo is the catchment's

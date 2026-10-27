@@ -19,7 +19,7 @@ cfg.basemapKey = loadSite().ldsKey || '';
 cfg.aerialLayer = cfg.basemap?.aerialLayer || null;
 if (!cfg.basemapKey) console.error('warning: no ldsKey in site.json, so the map uses Esri basemaps');
 else if (!cfg.aerialLayer) console.error('warning: no basemap.aerialLayer in catchment.json, so the aerial photo is from Esri');
-const sources = SOURCES.filter(s => s.uses(cfg)).map(s => ({ ...s, by: typeof s.by === 'function' ? s.by(cfg) : s.by, name: typeof s.name === 'function' ? s.name(cfg) : s.name }));
+const sources = SOURCES.filter(s => s.uses(cfg)).map(s => Object.fromEntries(Object.entries(s).map(([k, v]) => [k, typeof v === 'function' && k !== 'uses' ? v(cfg) : v])));
 
 // Map settings
 fs.writeFileSync(path('data/config.json'), JSON.stringify({

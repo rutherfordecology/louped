@@ -16,7 +16,7 @@
 :root {
   --bg: #f3f2ee; --panel: #fbfaf7; --ink: #1c1b18; --ink2: #56544c; --ink3: #8a877e;
   --line: #dddbd3; --hover: #e8f4ef; --sel: #1a5940; --accent: #2a7a58; --brand: #1a5940;
-  --river: #2f7fd0; --wet: #17a2a2; --qeii: #c96a00; --pma: #7348c9; --doc: #1f5fd1; --draw: #e0218a;
+  --river: #2f7fd0; --sched: #0f9d8a; --wet: #17a2a2; --qeii: #c96a00; --pma: #7348c9; --doc: #1f5fd1; --draw: #e0218a;
   --g-bird: #d6336c; --g-plant: #2f9e44; --g-fungi: #9c5d2e; --g-insect: #f08c00; --g-mammal: #6741d9; --g-herp: #0ca678; --g-fish: #1c7ed6; --g-inv: #e8590c; --g-other: #868e96;
   --mapbg: #dfe5df;
   --f-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
@@ -26,11 +26,11 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
   --line: #2b352f; --hover: #1d2b24; --sel: #9be3c6; --accent: #6dba9a; --brand: #143f2e;
-  --river: #6eb3ff; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; } }
+  --river: #6eb3ff; --sched: #3fd0bc; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
   --line: #2b352f; --hover: #1d2b24; --sel: #9be3c6; --accent: #6dba9a; --brand: #143f2e;
-  --river: #6eb3ff; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; }
+  --river: #6eb3ff; --sched: #3fd0bc; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; }
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
@@ -121,13 +121,24 @@ input[type=search] { width: 100%; }
 .sp:last-child { border-bottom: 0; }
 .sp.off .sp-name { opacity: .45; }
 input[type=checkbox] { accent-color: var(--accent); margin: 0; cursor: pointer; }
+/* NZTCS badges, Occurd's colours */
+.nztcs-badge { display: inline-block; font: 700 9.5px var(--f-body); letter-spacing: .03em; padding: 1px 4px; border-radius: 3px; vertical-align: 1px; margin-left: 5px; white-space: nowrap; color: #fff; }
+.nb-nc { background: #7B0D1E; } .nb-ne { background: #A3213A; } .nb-nv { background: #C0006E; } .nb-ar { background: #D4580A; }
+.nb-rc { background: #7AAE00; } .nb-ex { background: #1F2937; } .nb-oi { background: #6B21A8; }
+.nb-conflict { background: #faf0d9; color: #8a6020; border: 1px solid #d4a84b; }
+.nzchips { display: flex; flex-wrap: wrap; gap: 4px; }
+.nzchip { font: 600 11.5px var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 999px; padding: 2px 9px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; }
+.nzchip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.nzchip .n { font: 400 10.5px var(--f-data); opacity: .75; }
 .ll { color: var(--ink3); display: grid; place-items: center; border-radius: 4px; height: 22px; }
 .ll:hover { color: var(--accent); background: var(--bg); }
 .ll svg { width: 15px; height: 15px; }
 .sp:hover { background: var(--hover); }
 .sp[aria-current="true"] { background: var(--hover); box-shadow: inset 3px 0 0 var(--sel); }
 .sp-name { min-width: 0; display: grid; }
-.sp-name b { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-name b { font-weight: 600; font-size: 13px; display: flex; align-items: center; min-width: 0; }
+.sp-name b .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sp-name b .nztcs-badge { flex: none; }
 .sp-name i { font-size: 11.5px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-n { font: 11px var(--f-data); color: var(--ink3); text-align: right; font-variant-numeric: tabular-nums; }
 .bars { display: grid; gap: 4px; font-size: 12px; }
@@ -199,9 +210,10 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
           <label>Location within <select id="precSel"><option value="0">any distance</option><option value="1000">1 km</option><option value="100">100 m</option></select></label>
           <label>Licence <select id="licSel"><option value="0">any</option><option value="1">commercial use allowed</option></select></label>
         </div>
+        <div class="nzchips" id="nzChips" role="group" aria-label="Threat status (NZTCS)"></div>
         <input type="search" id="spSearch" placeholder="Find a species" aria-label="Find a species">
         <div class="row" style="justify-content: space-between;"><span class="eyebrow" id="spCount"></span><span class="row"><button class="btn" type="button" id="spClear" hidden>Show all species</button><button class="btn" type="button" id="llBtn" title="Photos of the ticked species in LookLike">Photos in LookLike</button></span></div>
-        <div class="note" id="spHelp">Tick species to show them on the map and to see their photos in LookLike. Click a name to show only its records.</div>
+        <div class="note" id="spHelp">Every species recorded in the area. Only threatened and at-risk species (NZTCS) are shown on the map; click one to see where it was recorded. Tick species to open their photos in LookLike.</div>
         <div class="spgroups" id="spList"></div>
       </section>
 
@@ -245,7 +257,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     const keys = cfg.layers;
     (await Promise.all(keys.map(k => getJSON('data/layers/' + k + '.json')))).forEach((fc, i) => V[keys[i]] = fc);
   } catch (e) { document.getElementById('summary').textContent = 'The map data didn\'t load. Reload the page to try again.'; return; }
-  const ALL_VECTORS = ['landcover', 'luc', 'overlays', 'overlay3a', 'wetlands', 'rivers', 'qeii', 'pma', 'doc'];
+  const ALL_VECTORS = ['landcover', 'luc', 'overlays', 'overlay3a', 'wetlands', 'rivers', 'scheduled', 'qeii', 'pma', 'doc'];
   ALL_VECTORS.forEach(k => V[k] = V[k] || { type: 'FeatureCollection', features: [] });
   const has = (k) => cfg.layers.includes(k) || !ALL_VECTORS.includes(k);
 
@@ -307,6 +319,25 @@ document.getElementById('ver').textContent = APP_VERSION;
   });
   gbif.rows = gbif.rows.filter(r => gbif.taxa[r[2]].name); // unnamed records say nothing about what was found
 
+  // NZTCS status (matched by the engine, as Occurd does). Threatened and At Risk
+  // species, and ones whose subspecies might be, are the ones shown on the map.
+  const NZ_CFG = { 'Nationally Critical': ['nc', 'NC'], 'Nationally Endangered': ['ne', 'NE'], 'Nationally Vulnerable': ['nv', 'NV'], 'Nationally Increasing': ['rc', 'NI'], 'Declining': ['ar', 'De'], 'Naturally Uncommon': ['ar', 'NU'], 'Relict': ['ar', 'Re'], 'Gradual Decline': ['ar', 'GD'], 'Serious Decline': ['ar', 'SD'], 'Sparse': ['ar', 'Sp'], 'Uncommon': ['ar', 'Un'], 'Recovering': ['rc', 'Rc'], 'Extinct': ['ex', 'Ex'], 'Introduced and Naturalised': ['oi', 'I&N'], 'Vagrant': ['oi', 'Va'] };
+  const NZ_TH = ['Nationally Critical', 'Nationally Endangered', 'Nationally Vulnerable', 'Nationally Increasing', 'Declining', 'Naturally Uncommon', 'Relict', 'Gradual Decline', 'Serious Decline', 'Sparse', 'Uncommon', 'Recovering', 'Extinct'];
+  const NZ_COL = { nc: '#7B0D1E', ne: '#A3213A', nv: '#C0006E', ar: '#D4580A', rc: '#7AAE00', ex: '#1F2937', conflict: '#d4a84b' };
+  gbif.taxa.forEach(t => {
+    const z = t.nztcs; t.nz = null; t.threat = false;
+    if (!z) return;
+    if (z.ambiguous) {
+      if (!z.options.some(o => NZ_TH.includes(o.status))) return;
+      t.nz = { cls: 'conflict', label: '?', status: '__ambiguous__', tip: 'Could be: ' + z.options.map(o => o.name + ' (' + o.status + ')').join('; ') };
+    } else {
+      const c = NZ_CFG[z.status]; if (!c) return;
+      t.nz = { cls: c[0], label: c[1] + (z.certain === false ? '*' : ''), status: z.status, tip: z.status + (z.year ? ' (' + z.year + ')' : '') + (z.name && z.name !== t.name ? ' · as ' + z.name : '') + (z.certain === false ? ' · unverified match' : '') };
+    }
+    t.threat = t.nz.status === '__ambiguous__' || NZ_TH.includes(t.nz.status);
+  });
+  const nzBadge = (t) => t.nz ? '<span class="nztcs-badge nb-' + t.nz.cls + '" title="' + esc(t.nz.tip) + '">' + esc(t.nz.label) + '</span>' : '';
+
   // Land cover classes shown (all to start); the dropdown under the layer ticks them
   const LC_HA = {}; V.landcover.features.forEach(f => { LC_HA[f.properties.c] = (LC_HA[f.properties.c] || 0) + turf.area(f) / 1e4; });
   const lcOn = new Set(Object.keys(LC_HA));
@@ -325,7 +356,9 @@ document.getElementById('ver').textContent = APP_VERSION;
     qeii: poly(V.qeii, () => ({ color: css('--qeii'), weight: 2, dashArray: '5 4', fillColor: css('--qeii'), fillOpacity: .12 }), lineR),
     pma: poly(V.pma, () => ({ color: css('--pma'), weight: 2, fillColor: css('--pma'), fillOpacity: .12 }), lineR),
     doc: poly(V.doc, () => ({ color: css('--doc'), weight: 2, fillColor: css('--doc'), fillOpacity: .12 }), lineR),
-    rivers: L.geoJSON(V.rivers, { renderer: lineR, interactive: false, style: f => riverStyle(f, 1) })
+    rivers: L.geoJSON(V.rivers, { renderer: lineR, interactive: false, style: f => riverStyle(f, 1) }),
+    // Rivers scheduled in the Tairāwhiti Resource Management Plan: a wide band over the river
+    scheduled: L.geoJSON(V.scheduled, { renderer: lineR, interactive: false, style: () => ({ color: css('--sched'), weight: 7, opacity: .45, lineCap: 'round' }) })
   };
 
   // LiDAR images: a 16 m overview when zoomed out, 4 m tiles in view when zoomed in
@@ -358,9 +391,10 @@ document.getElementById('ver').textContent = APP_VERSION;
 
   // Layers list: name, swatch, on, opacity; grouped, top of the map first
   const GROUPS_UI = [
-    ['Species', [['records', 'Species records (GBIF)', '<span class="dot" style="background: var(--g-bird)"></span>', true, 1]]],
+    ['Species', [['records', 'Threatened & at-risk species', '<span class="dot" style="background: #C0006E"></span>', true, 1]]],
     ['Water and protection', [
       ['rivers', 'Rivers and streams', '<span class="swatch" style="border-color: var(--river)"></span>', true, 1],
+      ['scheduled', 'Scheduled rivers (council plan)', '<span class="swatch" style="border-top-width: 5px; border-color: var(--sched); opacity: .6"></span>', false, 1],
       ['wetlands', 'Wetlands (council assessment)', '<span class="lfill" style="background: var(--wet)"></span>', true, 1],
       ['qeii', 'QEII covenants', '<span class="swatch" style="border-color: var(--qeii); border-top-style: dashed"></span>', true, 1],
       ['pma', 'Council protection management areas', '<span class="swatch" style="border-color: var(--pma)"></span>', true, 1],
@@ -391,6 +425,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     if (g.setOpacity && (k === 'aerial' || k === 'topo' || g.update)) g.setOpacity(s.op);
     else if (k === 'records') drawRecords();
     else if (k === 'rivers') g.eachLayer(l => l.setStyle(riverStyle(l.feature, s.op)));
+    else if (k === 'scheduled') g.setStyle({ opacity: .45 * s.op });
     else if (k === 'boundary') g.eachLayer(l => l.setStyle({ opacity: s.op }));
     else if (k === 'landcover') g.setStyle(f => lcStyle(f, s.op));
     else if (['qeii', 'pma', 'doc', 'wetlands'].includes(k)) g.setStyle({ opacity: s.op, fillOpacity: (k === 'wetlands' ? .45 : .12) * s.op });
@@ -432,6 +467,7 @@ document.getElementById('ver').textContent = APP_VERSION;
   // Legend for the coloured layers that are on
   function renderLegend() {
     const out = [], on = (k) => !!LSTATE[k]?.on;
+    if (on('records')) out.push('<div class="lg"><span>Threatened & at-risk species (NZTCS)</span><div class="keys">' + [['nc', 'Nationally Critical'], ['ne', 'Nationally Endangered'], ['nv', 'Nationally Vulnerable'], ['rc', 'Increasing or Recovering'], ['ar', 'At Risk'], ['conflict', 'Subspecies not settled']].map(([c, l]) => '<span><i class="dot" style="background:' + NZ_COL[c] + '"></i>' + l + '</span>').join('') + '</div></div>');
     if (on('chm')) out.push('<div class="lg"><span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div></div>');
     if (on('change')) out.push('<div class="lg"><span>Height change since ' + esc(lidar.surveys.before) + ', m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div></div>');
     if (on('landcover')) { const present = [...lcOn]; out.push('<div class="lg"><span>Land cover 2023</span><div class="keys">' + present.sort().map(c => '<span><i class="lfill" style="background:' + lcCol(c) + '"></i>' + esc(c) + '</span>').join('') + '</div></div>'); }
@@ -442,7 +478,7 @@ document.getElementById('ver').textContent = APP_VERSION;
 
   // Species filters. Ticked species show on the map (all to start); groups
   // fold away like Occurd's checklist.
-  const fState = { since: 0, prec: 0, noNC: false, taxon: null, search: '' };
+  const fState = { since: 0, prec: 0, noNC: false, taxon: null, search: '', nz: '' }; // nz: '' all species, 'th' threatened & at risk, or one status
   const hiddenTaxa = new Set(), openGroups = new Set();
   const NC = new Set(gbif.licences ? gbif.licences.map((l, i) => l === 'CC BY-NC' ? i : -1).filter(i => i >= 0) : []);
   if (!gbif.licences) document.getElementById('licSel').closest('label').hidden = true;
@@ -459,15 +495,18 @@ document.getElementById('ver').textContent = APP_VERSION;
   // base: the year, precision and licence filters; passes: also ticked, and the picked species
   const base = (r) => (!fState.since || r[3] >= fState.since) && (!fState.prec || (r[4] > 0 && r[4] <= fState.prec)) && (!fState.noNC || !NC.has(r[9]));
   const passes = (r, ignoreTaxon) => base(r) && !hiddenTaxa.has(r[2]) && (ignoreTaxon || fState.taxon == null || r[2] === fState.taxon);
+  const nzOk = (t) => !fState.nz || (fState.nz === 'th' ? t.threat : t.nz && t.nz.status === fState.nz);
+  // On the map: threatened and at-risk species only
+  const onMap = (r) => { const t = gbif.taxa[r[2]]; return t.threat && nzOk(t) && passes(r); };
   let scoped = []; // records in the area (whole or drawn), before filters
   const scope = () => { scoped = gbif.rows.filter(r => inDrawn(r[0], r[1])); };
 
   function drawRecords() {
     recLayer.clearLayers();
     const op = LSTATE.records.op;
-    scoped.filter(r => passes(r)).forEach(r => {
+    scoped.filter(onMap).forEach(r => {
       const t = gbif.taxa[r[2]];
-      L.circleMarker([r[1], r[0]], { renderer: pointR, radius: fState.taxon != null ? 5 : 3.5, color: '#fff', weight: .8, opacity: op, fillColor: GCOL[t.g], fillOpacity: .9 * op })
+      L.circleMarker([r[1], r[0]], { renderer: pointR, radius: fState.taxon != null ? 6 : 4.5, color: '#fff', weight: 1, opacity: op, fillColor: NZ_COL[t.nz.cls], fillOpacity: .95 * op })
         .on('click', (e) => { L.DomEvent.stop(e); showAt(e.latlng, r); }).addTo(recLayer);
     });
   }
@@ -478,6 +517,8 @@ document.getElementById('ver').textContent = APP_VERSION;
     const counts = new Map();
     scoped.forEach(r => { if (!base(r)) return; const c = counts.get(r[2]) || { n: 0, last: 0 }; c.n++; c.last = Math.max(c.last, r[3]); counts.set(r[2], c); });
     let list = [...counts.entries()].map(([i, c]) => ({ i, t: gbif.taxa[i], ...c }));
+    renderChips(list);
+    list = list.filter(x => nzOk(x.t));
     if (fState.search) list = list.filter(x => (x.t.name + ' ' + (x.t.en || '') + ' ' + (x.t.mi || '')).toLowerCase().includes(fState.search));
     list.sort((a, b) => b.n - a.n || a.t.label.localeCompare(b.t.label));
     listed = list;
@@ -485,7 +526,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     document.getElementById('spCount').textContent = shown.filter(x => x.t.rank === 'SPECIES').length.toLocaleString() + ' species · ' + shown.reduce((s, x) => s + x.n, 0).toLocaleString() + ' records';
     const row = (x) => '<li class="sp' + (hiddenTaxa.has(x.i) ? ' off' : '') + '" tabindex="0" data-i="' + x.i + '"' + (fState.taxon === x.i ? ' aria-current="true"' : '') + '>' +
       '<input type="checkbox" class="sp-cb"' + (hiddenTaxa.has(x.i) ? '' : ' checked') + ' aria-label="Show ' + esc(x.t.label) + ' on the map">' +
-      '<span class="sp-name"><b>' + esc(x.t.label) + '</b><i>' + esc(x.t.label !== x.t.name ? x.t.name : (x.t.family || x.t.order || '')) + (x.t.miExtra ? ' · ' + esc(x.t.miExtra) : '') + (x.t.iucn && !['LC', 'NE', 'DD', 'NA'].includes(x.t.iucn) ? ' · IUCN ' + x.t.iucn : '') + '</i></span>' +
+      '<span class="sp-name"><b><span class="nm">' + esc(x.t.label) + '</span>' + nzBadge(x.t) + '</b><i>' + esc(x.t.label !== x.t.name ? x.t.name : (x.t.family || x.t.order || '')) + (x.t.miExtra ? ' · ' + esc(x.t.miExtra) : '') + (x.t.iucn && !['LC', 'NE', 'DD', 'NA'].includes(x.t.iucn) ? ' · IUCN ' + x.t.iucn : '') + '</i></span>' +
       '<span class="sp-n">' + x.n + (x.last ? '<br>' + x.last : '') + '</span>' +
       (x.t.rank === 'SPECIES' ? '<a class="ll" href="' + lookLikeUrl([x.t.name]) + '" target="_blank" rel="noopener" title="Photos of ' + esc(x.t.label) + ' in LookLike">' + CAMERA + '</a>' : '<span></span>') + '</li>';
     document.getElementById('spList').innerHTML = GROUPS.map(([g, name]) => {
@@ -500,8 +541,17 @@ document.getElementById('ver').textContent = APP_VERSION;
     document.querySelectorAll('.spg-cb[data-mixed]').forEach(cb => { cb.indeterminate = true; });
     document.getElementById('spClear').hidden = fState.taxon == null;
   }
+  // NZTCS chips: all species, all threatened & at risk, then each status present (as Occurd)
+  function renderChips(list) {
+    const n = (f) => list.filter(x => x.t.rank === 'SPECIES' && f(x)).length, th = n(x => x.t.threat);
+    const chips = [['', 'All species', n(() => true)], ['th', 'Threatened & at risk', th]];
+    NZ_TH.forEach(st => { const k = n(x => x.t.nz && x.t.nz.status === st); if (k) chips.push([st, NZ_CFG[st][1], k, st]); });
+    const amb = n(x => x.t.nz && x.t.nz.status === '__ambiguous__'); if (amb) chips.push(['__ambiguous__', '?', amb, 'Subspecies not settled: could be threatened']);
+    document.getElementById('nzChips').innerHTML = chips.map(([k, label, c, tip]) => '<button class="nzchip" type="button" data-nz="' + esc(k) + '" aria-pressed="' + (fState.nz === k) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(label) + ' <span class="n">' + c + '</span></button>').join('');
+  }
+  document.getElementById('nzChips').addEventListener('click', e => { const b = e.target.closest('[data-nz]'); if (!b) return; fState.nz = b.dataset.nz; if (fState.nz) GROUPS.forEach(([g]) => openGroups.add(g)); refresh(); });
   const spList = document.getElementById('spList');
-  const pickTaxon = (li) => { const i = +li.dataset.i; fState.taxon = fState.taxon === i ? null : i; if (fState.taxon != null) hiddenTaxa.delete(i); drawRecords(); renderSpecies(); if (fState.taxon != null) { const b = L.latLngBounds(scoped.filter(r => r[2] === i && passes(r)).map(r => [r[1], r[0]])); if (b.isValid() && !LSTATE.records.on) document.querySelector('[data-key="records"] .eye').click(); if (b.isValid()) map.fitBounds(b, { padding: [40, 40], maxZoom: 15 }); } };
+  const pickTaxon = (li) => { const i = +li.dataset.i; fState.taxon = fState.taxon === i ? null : i; if (fState.taxon != null) hiddenTaxa.delete(i); drawRecords(); renderSpecies(); if (fState.taxon != null) { const b = L.latLngBounds(scoped.filter(r => r[2] === i && onMap(r)).map(r => [r[1], r[0]])); if (b.isValid() && !LSTATE.records.on) document.querySelector('[data-key="records"] .eye').click(); if (b.isValid()) map.fitBounds(b, { padding: [40, 40], maxZoom: 15 }); } };
   const toggleGroup = (head) => { const g = head.closest('.spg').dataset.g; openGroups.has(g) ? openGroups.delete(g) : openGroups.add(g); renderSpecies(); };
   spList.addEventListener('change', e => {
     if (e.target.classList.contains('sp-cb')) { const i = +e.target.closest('.sp').dataset.i; e.target.checked ? hiddenTaxa.delete(i) : hiddenTaxa.add(i); if (!e.target.checked && fState.taxon === i) fState.taxon = null; }
@@ -536,7 +586,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     const lc = {}; for (const f of V.landcover.features) { let c = null; try { c = drawn ? turf.intersect(f, shp) : f; } catch (e) {} if (c) lc[f.properties.c] = (lc[f.properties.c] || 0) + turf.area(c); }
     const nat = Object.entries(lc).filter(([k]) => NATIVE.has(k)).reduce((s, [, v]) => s + v, 0);
     const stat = (k, v) => '<div class="stat"><b>' + v + '</b><span>' + k + '</span></div>';
-    document.getElementById('areaStats').innerHTML = stat('Area', fmtHa(tot)) + stat('Native cover', Math.round(100 * nat / tot) + '%') + stat('Protected', fmtHa(prot)) + stat('Wetlands mapped', fmtHa(wet)) + stat('Rivers', (V.rivers.features.filter(f => !drawn || turf.booleanPointInPolygon(turf.along(f, turf.length(f) / 2), shp)).reduce((s, f) => s + turf.length(f), 0)).toFixed(0) + ' km') + stat('Species', new Set(scoped.filter(r => gbif.taxa[r[2]].rank === 'SPECIES').map(r => r[2])).size.toLocaleString());
+    document.getElementById('areaStats').innerHTML = stat('Area', fmtHa(tot)) + stat('Native cover', Math.round(100 * nat / tot) + '%') + stat('Protected', fmtHa(prot)) + stat('Wetlands mapped', fmtHa(wet)) + stat('Rivers', (V.rivers.features.filter(f => !drawn || turf.booleanPointInPolygon(turf.along(f, turf.length(f) / 2), shp)).reduce((s, f) => s + turf.length(f), 0)).toFixed(0) + ' km') + stat('Species', new Set(scoped.filter(r => gbif.taxa[r[2]].rank === 'SPECIES').map(r => r[2])).size.toLocaleString()) + stat('Threatened & at risk', new Set(scoped.filter(r => gbif.taxa[r[2]].threat).map(r => r[2])).size.toLocaleString());
     const rows = Object.entries(lc).sort((a, b) => b[1] - a[1]), max = rows.length ? rows[0][1] : 1;
     document.getElementById('coverBars').innerHTML = '<span class="eyebrow">Land cover 2023</span>' + rows.slice(0, 8).map(([k, v]) => '<div class="barrow"><span class="lab"><i class="lfill" style="background:' + lcCol(k) + '"></i><span>' + esc(k) + '</span></span><span class="v">' + fmtHa(v) + '</span><span class="track"><i style="width:' + (100 * v / max).toFixed(1) + '%;background:' + lcCol(k) + '"></i></span></div>').join('');
     document.getElementById('areaLinks').innerHTML = '<button class="btn" type="button" id="dlSpecies">Species list (CSV)</button><button class="btn" type="button" id="dlRecords">Records (CSV)</button>' + (drawn ? '<button class="btn" type="button" id="dlShape">Drawn area (GeoJSON)</button>' : '');
@@ -549,8 +599,8 @@ document.getElementById('ver').textContent = APP_VERSION;
   function save(text, name, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
   function downloadSpecies() {
     const m = new Map(); scoped.filter(r => passes(r, true)).forEach(r => { const c = m.get(r[2]) || { n: 0, first: 9999, last: 0 }; c.n++; if (r[3]) { c.first = Math.min(c.first, r[3]); c.last = Math.max(c.last, r[3]); } m.set(r[2], c); });
-    const rows = [['scientific_name', 'common_name', 'maori_name', 'group', 'family', 'order', 'class', 'kingdom', 'iucn', 'records', 'first_year', 'last_year', 'gbif_taxon_key']];
-    [...m.entries()].sort((a, b) => b[1].n - a[1].n).forEach(([i, c]) => { const t = gbif.taxa[i]; rows.push([t.name, t.en || '', t.mi || '', GROUPS.find(g => g[0] === t.g)[1], t.family, t.order, t.cls, t.kingdom, t.iucn, c.n, c.first === 9999 ? '' : c.first, c.last || '', t.key]); });
+    const rows = [['scientific_name', 'common_name', 'maori_name', 'group', 'family', 'order', 'class', 'kingdom', 'iucn', 'nztcs_status', 'records', 'first_year', 'last_year', 'gbif_taxon_key']];
+    [...m.entries()].sort((a, b) => b[1].n - a[1].n).forEach(([i, c]) => { const t = gbif.taxa[i]; rows.push([t.name, t.en || '', t.mi || '', GROUPS.find(g => g[0] === t.g)[1], t.family, t.order, t.cls, t.kingdom, t.iucn, t.nz ? (t.nz.status === '__ambiguous__' ? t.nz.tip : t.nz.status) : (t.nztcs && t.nztcs.status) || '', c.n, c.first === 9999 ? '' : c.first, c.last || '', t.key]); });
     save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_species' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
   }
   function downloadRecords() {
@@ -590,16 +640,21 @@ document.getElementById('ver').textContent = APP_VERSION;
   const hit = (fc, pt) => fc.features.filter(f => { try { return turf.booleanPointInPolygon(pt, f); } catch (e) { return false; } });
   function showAt(latlng, rec) {
     const pt = turf.point([latlng.lng, latlng.lat]), out = [];
-    const near = []; if (LSTATE.records.on) { const p0 = map.latLngToContainerPoint(latlng); scoped.forEach(r => { if (passes(r) && map.latLngToContainerPoint([r[1], r[0]]).distanceTo(p0) < 8) near.push(r); }); }
+    const near = []; if (LSTATE.records.on) { const p0 = map.latLngToContainerPoint(latlng); scoped.forEach(r => { if (onMap(r) && map.latLngToContainerPoint([r[1], r[0]]).distanceTo(p0) < 8) near.push(r); }); }
     if (rec && !near.includes(rec)) near.unshift(rec);
     if (near.length) {
-      out.push('<h3>Species records (' + near.length + ')</h3>' + near.slice(0, 6).map(r => { const t = gbif.taxa[r[2]]; return '<div class="rec"><b>' + esc(t.label) + '</b>' + (t.label !== t.name ? ' <i>' + esc(t.name) + '</i>' : '') + '<br>' + esc(r[8] || r[3] || 'no date') + ' · ' + (r[4] ? 'within ' + (r[4] >= 1000 ? (r[4] / 1000).toFixed(1) + ' km' : Math.round(r[4]) + ' m') : 'precision not given') + '<br>' + esc(gbif.datasets[r[6]].name) + (gbif.licences ? ' · ' + esc(gbif.licences[r[9]]) : '') + ' · <a href="https://www.gbif.org/occurrence/' + r[7] + '" target="_blank" rel="noopener">GBIF record</a></div>'; }).join('') + (near.length > 6 ? '<div class="rec">and ' + (near.length - 6) + ' more here</div>' : ''));
+      out.push('<h3>Threatened & at-risk records (' + near.length + ')</h3>' + near.slice(0, 6).map(r => { const t = gbif.taxa[r[2]]; return '<div class="rec"><b>' + esc(t.label) + '</b>' + nzBadge(t) + (t.label !== t.name ? ' <i>' + esc(t.name) + '</i>' : '') + '<br>' + esc(r[8] || r[3] || 'no date') + ' · ' + (r[4] ? 'within ' + (r[4] >= 1000 ? (r[4] / 1000).toFixed(1) + ' km' : Math.round(r[4]) + ' m') : 'precision not given') + '<br>' + esc(gbif.datasets[r[6]].name) + (gbif.licences ? ' · ' + esc(gbif.licences[r[9]]) : '') + ' · <a href="https://www.gbif.org/occurrence/' + r[7] + '" target="_blank" rel="noopener">GBIF record</a></div>'; }).join('') + (near.length > 6 ? '<div class="rec">and ' + (near.length - 6) + ' more here</div>' : ''));
       unc.clearLayers(); near.slice(0, 6).forEach(r => { if (r[4] > 0) L.circle([r[1], r[0]], { radius: r[4], renderer: lineR, color: GCOL[gbif.taxa[r[2]].g], weight: 1.5, fillOpacity: .08, interactive: false }).addTo(unc); });
     } else unc.clearLayers();
     const inArea = turf.booleanPointInPolygon(pt, area.outline);
     if (inArea) {
       const cat = hit(area.parts, pt)[0]; if (cat) out.push('<h3>Catchment</h3>' + esc(cat.properties.name));
       const lc = hit(V.landcover, pt)[0]; if (lc) { const p = lc.properties; out.push('<h3>Land cover 2023</h3>' + esc(p.c) + (p.c01 && p.c01 !== p.c ? '<br><span style="color:#6b776f">2001: ' + esc(p.c01) + '</span>' : '')); }
+      // Rivers within a few pixels of the click
+      const tol = 10 * 40075016 * Math.cos(latlng.lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+      const nearLine = (fc) => { let best = null, bd = tol; for (const f of fc.features) { try { const d = turf.pointToLineDistance(pt, f, { units: 'meters' }); if (d < bd) { bd = d; best = f; } } catch (e) {} } return best; };
+      const rv = LSTATE.rivers?.on && nearLine(V.rivers); if (rv) out.push('<h3>River or stream</h3>' + esc(rv.properties.name || 'Unnamed stream') + (rv.properties.order ? ' · stream order ' + rv.properties.order : ''));
+      const sc = nearLine(V.scheduled); if (sc) { const p = sc.properties; out.push('<h3>Scheduled river (council plan)</h3>' + esc(p.name) + (p.schedule ? ', Schedule ' + esc(p.schedule) : '') + (p.species ? '<br><span style="color:#6b776f">' + esc(p.species) + '</span>' : '')); }
       const w = hit(V.wetlands, pt)[0]; if (w) { const p = w.properties; out.push('<h3>Wetland (council assessment)</h3>' + esc([p.cls, p.sys].filter(Boolean).join(', ')) + (p.status ? '<br>Status: ' + esc(p.status) : '') + (p.conf ? '<br>Confidence: ' + esc(p.conf) : '') + (p.value ? '<br>Assumed value: ' + esc(p.value) : '')); }
       const prot = [...hit(V.qeii, pt), ...hit(V.pma, pt), ...hit(V.doc, pt)].map(f => esc(f.properties.name + (f.properties.type ? ' (' + f.properties.type + ')' : '')));
       if (prot.length) out.push('<h3>Protection</h3>' + prot.join('<br>'));

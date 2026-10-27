@@ -1,8 +1,15 @@
-// Catchment boundaries for named rivers, traced upstream through NIWA's REC2
-// river network and merged from REC2 watersheds. Settings in catchment.json:
-//   "boundary": { "bbox": [minLng, minLat, maxLng, maxLat], "rivers": ["Waimata"], "coast": false }
-// "coast" also takes in the small streams reaching the sea between the rivers.
-// A boundary from elsewhere: "boundary": { "file": "inputs/catchments.geojson" }
+// Catchment boundaries. Settings in catchment.json, one of:
+// 1. From a catchment polygon layer (e.g. Gisborne District Council's River
+//    Catchments, CC BY 4.0): each part is the polygons whose `field` has that value.
+//    "boundary": { "layer": "<ArcGIS FeatureServer layer URL>", "field": "SubCatchment",
+//                  "parts": { "Waimata": "Waimata River" },
+//                  "coast": { "values": ["Coastal", "Other"], "label": "Coastal streams" } }
+//    "coast" adds the small coastal catchments lying between the parts.
+// 2. Traced upstream through NIWA's REC2 river network (CC BY-NC 4.0, so not
+//    for commercial use) and merged from REC2 watersheds:
+//    "boundary": { "bbox": [minLng, minLat, maxLng, maxLat], "rivers": ["Waimata"], "coast": false }
+//    "coast" also takes in the small streams reaching the sea between the rivers.
+// 3. A boundary from elsewhere: "boundary": { "file": "inputs/catchments.geojson" }
 // (a FeatureCollection with a "name" on each part); this step then does nothing.
 // usage: node engine/steps/boundary.mjs <catchment folder>
 import * as turf from '@turf/turf';
@@ -13,6 +20,41 @@ const { cfg, path } = loadCatchment(process.argv[2]);
 const outFile = path('inputs/catchments.geojson');
 if (cfg.boundary.file) { console.error('boundary from ' + cfg.boundary.file); process.exit(0); }
 fs.mkdirSync(path('inputs'), { recursive: true });
+
+// Holes between neighbouring polygons are filled; specks under 1 ha dropped
+const tidy = (u, label, n) => {
+  const g = u.geometry, polys = (g.type === 'Polygon' ? [g.coordinates] : g.coordinates).map(p => [p[0]]).filter(p => turf.area(turf.polygon(p)) > 1e4);
+  const f = turf.truncate(polys.length === 1 ? turf.polygon(polys[0]) : turf.multiPolygon(polys), { precision: 5 });
+  f.properties = { name: label, polygons: n, km2: +(turf.area(f) / 1e6).toFixed(1) };
+  console.error(label + ': ' + n + ' polygons, ' + f.properties.km2 + ' km²');
+  return f;
+};
+if (cfg.boundary.layer) {
+  const B = cfg.boundary, cw = (r) => { let a = 0; for (let i = 0; i < r.length - 1; i++) a += (r[i + 1][0] - r[i][0]) * (r[i + 1][1] + r[i][1]); return a > 0; };
+  const get = async (where) => {
+    const body = new URLSearchParams({ f: 'json', outSR: '4326', where, outFields: B.field, returnGeometry: 'true', resultRecordCount: '2000' });
+    for (let i = 0; ; i++) { try { const j = await (await fetch(B.layer + '/query', { method: 'POST', body })).json(); if (j.error) throw new Error(JSON.stringify(j.error)); return j.features; } catch (e) { if (i === 2) throw e; await new Promise(r => setTimeout(r, 3000)); } }
+  };
+  // Outer rings only: catchments don't have holes worth keeping
+  const toGeo = (g) => { const o = g.rings.filter(cw).map(r => [r.slice().reverse()]); return o.length === 1 ? turf.polygon(o[0]) : turf.multiPolygon(o); };
+  const unite = (list) => list.reduce((a, b) => a ? turf.union(a, b) : b, null);
+  const q = (v) => "'" + String(v).replace(/'/g, "''") + "'";
+  const out = [];
+  for (const [value, label] of Object.entries(B.parts)) {
+    const polys = (await get(B.field + ' = ' + q(value))).map(f => toGeo(f.geometry));
+    if (!polys.length) throw new Error('no ' + B.field + ' = ' + value + ' in ' + B.layer);
+    out.push(tidy(unite(polys), label, polys.length));
+  }
+  if (B.coast) {
+    // Coastal catchments whose middle lies within the hull of the named parts
+    const hull = turf.convex(turf.featureCollection(out));
+    const polys = (await get(B.field + ' IN (' + B.coast.values.map(q).join(',') + ')')).map(f => toGeo(f.geometry))
+      .filter(p => turf.booleanPointInPolygon(turf.pointOnFeature(p), hull));
+    if (polys.length) out.push(tidy(unite(polys), B.coast.label || 'Coastal streams', polys.length));
+  }
+  fs.writeFileSync(outFile, JSON.stringify(turf.featureCollection(out)));
+  process.exit(0);
+}
 const bboxArg = cfg.boundary.bbox.join(','), names = [...cfg.boundary.rivers];
 const RIV = 'https://services3.arcgis.com/fp1tibNcN9mbExhG/arcgis/rest/services/NZ_Rivers_and_Names_WFL1/FeatureServer/0/query';
 const WS = 'https://services3.arcgis.com/fp1tibNcN9mbExhG/arcgis/rest/services/REC2_Layers/FeatureServer/1/query';

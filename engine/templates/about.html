@@ -29,7 +29,7 @@
     <li><b>Layers.</b> Turn layers on and off with the eye, and fade them with the slider. Under land cover, <i>classes</i> lets you show only some kinds of cover, such as native vegetation.</li>
     <li><b>What's here.</b> Click anywhere to see every layer at that spot, and any species records nearby.</li>
     <li><b>Your block.</b> <i>Draw an area</i> around a property or block to get its species list, land cover and protected areas, and download them.</li>
-    <li><b>Species.</b> Species are grouped; click a group to open it. Tick species to show them on the map, click a name to see only its records, and use the camera (or <i>Photos in LookLike</i>) to see photos.</li>
+    <li><b>Species.</b> The species list covers every species recorded in the area, grouped by kind; click a group to open it. Only threatened and at-risk species are shown on the map, coloured by their NZ Threat Classification. The chips above the list filter it by threat status. Click a threatened species to see where it was recorded, and use the camera (or <i>Photos in LookLike</i>) to see photos.</li>
   </ul>
 
   <h2>The catchment</h2>
@@ -38,7 +38,8 @@
   <h2>Species records</h2>
   <p>{{GBIF_SUMMARY}}</p>
   <ul>
-    <li>Records are shown where GBIF publishes them. Nothing is blurred on this map.</li>
+    <li>Threat status is the New Zealand Threat Classification System (NZTCS), matched to each species as Occurd does: by GBIF's taxon, then by name. Where NZTCS assesses subspecies, the one found on this island is used, then the nominate subspecies; if that still leaves a threatened possibility, the species is marked <b>?</b>. A <b>*</b> means the match was by species name only.</li>
+    <li>Threatened and at-risk records are shown where GBIF publishes them. Nothing is blurred on this map.</li>
     <li>Left out: records whose location was already hidden by their source (for example iNaturalist obscures threatened species to about 28 km), records that could be more than {{MAX_UNC_KM}} km off, records with no name, and sea species recorded at the coast{{EXCLUDED}}.</li>
     <li>Records cluster along roads, tracks and towns, where people go. Few records means few visits, not few species.</li>
   </ul>
