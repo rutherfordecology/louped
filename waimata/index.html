@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Waimata Biodiversity Map</title>
+<meta name="description" content="Layers for the Waimata catchment, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* Map on the left, layers and species on the right (stacked on phones).
+   Survey-sheet type; data colours carry meaning, chrome stays quiet. */
+:root {
+  --bg: #eef1ed; --panel: #f8faf7; --ink: #18211c; --ink2: #4b5a51; --ink3: #7d8a81;
+  --line: #d3dbd4; --hover: #e4ebe5; --sel: #0b4d47; --accent: #0b4d47;
+  --river: #2f7fd0; --wet: #17a2a2; --qeii: #c96a00; --pma: #7348c9; --doc: #1f5fd1; --draw: #e0218a;
+  --g-bird: #d6336c; --g-plant: #2f9e44; --g-fungi: #9c5d2e; --g-insect: #f08c00; --g-mammal: #6741d9; --g-herp: #0ca678; --g-fish: #1c7ed6; --g-inv: #e8590c; --g-other: #868e96;
+  --mapbg: #dfe5df;
+  --f-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --f-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --f-data: 'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
+  --line: #2b352f; --hover: #202923; --sel: #9be3c6; --accent: #9be3c6;
+  --river: #6eb3ff; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
+  --line: #2b352f; --hover: #202923; --sel: #9be3c6; --accent: #9be3c6;
+  --river: #6eb3ff; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; }
+.app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 410px; }
+#map { height: 100%; background: var(--mapbg); }
+.leaflet-container { background: var(--mapbg); font-family: var(--f-body); }
+.drawing .leaflet-container { cursor: crosshair; }
+.px img.leaflet-image-layer { image-rendering: pixelated; }
+.panel { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.scroll { overflow-y: auto; min-height: 0; flex: 1; }
+.sec { padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0; }
+.sub { color: var(--ink2); font-size: 12.5px; line-height: 1.45; }
+.eyebrow { font: 600 10.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.row2 { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 12.5px; color: var(--ink2); }
+.row2 label { display: inline-flex; gap: 6px; align-items: center; }
+.chip { font: 600 12px var(--f-body); border: 1px solid var(--line); background: transparent; color: var(--ink2); border-radius: 999px; padding: 3px 9px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.chip .n { font: 400 10.5px var(--f-data); opacity: .75; }
+.btn { font: 600 12px var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 4px; padding: 5px 10px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.btn:hover { background: var(--hover); }
+.btn[aria-pressed="true"] { background: var(--sel); color: var(--panel); border-color: var(--sel); }
+.btn[disabled] { opacity: .4; cursor: default; }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+select, input[type=range] { accent-color: var(--accent); }
+select, input[type=search] { font: 12.5px var(--f-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+input[type=search] { width: 100%; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.swatch { width: 14px; height: 0; border-top: 2px solid; display: inline-block; }
+.lfill { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+/* Layers */
+.layers-box > summary { cursor: pointer; }
+.group-name { font: 600 10.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); padding: 8px 0 2px; }
+.layers { list-style: none; margin: 0; padding: 0; display: grid; }
+.layer { display: grid; grid-template-columns: 26px 18px minmax(0, 1fr) 64px; gap: 6px; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.layer.off .lname, .layer.off .lswatch { opacity: .4; }
+.eye { width: 24px; height: 22px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); cursor: pointer; display: grid; place-items: center; padding: 0; }
+.eye svg { width: 15px; height: 15px; }
+.lname { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lswatch { display: grid; place-items: center; }
+.layer input[type=range] { width: 64px; min-width: 0; margin: 0; }
+.legend { display: grid; gap: 6px; font-size: 11.5px; color: var(--ink2); }
+.legend .lg { display: grid; gap: 3px; }
+.legend .keys { display: flex; flex-wrap: wrap; gap: 3px 10px; }
+.legend .keys span { display: inline-flex; gap: 5px; align-items: center; }
+.ramp { height: 8px; border-radius: 2px; }
+.ticks { display: flex; justify-content: space-between; font: 10.5px var(--f-data); color: var(--ink3); }
+/* Species */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--bg); border-radius: 4px; padding: 7px 8px; min-width: 0; }
+.stat b { display: block; font: 500 15px var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat span { font-size: 10.5px; color: var(--ink3); letter-spacing: .04em; text-transform: uppercase; }
+.splist { list-style: none; margin: 0; padding: 0; }
+.sp { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.sp:hover { background: var(--hover); }
+.sp[aria-current="true"] { background: var(--hover); box-shadow: inset 3px 0 0 var(--sel); }
+.sp-name { min-width: 0; display: grid; }
+.sp-name b { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-name i { font-size: 11.5px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-n { font: 11px var(--f-data); color: var(--ink3); text-align: right; font-variant-numeric: tabular-nums; }
+.bars { display: grid; gap: 4px; font-size: 12px; }
+.barrow { display: grid; grid-template-columns: minmax(0, 1fr) 56px; gap: 8px; align-items: center; }
+.barrow .lab { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.barrow .lab span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barrow .v { font: 11px var(--f-data); color: var(--ink2); text-align: right; }
+.barrow .track { grid-column: 1 / -1; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.barrow .track i { display: block; height: 100%; }
+.note { font-size: 12px; color: var(--ink2); line-height: 1.5; }
+details.about { font-size: 12.5px; color: var(--ink2); line-height: 1.55; }
+details.about summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px; }
+.leaflet-popup-content { font: 12.5px/1.45 var(--f-body); margin: 10px 12px; }
+.leaflet-popup-content h3 { font: 600 11px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #6b776f; margin: 8px 0 2px; }
+.leaflet-popup-content h3:first-child { margin-top: 0; }
+.leaflet-popup-content .rec { padding: 3px 0; border-top: 1px solid #e3e8e4; }
+.leaflet-control-attribution { font-size: 10px; }
+.more { text-align: center; padding-top: 6px; }
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 50vh minmax(0, 1fr); }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div id="map" role="region" aria-label="Map of the catchment"></div>
+  <aside class="panel">
+    <div class="scroll">
+      <section class="sec">
+        <h1 id="heading">Catchment biodiversity map</h1>
+        <div class="sub" id="summary">Loading…</div>
+      </section>
+
+      <section class="sec">
+        <details class="layers-box" open>
+          <summary class="eyebrow">Layers</summary>
+          <div id="layerGroups"></div>
+          <div class="legend" id="legend"></div>
+        </details>
+      </section>
+
+      <section class="sec" aria-labelledby="areaTitle">
+        <div class="row" style="justify-content: space-between;">
+          <h2 id="areaTitle">Whole area</h2>
+          <div class="row">
+            <button class="btn" type="button" id="drawBtn" aria-pressed="false">Draw an area</button>
+            <button class="btn" type="button" id="clearDraw" hidden>Back to whole area</button>
+          </div>
+        </div>
+        <div class="note" id="drawHelp" hidden>Click around your property or block. Double-click, or click the first point, to finish.</div>
+        <div class="stats" id="areaStats"></div>
+        <div class="bars" id="coverBars"></div>
+        <div class="row" id="areaLinks"></div>
+      </section>
+
+      <section class="sec" aria-labelledby="spTitle">
+        <div class="row" style="justify-content: space-between;"><h2 id="spTitle">Species records</h2><span class="eyebrow" id="gbifDate"></span></div>
+        <div class="row" id="groupChips" role="group" aria-label="Groups shown"></div>
+        <div class="row2">
+          <label>Since <select id="sinceSel"><option value="0">any year</option><option value="2000">2000</option><option value="2010">2010</option><option value="2020">2020</option></select></label>
+          <label>Location within <select id="precSel"><option value="0">any distance</option><option value="1000">1 km</option><option value="100">100 m</option></select></label>
+        </div>
+        <input type="search" id="spSearch" placeholder="Find a species" aria-label="Find a species">
+        <div class="row" style="justify-content: space-between;"><span class="eyebrow" id="spCount"></span><button class="btn" type="button" id="spClear" hidden>Show all species</button></div>
+        <ul class="splist" id="spList"></ul>
+        <div class="more"><button class="btn" type="button" id="spMore" hidden>Show more</button></div>
+      </section>
+
+      <section class="sec">
+        <details class="about">
+          <summary>About the data</summary>
+          <ul>
+            <li id="boundaryNote"></li>
+            <li>Species records are every public GBIF record in the area, at the location GBIF publishes. Some records are already blurred by their source (for example iNaturalist hides threatened species); their circle shows how far off they could be. Records cluster where people go, so few records means few visits, not few species.</li>
+            <li>Canopy height is the LINZ LiDAR surface model less the ground model (2023), shown at 4 m when zoomed in and 16 m when zoomed out. Height change is against the 2018–20 survey; changes under 2 m are left clear.</li>
+            <li>Land cover is LCDB v6 (2023). Wetlands are Gisborne District Council's provisional regional wetland assessment (2022), not all field-checked. Land use capability is NZLRI. Land Overlays 1–3 and 3A are the council's erosion-susceptibility overlays.</li>
+            <li>Click anywhere on the map to see every layer at that spot.</li>
+          </ul>
+          <p style="margin:10px 0 0;">Data: GBIF.org (snapshot <span id="gbifDate2"></span>); LINZ LiDAR 1 m DEM and DSM, Gisborne 2018–20 and 2023 (CC BY 4.0); LCDB v6, Manaaki Whenua (CC BY 4.0); NIWA REC2; NZLRI; Gisborne District Council; QEII National Trust; DOC (CC BY 4.0). Imagery: Esri, Maxar, Earthstar Geographics. Built by <a href="https://sites.google.com/view/rutherford-ecology/home" target="_blank" rel="noopener">Rutherford Ecology</a>. <span id="ver"></span></p>
+        </details>
+      </section>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<script>
+const APP_VERSION = 'v0.2.0';
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17.3 17.3 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+document.getElementById('ver').textContent = APP_VERSION;
+
+(async function () {
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmtHa = (m2) => { const ha = m2 / 1e4; return ha >= 100 ? Math.round(ha).toLocaleString() + ' ha' : ha >= 1 ? ha.toFixed(1) + ' ha' : ha.toFixed(2) + ' ha'; };
+  const getJSON = async (u) => (await fetch(u)).json();
+
+  let area, lidar, gbif, cfg; const V = {};
+  try {
+    [cfg, area, lidar, gbif] = await Promise.all([getJSON('data/config.json'), getJSON('data/layers/area.json'), getJSON('data/lidar/index.json').catch(() => ({ tiles: [], overview: null })), getJSON('data/gbif.json')]);
+    const keys = ['landcover', 'luc', 'overlays', 'overlay3a', 'wetlands', 'rivers', 'qeii', 'pma', 'doc'];
+    (await Promise.all(keys.map(k => getJSON('data/layers/' + k + '.json')))).forEach((fc, i) => V[keys[i]] = fc);
+  } catch (e) { document.getElementById('summary').textContent = 'The map data didn\'t load. Reload the page to try again.'; return; }
+
+  // This catchment's wording (data/config.json)
+  document.getElementById('heading').textContent = cfg.title;
+  document.getElementById('map').setAttribute('aria-label', 'Map of ' + cfg.mapLabel);
+  document.getElementById('boundaryNote').textContent = cfg.boundaryNote;
+
+  // Map, panes bottom to top
+  const map = L.map('map', { zoomSnap: 0.25, maxZoom: 19 });
+  map.attributionControl.setPrefix(false);
+  [['rasters', 250], ['fills', 410], ['lines', 430], ['points', 450]].forEach(([p, z]) => { map.createPane(p); map.getPane(p).style.zIndex = z; });
+  const fillR = L.canvas({ pane: 'fills', padding: 0.3 }), lineR = L.canvas({ pane: 'lines', padding: 0.3 }), pointR = L.canvas({ pane: 'points', padding: 0.3, tolerance: 4 });
+  const aerial = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 });
+  const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 });
+  map.attributionControl.addAttribution('GBIF.org · LiDAR: LINZ CC BY 4.0 · LCDB v6 Manaaki Whenua · NIWA · GDC · QEII · DOC');
+  const outline = L.geoJSON(area.outline, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 2.5, opacity: 1, fill: false }) });
+  const parts = L.geoJSON(area.parts, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 1, opacity: .8, dashArray: '5 4', fill: false }) });
+  const boundary = L.layerGroup([parts, outline]);
+  map.fitBounds(outline.getBounds(), { padding: [10, 10] });
+
+  // Colours
+  const LC = {
+    'Indigenous Forest': '#1d5e3a', 'Broadleaved Indigenous Hardwoods': '#3f8f4f', 'Manuka and/or Kanuka': '#8cc06a', 'Fernland': '#a7c97e', 'Matagouri or Grey Scrub': '#b5b07a', 'Sub Alpine Shrubland': '#9fb98a',
+    'Exotic Forest': '#7d6b3a', 'Forest - Harvested': '#c8a07a', 'Deciduous Hardwoods': '#b3a35e', 'Gorse and/or Broom': '#e2c84a', 'Mixed Exotic Shrubland': '#cdb36d',
+    'High Producing Exotic Grassland': '#dbe9a6', 'Low Producing Grassland': '#ece0ad', 'Short-rotation Cropland': '#f1c27a', 'Orchard, Vineyard or Other Perennial Crop': '#e3995b',
+    'Herbaceous Freshwater Vegetation': '#3fb6b0', 'Herbaceous Saline Vegetation': '#7fb9c9', 'Flaxland': '#5c9c7a', 'Lake or Pond': '#3c86c8', 'River': '#4a96d6', 'Estuarine Open Water': '#6aa6cf',
+    'Gravel and Rock': '#bdb7ab', 'Sand and Gravel': '#d8cfb6', 'Landslide': '#a5785a', 'Surface Mine or Dump': '#8d8d8d', 'Built-up Area (settlement)': '#c94b4b', 'Urban Parkland/Open Space': '#b6d7a8', 'Transport Infrastructure': '#999'
+  };
+  const lcCol = (c) => LC[c] || '#cccccc';
+  const NATIVE = new Set(['Indigenous Forest', 'Broadleaved Indigenous Hardwoods', 'Manuka and/or Kanuka', 'Fernland', 'Matagouri or Grey Scrub', 'Flaxland', 'Herbaceous Freshwater Vegetation', 'Herbaceous Saline Vegetation']);
+  const LUC_COL = { 1: '#1a9850', 2: '#66bd63', 3: '#a6d96a', 4: '#d9ef8b', 5: '#fee08b', 6: '#fdae61', 7: '#f46d43', 8: '#a50026' };
+  const OV_COL = { 'Land 1': '#fff3b0', 'Land 2': '#ffd166', 'Land 3': '#f4845f' };
+  const GROUPS = [['bird', 'Birds', '--g-bird'], ['plant', 'Plants', '--g-plant'], ['fungi', 'Fungi', '--g-fungi'], ['insect', 'Insects', '--g-insect'], ['inv', 'Other invertebrates', '--g-inv'], ['mammal', 'Mammals', '--g-mammal'], ['herp', 'Reptiles & frogs', '--g-herp'], ['fish', 'Fish', '--g-fish'], ['other', 'Microbes & other', '--g-other']];
+  const GCOL = Object.fromEntries(GROUPS.map(([k, , v]) => [k, css(v)]));
+  // GBIF's backbone leaves class blank for many ray-finned fish
+  const FISH_ORDERS = new Set(['Anguilliformes', 'Osmeriformes', 'Galaxiiformes', 'Perciformes', 'Gobiiformes', 'Salmoniformes', 'Cypriniformes', 'Mugiliformes', 'Pleuronectiformes', 'Clupeiformes', 'Siluriformes', 'Cyprinodontiformes', 'Atheriniformes', 'Scorpaeniformes']);
+  // Common names GBIF gets wrong for New Zealand
+  const NAME_FIX = { 'Canis lupus': 'Dog', 'Bos taurus': 'Cattle', 'Ovis aries': 'Sheep', 'Anguilla australis': 'Shortfin eel', 'Galaxias maculatus': 'Īnanga', 'Trichosurus vulpecula': 'Brushtail possum', 'Oryctolagus cuniculus': 'Rabbit' };
+  const groupOf = (t) => t.kingdom === 'Plantae' ? 'plant' : t.kingdom === 'Fungi' ? 'fungi' : t.kingdom !== 'Animalia' ? 'other'
+    : t.cls === 'Aves' ? 'bird' : t.cls === 'Insecta' ? 'insect' : t.cls === 'Mammalia' ? 'mammal' : (t.cls === 'Reptilia' || t.cls === 'Amphibia' || t.cls === 'Squamata') ? 'herp'
+    : (['Actinopterygii', 'Teleostei', 'Chondrichthyes', 'Elasmobranchii', 'Petromyzonti', 'Cephalaspidomorphi'].includes(t.cls) || (t.phylum === 'Chordata' && !t.cls && FISH_ORDERS.has(t.order))) ? 'fish' : t.phylum === 'Chordata' ? 'other' : 'inv';
+  gbif.taxa.forEach(t => { if (NAME_FIX[t.name]) t.en = NAME_FIX[t.name]; t.g = groupOf(t); t.label = t.en || t.mi || t.name; });
+  gbif.rows = gbif.rows.filter(r => gbif.taxa[r[2]].name); // unnamed records say nothing about what was found
+
+  // Vector layers (not clickable themselves: a map click reports everything at that spot)
+  const poly = (fc, style, r = fillR) => L.geoJSON(fc, { renderer: r, interactive: false, style });
+  // Small headwater streams thin and faint; rivers wider
+  const riverStyle = (f, op) => { const o = f.properties.order || 1; return { color: css('--river'), weight: [0, .7, 1, 1.6, 2.4, 3.2, 4][Math.min(6, o)], opacity: (o <= 2 ? .55 : 1) * op }; };
+  const LAYER = {
+    landcover: poly(V.landcover, f => ({ stroke: false, fillColor: lcCol(f.properties.c), fillOpacity: 1 })),
+    luc: poly(V.luc, f => ({ color: '#333', weight: .4, opacity: .5, fillColor: LUC_COL[f.properties.cls] || '#ccc', fillOpacity: 1 })),
+    overlays: poly(V.overlays, f => ({ stroke: false, fillColor: OV_COL[f.properties.ov] || '#ddd', fillOpacity: 1 })),
+    overlay3a: poly(V.overlay3a, () => ({ color: '#9b1c1c', weight: .6, fillColor: '#d7301f', fillOpacity: 1 })),
+    wetlands: poly(V.wetlands, () => ({ color: css('--wet'), weight: 1.2, fillColor: css('--wet'), fillOpacity: .45 })),
+    qeii: poly(V.qeii, () => ({ color: css('--qeii'), weight: 2, dashArray: '5 4', fillColor: css('--qeii'), fillOpacity: .12 }), lineR),
+    pma: poly(V.pma, () => ({ color: css('--pma'), weight: 2, fillColor: css('--pma'), fillOpacity: .12 }), lineR),
+    doc: poly(V.doc, () => ({ color: css('--doc'), weight: 2, fillColor: css('--doc'), fillOpacity: .12 }), lineR),
+    rivers: L.geoJSON(V.rivers, { renderer: lineR, interactive: false, style: f => riverStyle(f, 1) })
+  };
+
+  // LiDAR images: a 16 m overview when zoomed out, 4 m tiles in view when zoomed in
+  const DETAIL_Z = 14;
+  function lidarLayer(key) {
+    const g = L.layerGroup(), over = !lidar.overview ? L.layerGroup() : L.imageOverlay('data/lidar/' + key + '/overview.png', lidar.overview, { pane: 'rasters', interactive: false, className: 'lidar-' + key });
+    const tiles = new Map(); let op = 1;
+    g.update = () => {
+      if (!map.hasLayer(g)) return;
+      const z = map.getZoom(), vb = map.getBounds().pad(0.2);
+      if (z < DETAIL_Z) { if (!g.hasLayer(over)) g.addLayer(over); tiles.forEach(t => g.removeLayer(t)); return; }
+      lidar.tiles.forEach(t => {
+        const b = L.latLngBounds(t.bounds), on = vb.intersects(b);
+        if (on && !tiles.has(t.name)) tiles.set(t.name, L.imageOverlay('data/lidar/' + key + '/' + t.name + '.png', t.bounds, { pane: 'rasters', interactive: false, opacity: op }));
+        const im = tiles.get(t.name); if (!im) return;
+        if (on && !g.hasLayer(im)) g.addLayer(im); else if (!on && g.hasLayer(im)) g.removeLayer(im);
+      });
+      if (g.hasLayer(over)) g.removeLayer(over);
+    };
+    g.setOpacity = (o) => { op = o; if (over.setOpacity) over.setOpacity(o); tiles.forEach(t => t.setOpacity(o)); };
+    g.on('add', () => setTimeout(g.update));
+    return g;
+  }
+  LAYER.chm = lidarLayer('chm'); LAYER.change = lidarLayer('change'); LAYER.hillshade = lidarLayer('hillshade');
+  map.on('moveend', () => ['chm', 'change', 'hillshade'].forEach(k => LAYER[k].update()));
+
+  // GBIF records
+  const recLayer = L.layerGroup();
+  LAYER.records = recLayer; LAYER.boundary = boundary; LAYER.aerial = aerial; LAYER.topo = topo;
+
+  // Layers list: name, swatch, on, opacity; grouped, top of the map first
+  const GROUPS_UI = [
+    ['Species', [['records', 'Species records (GBIF)', '<span class="dot" style="background: var(--g-bird)"></span>', true, 1]]],
+    ['Water and protection', [
+      ['rivers', 'Rivers and streams', '<span class="swatch" style="border-color: var(--river)"></span>', true, 1],
+      ['wetlands', 'Wetlands (council assessment)', '<span class="lfill" style="background: var(--wet)"></span>', true, 1],
+      ['qeii', 'QEII covenants', '<span class="swatch" style="border-color: var(--qeii); border-top-style: dashed"></span>', true, 1],
+      ['pma', 'Council protection management areas', '<span class="swatch" style="border-color: var(--pma)"></span>', true, 1],
+      ['doc', 'DOC land', '<span class="swatch" style="border-color: var(--doc)"></span>', true, 1],
+      ['boundary', 'Catchment boundaries', '<span class="swatch" style="border-color: var(--ink3); border-top-style: dashed"></span>', true, 1]]],
+    ['Land', [
+      ['landcover', 'Land cover 2023 (LCDB)', '<span class="lfill" style="background: linear-gradient(90deg, #1d5e3a 33%, #dbe9a6 33% 66%, #7d6b3a 66%)"></span>', false, 0.7],
+      ['luc', 'Land use capability', '<span class="lfill" style="background: linear-gradient(90deg, #66bd63, #fee08b, #f46d43)"></span>', false, 0.6],
+      ['overlay3a', 'Erosion: Land Overlay 3A', '<span class="lfill" style="background: #d7301f"></span>', false, 0.6],
+      ['overlays', 'Erosion: Land Overlays 1–3', '<span class="lfill" style="background: linear-gradient(90deg, #fff3b0, #ffd166, #f4845f)"></span>', false, 0.6]]],
+    ['LiDAR', [
+      ['chm', 'Canopy height 2023', '<span class="lfill" style="background: linear-gradient(90deg, #edf8b1, #41b6c4, #253494, #4a1486)"></span>', false, 0.85],
+      ['change', 'Height change since 2018–20', '<span class="lfill" style="background: linear-gradient(90deg, #e31a1c, #fee090 45%, #c7e9c0 55%, #238b45)"></span>', false, 0.85],
+      ['hillshade', 'Hillshade', '<span class="lfill" style="background: linear-gradient(135deg, #eee, #555)"></span>', false, 0.6]]],
+    ['Base map', [
+      ['aerial', 'Aerial photo', '<span class="lfill" style="background: linear-gradient(135deg, #6b8f4e, #2f4a2a)"></span>', true, 1],
+      ['topo', 'Topographic map', '<span class="lfill" style="background: linear-gradient(135deg, #f3efe2, #c9d8b6)"></span>', false, 1]]]
+  ];
+  const LSTATE = {};
+  GROUPS_UI.forEach(([, list]) => list.forEach(([k, name, sw, on, op]) => LSTATE[k] = { name, sw, on, op }));
+  function applyLayer(k) {
+    const s = LSTATE[k], g = LAYER[k];
+    if (s.on && !map.hasLayer(g)) g.addTo(map); else if (!s.on && map.hasLayer(g)) map.removeLayer(g);
+    if (g.setOpacity && (k === 'aerial' || k === 'topo' || g.update)) g.setOpacity(s.op);
+    else if (k === 'records') drawRecords();
+    else if (k === 'rivers') g.eachLayer(l => l.setStyle(riverStyle(l.feature, s.op)));
+    else if (k === 'boundary') g.eachLayer(l => l.setStyle({ opacity: s.op }));
+    else if (['qeii', 'pma', 'doc', 'wetlands'].includes(k)) g.setStyle({ opacity: s.op, fillOpacity: (k === 'wetlands' ? .45 : .12) * s.op });
+    else g.setStyle({ fillOpacity: s.op, opacity: .5 * s.op });
+    renderLegend();
+  }
+  document.getElementById('layerGroups').innerHTML = GROUPS_UI.map(([gname, list]) => '<div class="group-name">' + gname + '</div><ul class="layers">' + list.map(([k]) => {
+    const s = LSTATE[k];
+    return '<li class="layer' + (s.on ? '' : ' off') + '" data-key="' + k + '"><button class="eye" type="button" aria-pressed="' + s.on + '" aria-label="' + (s.on ? 'Hide ' : 'Show ') + esc(s.name) + '">' + (s.on ? EYE : EYE_OFF) + '</button>' +
+      '<span class="lswatch">' + s.sw + '</span><span class="lname">' + esc(s.name) + '</span><input type="range" min="0" max="100" step="5" value="' + Math.round(s.op * 100) + '" aria-label="' + esc(s.name) + ' opacity"></li>';
+  }).join('') + '</ul>').join('');
+  document.querySelectorAll('.layer').forEach(li => {
+    const k = li.dataset.key, s = LSTATE[k], eye = li.querySelector('.eye');
+    eye.addEventListener('click', () => {
+      s.on = !s.on; li.classList.toggle('off', !s.on); eye.setAttribute('aria-pressed', String(s.on));
+      eye.setAttribute('aria-label', (s.on ? 'Hide ' : 'Show ') + s.name); eye.innerHTML = s.on ? EYE : EYE_OFF;
+      if (k === 'aerial' && s.on && LSTATE.topo.on) document.querySelector('[data-key="topo"] .eye').click();
+      if (k === 'topo' && s.on && LSTATE.aerial.on) document.querySelector('[data-key="aerial"] .eye').click();
+      applyLayer(k);
+    });
+    li.querySelector('input').addEventListener('input', e => { s.op = e.target.value / 100; applyLayer(k); });
+  });
+
+  // Legend for the coloured layers that are on
+  function renderLegend() {
+    const out = [];
+    if (LSTATE.chm.on) out.push('<div class="lg"><span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div></div>');
+    if (LSTATE.change.on) out.push('<div class="lg"><span>Height change since 2018–20, m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div></div>');
+    if (LSTATE.landcover.on) { const present = [...new Set(V.landcover.features.map(f => f.properties.c))]; out.push('<div class="lg"><span>Land cover 2023</span><div class="keys">' + present.sort().map(c => '<span><i class="lfill" style="background:' + lcCol(c) + '"></i>' + esc(c) + '</span>').join('') + '</div></div>'); }
+    if (LSTATE.luc.on) out.push('<div class="lg"><span>Land use capability class (1 = most versatile, 8 = least)</span><div class="keys">' + Object.entries(LUC_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k + '</span>').join('') + '</div></div>');
+    if (LSTATE.overlays.on || LSTATE.overlay3a.on) out.push('<div class="lg"><span>Council erosion overlays</span><div class="keys">' + (LSTATE.overlay3a.on ? '<span><i class="lfill" style="background:#d7301f"></i>3A, highly erodible</span>' : '') + (LSTATE.overlays.on ? Object.entries(OV_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k.replace('Land ', 'Overlay ') + '</span>').join('') : '') + '</div></div>');
+    document.getElementById('legend').innerHTML = out.join('');
+  }
+
+  // Species filters
+  const fState = { groups: new Set(GROUPS.map(g => g[0])), since: 0, prec: 0, taxon: null, search: '', shown: 60 };
+  const groupCounts = {}; gbif.rows.forEach(r => { const g = gbif.taxa[r[2]].g; groupCounts[g] = (groupCounts[g] || 0) + 1; });
+  document.getElementById('groupChips').innerHTML = GROUPS.filter(([k]) => groupCounts[k]).map(([k, name]) => '<button class="chip" type="button" data-g="' + k + '" aria-pressed="true"><span class="dot" style="background:' + GCOL[k] + '"></span>' + name + ' <span class="n">' + groupCounts[k].toLocaleString() + '</span></button>').join('');
+  document.querySelectorAll('[data-g]').forEach(c => c.addEventListener('click', () => {
+    const on = c.getAttribute('aria-pressed') !== 'true';
+    // A click on one group when all are on shows that group alone
+    if (!on && fState.groups.size === Object.keys(groupCounts).length) { fState.groups = new Set([c.dataset.g]); document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', String(x === c))); }
+    else { c.setAttribute('aria-pressed', String(on)); on ? fState.groups.add(c.dataset.g) : fState.groups.delete(c.dataset.g); if (!fState.groups.size) { fState.groups = new Set(Object.keys(groupCounts)); document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', 'true')); } }
+    refresh();
+  }));
+  document.getElementById('sinceSel').addEventListener('change', e => { fState.since = +e.target.value; refresh(); });
+  document.getElementById('precSel').addEventListener('change', e => { fState.prec = +e.target.value; refresh(); });
+  document.getElementById('spSearch').addEventListener('input', e => { fState.search = e.target.value.trim().toLowerCase(); fState.shown = 60; renderSpecies(); });
+  document.getElementById('spMore').addEventListener('click', () => { fState.shown += 60; renderSpecies(); });
+  document.getElementById('spClear').addEventListener('click', () => { fState.taxon = null; refresh(); });
+
+  // Drawn area
+  let drawn = null, drawing = false, pts = [], guide = null;
+  const drawnLayer = L.layerGroup().addTo(map);
+  const inDrawn = (lng, lat) => !drawn || turf.booleanPointInPolygon([lng, lat], drawn);
+  const passes = (r, ignoreTaxon) => { const t = gbif.taxa[r[2]]; return fState.groups.has(t.g) && (!fState.since || r[3] >= fState.since) && (!fState.prec || (r[4] > 0 && r[4] <= fState.prec)) && (ignoreTaxon || fState.taxon == null || r[2] === fState.taxon); };
+  let scoped = []; // records in the area (whole or drawn), before filters
+  const scope = () => { scoped = gbif.rows.filter(r => inDrawn(r[0], r[1])); };
+
+  function drawRecords() {
+    recLayer.clearLayers();
+    const op = LSTATE.records.op;
+    scoped.filter(r => passes(r)).forEach(r => {
+      const t = gbif.taxa[r[2]];
+      L.circleMarker([r[1], r[0]], { renderer: pointR, radius: fState.taxon != null ? 5 : 3.5, color: '#fff', weight: .8, opacity: op, fillColor: GCOL[t.g], fillOpacity: .9 * op })
+        .on('click', (e) => { L.DomEvent.stop(e); showAt(e.latlng, r); }).addTo(recLayer);
+    });
+  }
+
+  function renderSpecies() {
+    const counts = new Map();
+    scoped.forEach(r => { if (!passes(r, true)) return; const c = counts.get(r[2]) || { n: 0, last: 0 }; c.n++; c.last = Math.max(c.last, r[3]); counts.set(r[2], c); });
+    let list = [...counts.entries()].map(([i, c]) => ({ i, t: gbif.taxa[i], ...c }));
+    if (fState.search) list = list.filter(x => (x.t.name + ' ' + (x.t.en || '') + ' ' + (x.t.mi || '')).toLowerCase().includes(fState.search));
+    list.sort((a, b) => b.n - a.n || a.t.label.localeCompare(b.t.label));
+    const nSp = [...counts.keys()].filter(i => gbif.taxa[i].rank === 'SPECIES').length;
+    document.getElementById('spCount').textContent = nSp.toLocaleString() + ' species · ' + [...counts.values()].reduce((s, c) => s + c.n, 0).toLocaleString() + ' records';
+    document.getElementById('spList').innerHTML = list.slice(0, fState.shown).map(x => '<li class="sp" tabindex="0" data-i="' + x.i + '"' + (fState.taxon === x.i ? ' aria-current="true"' : '') + '><span class="dot" style="background:' + GCOL[x.t.g] + '"></span>' +
+      '<span class="sp-name"><b>' + esc(x.t.label) + '</b><i>' + esc(x.t.label !== x.t.name ? x.t.name : (x.t.family || x.t.order || '')) + (x.t.mi && x.t.en ? ' · ' + esc(x.t.mi) : '') + (x.t.iucn && !['LC', 'NE', 'DD', 'NA'].includes(x.t.iucn) ? ' · IUCN ' + x.t.iucn : '') + '</i></span>' +
+      '<span class="sp-n">' + x.n + (x.last ? '<br>' + x.last : '') + '</span></li>').join('');
+    document.getElementById('spMore').hidden = list.length <= fState.shown;
+    document.getElementById('spClear').hidden = fState.taxon == null;
+  }
+  const spList = document.getElementById('spList');
+  const pickTaxon = (li) => { const i = +li.dataset.i; fState.taxon = fState.taxon === i ? null : i; drawRecords(); renderSpecies(); if (fState.taxon != null) { const b = L.latLngBounds(scoped.filter(r => r[2] === i && passes(r)).map(r => [r[1], r[0]])); if (b.isValid() && !LSTATE.records.on) document.querySelector('[data-key="records"] .eye').click(); if (b.isValid()) map.fitBounds(b, { padding: [40, 40], maxZoom: 15 }); } };
+  spList.addEventListener('click', e => { const li = e.target.closest('.sp'); if (li) pickTaxon(li); });
+  spList.addEventListener('keydown', e => { const li = e.target.closest('.sp'); if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pickTaxon(li); } });
+
+  // Area summary: size, protection, wetlands, land cover
+  const shapeArea = drawnShape => drawnShape || area.outline;
+  function sumArea(fc, clip) { let s = 0; for (const f of fc.features) { try { const c = clip === area.outline ? f : turf.intersect(f, clip); if (c) s += turf.area(c); } catch (e) {} } return s; }
+  function renderArea() {
+    const shp = shapeArea(drawn), tot = turf.area(shp);
+    const prot = sumArea(V.qeii, shp) + sumArea(V.pma, shp) + sumArea(V.doc, shp), wet = sumArea(V.wetlands, shp);
+    const lc = {}; for (const f of V.landcover.features) { let c = null; try { c = drawn ? turf.intersect(f, shp) : f; } catch (e) {} if (c) lc[f.properties.c] = (lc[f.properties.c] || 0) + turf.area(c); }
+    const nat = Object.entries(lc).filter(([k]) => NATIVE.has(k)).reduce((s, [, v]) => s + v, 0);
+    const stat = (k, v) => '<div class="stat"><b>' + v + '</b><span>' + k + '</span></div>';
+    document.getElementById('areaStats').innerHTML = stat('Area', fmtHa(tot)) + stat('Native cover', Math.round(100 * nat / tot) + '%') + stat('Protected', fmtHa(prot)) + stat('Wetlands mapped', fmtHa(wet)) + stat('Rivers', (V.rivers.features.filter(f => !drawn || turf.booleanPointInPolygon(turf.along(f, turf.length(f) / 2), shp)).reduce((s, f) => s + turf.length(f), 0)).toFixed(0) + ' km') + stat('Species', new Set(scoped.filter(r => gbif.taxa[r[2]].rank === 'SPECIES').map(r => r[2])).size.toLocaleString());
+    const rows = Object.entries(lc).sort((a, b) => b[1] - a[1]), max = rows.length ? rows[0][1] : 1;
+    document.getElementById('coverBars').innerHTML = '<span class="eyebrow">Land cover 2023</span>' + rows.slice(0, 8).map(([k, v]) => '<div class="barrow"><span class="lab"><i class="lfill" style="background:' + lcCol(k) + '"></i><span>' + esc(k) + '</span></span><span class="v">' + fmtHa(v) + '</span><span class="track"><i style="width:' + (100 * v / max).toFixed(1) + '%;background:' + lcCol(k) + '"></i></span></div>').join('');
+    document.getElementById('areaLinks').innerHTML = '<button class="btn" type="button" id="dlSpecies">Species list (CSV)</button><button class="btn" type="button" id="dlRecords">Records (CSV)</button>' + (drawn ? '<button class="btn" type="button" id="dlShape">Drawn area (GeoJSON)</button>' : '');
+    document.getElementById('dlSpecies').addEventListener('click', downloadSpecies);
+    document.getElementById('dlRecords').addEventListener('click', downloadRecords);
+    if (drawn) document.getElementById('dlShape').addEventListener('click', () => save(JSON.stringify(drawn), cfg.slug + '_area.geojson', 'application/geo+json'));
+    document.getElementById('areaTitle').textContent = drawn ? 'Drawn area' : 'Whole area';
+  }
+  const csvCell = v => /[",\n]/.test(String(v ?? '')) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v ?? '');
+  function save(text, name, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  function downloadSpecies() {
+    const m = new Map(); scoped.filter(r => passes(r, true)).forEach(r => { const c = m.get(r[2]) || { n: 0, first: 9999, last: 0 }; c.n++; if (r[3]) { c.first = Math.min(c.first, r[3]); c.last = Math.max(c.last, r[3]); } m.set(r[2], c); });
+    const rows = [['scientific_name', 'common_name', 'maori_name', 'group', 'family', 'order', 'class', 'kingdom', 'iucn', 'records', 'first_year', 'last_year', 'gbif_taxon_key']];
+    [...m.entries()].sort((a, b) => b[1].n - a[1].n).forEach(([i, c]) => { const t = gbif.taxa[i]; rows.push([t.name, t.en || '', t.mi || '', GROUPS.find(g => g[0] === t.g)[1], t.family, t.order, t.cls, t.kingdom, t.iucn, c.n, c.first === 9999 ? '' : c.first, c.last || '', t.key]); });
+    save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_species' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
+  }
+  function downloadRecords() {
+    const rows = [['gbif_id', 'scientific_name', 'common_name', 'group', 'date', 'year', 'latitude', 'longitude', 'uncertainty_m', 'basis_of_record', 'dataset', 'gbif_url']];
+    scoped.filter(r => passes(r)).forEach(r => { const t = gbif.taxa[r[2]]; rows.push([r[7], t.name, t.en || '', GROUPS.find(g => g[0] === t.g)[1], r[8], r[3] || '', r[1], r[0], r[4] || '', gbif.bases[r[5]], gbif.datasets[r[6]].name, 'https://www.gbif.org/occurrence/' + r[7]]); });
+    save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_gbif_records' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
+  }
+
+  // Drawing: click points; double-click or click the first point to finish
+  const drawBtn = document.getElementById('drawBtn'), clearBtn = document.getElementById('clearDraw');
+  function setDrawing(on) {
+    drawing = on; pts = []; if (guide) { drawnLayer.removeLayer(guide); guide = null; }
+    drawBtn.setAttribute('aria-pressed', String(on)); drawBtn.textContent = on ? 'Cancel drawing' : (drawn ? 'Draw again' : 'Draw an area');
+    document.getElementById('drawHelp').hidden = !on; document.querySelector('.app').classList.toggle('drawing', on);
+    on ? map.doubleClickZoom.disable() : map.doubleClickZoom.enable();
+  }
+  drawBtn.addEventListener('click', () => setDrawing(!drawing));
+  function finishDraw() {
+    if (pts.length < 3) return;
+    drawn = turf.polygon([[...pts.map(p => [p.lng, p.lat]), [pts[0].lng, pts[0].lat]]]);
+    try { const k = turf.kinks(drawn); if (k.features.length) drawn = turf.unkinkPolygon(drawn).features.reduce((a, b) => turf.union(a, b)); } catch (e) {}
+    drawnLayer.clearLayers();
+    L.geoJSON(drawn, { renderer: lineR, interactive: false, style: () => ({ color: css('--draw'), weight: 3, fillColor: css('--draw'), fillOpacity: .06 }) }).addTo(drawnLayer);
+    setDrawing(false); clearBtn.hidden = false; fState.taxon = null; scope(); refresh(true);
+  }
+  map.on('click', (e) => {
+    if (!drawing) { showAt(e.latlng); return; }
+    if (pts.length > 2 && map.latLngToContainerPoint(pts[0]).distanceTo(e.containerPoint) < 12) { finishDraw(); return; }
+    pts.push(e.latlng);
+    if (guide) drawnLayer.removeLayer(guide);
+    guide = L.polyline(pts, { renderer: lineR, color: css('--draw'), weight: 2, dashArray: '4 4', interactive: false }).addTo(drawnLayer);
+  });
+  map.on('dblclick', (e) => { if (drawing) { L.DomEvent.stop(e); finishDraw(); } });
+  clearBtn.addEventListener('click', () => { drawn = null; drawnLayer.clearLayers(); clearBtn.hidden = true; setDrawing(false); fState.taxon = null; scope(); refresh(true); });
+
+  // What's here: every layer at a clicked spot, plus records within a few pixels
+  const hit = (fc, pt) => fc.features.filter(f => { try { return turf.booleanPointInPolygon(pt, f); } catch (e) { return false; } });
+  function showAt(latlng, rec) {
+    const pt = turf.point([latlng.lng, latlng.lat]), out = [];
+    const near = []; if (LSTATE.records.on) { const p0 = map.latLngToContainerPoint(latlng); scoped.forEach(r => { if (passes(r) && map.latLngToContainerPoint([r[1], r[0]]).distanceTo(p0) < 8) near.push(r); }); }
+    if (rec && !near.includes(rec)) near.unshift(rec);
+    if (near.length) {
+      out.push('<h3>Species records (' + near.length + ')</h3>' + near.slice(0, 6).map(r => { const t = gbif.taxa[r[2]]; return '<div class="rec"><b>' + esc(t.label) + '</b>' + (t.label !== t.name ? ' <i>' + esc(t.name) + '</i>' : '') + '<br>' + esc(r[8] || r[3] || 'no date') + ' · ' + (r[4] ? 'within ' + (r[4] >= 1000 ? (r[4] / 1000).toFixed(1) + ' km' : Math.round(r[4]) + ' m') : 'precision not given') + '<br>' + esc(gbif.datasets[r[6]].name) + ' · <a href="https://www.gbif.org/occurrence/' + r[7] + '" target="_blank" rel="noopener">GBIF record</a></div>'; }).join('') + (near.length > 6 ? '<div class="rec">and ' + (near.length - 6) + ' more here</div>' : ''));
+      unc.clearLayers(); near.slice(0, 6).forEach(r => { if (r[4] > 0) L.circle([r[1], r[0]], { radius: r[4], renderer: lineR, color: GCOL[gbif.taxa[r[2]].g], weight: 1.5, fillOpacity: .08, interactive: false }).addTo(unc); });
+    } else unc.clearLayers();
+    const inArea = turf.booleanPointInPolygon(pt, area.outline);
+    if (inArea) {
+      const cat = hit(area.parts, pt)[0]; if (cat) out.push('<h3>Catchment</h3>' + esc(cat.properties.name));
+      const lc = hit(V.landcover, pt)[0]; if (lc) { const p = lc.properties; out.push('<h3>Land cover 2023</h3>' + esc(p.c) + (p.c01 && p.c01 !== p.c ? '<br><span style="color:#6b776f">2001: ' + esc(p.c01) + '</span>' : '')); }
+      const w = hit(V.wetlands, pt)[0]; if (w) { const p = w.properties; out.push('<h3>Wetland (council assessment)</h3>' + esc([p.cls, p.sys].filter(Boolean).join(', ')) + (p.status ? '<br>Status: ' + esc(p.status) : '') + (p.conf ? '<br>Confidence: ' + esc(p.conf) : '') + (p.value ? '<br>Assumed value: ' + esc(p.value) : '')); }
+      const prot = [...hit(V.qeii, pt), ...hit(V.pma, pt), ...hit(V.doc, pt)].map(f => esc(f.properties.name + (f.properties.type ? ' (' + f.properties.type + ')' : '')));
+      if (prot.length) out.push('<h3>Protection</h3>' + prot.join('<br>'));
+      const luc = hit(V.luc, pt)[0]; if (luc) out.push('<h3>Land use capability</h3>' + esc(luc.properties.luc) + '<br><span style="color:#6b776f">' + esc((luc.properties.desc || '').trim()) + '</span>');
+      const ov = [...hit(V.overlay3a, pt), ...hit(V.overlays, pt)].map(f => esc(f.properties.name.replace('Land Overlay Land', 'Land Overlay')));
+      if (ov.length) out.push('<h3>Erosion overlay</h3>' + [...new Set(ov)].join(', '));
+    }
+    out.push('<h3>Location</h3>' + latlng.lat.toFixed(5) + ', ' + latlng.lng.toFixed(5) + ' · <a href="https://www.google.com/maps/@' + latlng.lat.toFixed(5) + ',' + latlng.lng.toFixed(5) + ',300m/data=!3m1!1e3" target="_blank" rel="noopener">Satellite view</a>');
+    L.popup({ maxWidth: 300, maxHeight: 320 }).setLatLng(latlng).setContent(out.join('')).openOn(map);
+  }
+  const unc = L.layerGroup().addTo(map);
+  map.on('popupclose', () => unc.clearLayers());
+
+  function refresh(withArea) { drawRecords(); renderSpecies(); if (withArea) renderArea(); }
+  const fetched = gbif.fetched; document.getElementById('gbifDate').textContent = 'GBIF, ' + fetched; document.getElementById('gbifDate2').textContent = fetched;
+  document.getElementById('summary').textContent = cfg.areaText + ': ' + Math.round(area.km2 * 100).toLocaleString() + ' ha. Turn layers on and off, click the map to see what\'s at a spot, or draw an area for its species list and land cover.';
+  scope();
+  Object.keys(LSTATE).forEach(applyLayer);
+  refresh(true);
+
+  // Colours follow the theme
+  const retheme = () => { Object.keys(LSTATE).forEach(k => LAYER[k].setStyle && LAYER[k].resetStyle && LAYER[k].eachLayer(l => LAYER[k].resetStyle(l))); Object.keys(LSTATE).forEach(applyLayer); };
+  const mq = window.matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change', retheme);
+})();
+</script>
+</body>
+</html>

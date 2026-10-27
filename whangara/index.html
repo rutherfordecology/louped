@@ -119,11 +119,11 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 <body>
 
 <div class="app">
-  <div id="map" role="region" aria-label="Map of the Whangārā catchments"></div>
+  <div id="map" role="region" aria-label="Map of the catchment"></div>
   <aside class="panel">
     <div class="scroll">
       <section class="sec">
-        <h1>Whangārā catchments biodiversity map</h1>
+        <h1 id="heading">Catchment biodiversity map</h1>
         <div class="sub" id="summary">Loading…</div>
       </section>
 
@@ -166,7 +166,7 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
         <details class="about">
           <summary>About the data</summary>
           <ul>
-            <li>The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal streams between them, traced from NIWA's river network (REC2). Check the boundary with the catchment group.</li>
+            <li id="boundaryNote"></li>
             <li>Species records are every public GBIF record in the area, at the location GBIF publishes. Some records are already blurred by their source (for example iNaturalist hides threatened species); their circle shows how far off they could be. Records cluster where people go, so few records means few visits, not few species.</li>
             <li>Canopy height is the LINZ LiDAR surface model less the ground model (2023), shown at 4 m when zoomed in and 16 m when zoomed out. Height change is against the 2018–20 survey; changes under 2 m are left clear.</li>
             <li>Land cover is LCDB v6 (2023). Wetlands are Gisborne District Council's provisional regional wetland assessment (2022), not all field-checked. Land use capability is NZLRI. Land Overlays 1–3 and 3A are the council's erosion-susceptibility overlays.</li>
@@ -182,7 +182,7 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const APP_VERSION = 'v0.1.1';
+const APP_VERSION = 'v0.2.0';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17.3 17.3 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 document.getElementById('ver').textContent = APP_VERSION;
@@ -193,12 +193,17 @@ document.getElementById('ver').textContent = APP_VERSION;
   const fmtHa = (m2) => { const ha = m2 / 1e4; return ha >= 100 ? Math.round(ha).toLocaleString() + ' ha' : ha >= 1 ? ha.toFixed(1) + ' ha' : ha.toFixed(2) + ' ha'; };
   const getJSON = async (u) => (await fetch(u)).json();
 
-  let area, lidar, gbif; const V = {};
+  let area, lidar, gbif, cfg; const V = {};
   try {
-    [area, lidar, gbif] = await Promise.all([getJSON('data/layers/area.json'), getJSON('data/lidar/index.json').catch(() => ({ tiles: [], overview: null })), getJSON('data/gbif.json')]);
+    [cfg, area, lidar, gbif] = await Promise.all([getJSON('data/config.json'), getJSON('data/layers/area.json'), getJSON('data/lidar/index.json').catch(() => ({ tiles: [], overview: null })), getJSON('data/gbif.json')]);
     const keys = ['landcover', 'luc', 'overlays', 'overlay3a', 'wetlands', 'rivers', 'qeii', 'pma', 'doc'];
     (await Promise.all(keys.map(k => getJSON('data/layers/' + k + '.json')))).forEach((fc, i) => V[keys[i]] = fc);
   } catch (e) { document.getElementById('summary').textContent = 'The map data didn\'t load. Reload the page to try again.'; return; }
+
+  // This catchment's wording (data/config.json)
+  document.getElementById('heading').textContent = cfg.title;
+  document.getElementById('map').setAttribute('aria-label', 'Map of ' + cfg.mapLabel);
+  document.getElementById('boundaryNote').textContent = cfg.boundaryNote;
 
   // Map, panes bottom to top
   const map = L.map('map', { zoomSnap: 0.25, maxZoom: 19 });
@@ -414,7 +419,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     document.getElementById('areaLinks').innerHTML = '<button class="btn" type="button" id="dlSpecies">Species list (CSV)</button><button class="btn" type="button" id="dlRecords">Records (CSV)</button>' + (drawn ? '<button class="btn" type="button" id="dlShape">Drawn area (GeoJSON)</button>' : '');
     document.getElementById('dlSpecies').addEventListener('click', downloadSpecies);
     document.getElementById('dlRecords').addEventListener('click', downloadRecords);
-    if (drawn) document.getElementById('dlShape').addEventListener('click', () => save(JSON.stringify(drawn), 'whangara_area.geojson', 'application/geo+json'));
+    if (drawn) document.getElementById('dlShape').addEventListener('click', () => save(JSON.stringify(drawn), cfg.slug + '_area.geojson', 'application/geo+json'));
     document.getElementById('areaTitle').textContent = drawn ? 'Drawn area' : 'Whole area';
   }
   const csvCell = v => /[",\n]/.test(String(v ?? '')) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v ?? '');
@@ -423,12 +428,12 @@ document.getElementById('ver').textContent = APP_VERSION;
     const m = new Map(); scoped.filter(r => passes(r, true)).forEach(r => { const c = m.get(r[2]) || { n: 0, first: 9999, last: 0 }; c.n++; if (r[3]) { c.first = Math.min(c.first, r[3]); c.last = Math.max(c.last, r[3]); } m.set(r[2], c); });
     const rows = [['scientific_name', 'common_name', 'maori_name', 'group', 'family', 'order', 'class', 'kingdom', 'iucn', 'records', 'first_year', 'last_year', 'gbif_taxon_key']];
     [...m.entries()].sort((a, b) => b[1].n - a[1].n).forEach(([i, c]) => { const t = gbif.taxa[i]; rows.push([t.name, t.en || '', t.mi || '', GROUPS.find(g => g[0] === t.g)[1], t.family, t.order, t.cls, t.kingdom, t.iucn, c.n, c.first === 9999 ? '' : c.first, c.last || '', t.key]); });
-    save(rows.map(r => r.map(csvCell).join(',')).join('\n'), 'whangara_species' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
+    save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_species' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
   }
   function downloadRecords() {
     const rows = [['gbif_id', 'scientific_name', 'common_name', 'group', 'date', 'year', 'latitude', 'longitude', 'uncertainty_m', 'basis_of_record', 'dataset', 'gbif_url']];
     scoped.filter(r => passes(r)).forEach(r => { const t = gbif.taxa[r[2]]; rows.push([r[7], t.name, t.en || '', GROUPS.find(g => g[0] === t.g)[1], r[8], r[3] || '', r[1], r[0], r[4] || '', gbif.bases[r[5]], gbif.datasets[r[6]].name, 'https://www.gbif.org/occurrence/' + r[7]]); });
-    save(rows.map(r => r.map(csvCell).join(',')).join('\n'), 'whangara_gbif_records' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
+    save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_gbif_records' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
   }
 
   // Drawing: click points; double-click or click the first point to finish
@@ -487,7 +492,7 @@ document.getElementById('ver').textContent = APP_VERSION;
 
   function refresh(withArea) { drawRecords(); renderSpecies(); if (withArea) renderArea(); }
   const fetched = gbif.fetched; document.getElementById('gbifDate').textContent = 'GBIF, ' + fetched; document.getElementById('gbifDate2').textContent = fetched;
-  document.getElementById('summary').textContent = 'The Turihaua, Pouawa, Waiomoko and Pakarae catchments and the coastal streams between them: ' + Math.round(area.km2 * 100).toLocaleString() + ' ha. Turn layers on and off, click the map to see what\'s at a spot, or draw an area for its species list and land cover.';
+  document.getElementById('summary').textContent = cfg.areaText + ': ' + Math.round(area.km2 * 100).toLocaleString() + ' ha. Turn layers on and off, click the map to see what\'s at a spot, or draw an area for its species list and land cover.';
   scope();
   Object.keys(LSTATE).forEach(applyLayer);
   refresh(true);

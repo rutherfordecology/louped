@@ -1,14 +1,18 @@
 # Catchment reports
 
 Layers-only biodiversity maps for catchment groups in Tairāwhiti. Each catchment
-is a folder with its own static map (`<catchment>/index.html`) and data
-(`<catchment>/data/`); the build scripts in `scripts/` are shared. No scoring or
+is a folder with its own data (`<catchment>/data/`) and map page
+(`<catchment>/index.html`); the build scripts in `scripts/` and the map page are
+shared. Edit the master page `map.html`, then run `node scripts/pages.mjs` to copy
+it into every catchment folder; each catchment's wording (title, area,
+boundary note, download names) is in `<catchment>/data/config.json`. No scoring or
 ranking: people turn layers on and off, click a spot to see every layer there,
 or draw an area to get its species list and land cover.
 
 | Folder | Area |
 |---|---|
 | `whangara/` | Whangārā community catchments: Turihaua, Pouawa, Waiomoko and Pakarae rivers plus the coastal streams between them |
+| `waimata/` | Waimata catchment: Waimata and Taruheru rivers and the lower Tūranganui they join to form (NIWA's Waimata catchment) |
 
 ## Build a catchment (Whangārā shown; run from this folder)
     npm install
@@ -16,6 +20,12 @@ or draw an area to get its species list and land cover.
     node scripts/vectors.mjs whangara/inputs/catchments.geojson whangara/data/layers
     node scripts/gbif.mjs whangara/data/layers/area.json whangara/data/gbif.json
     node scripts/lidar.mjs whangara/data/layers/area.json whangara/data/lidar
+    node scripts/pages.mjs
+
+Waimata: `node scripts/boundary.mjs waimata/inputs/catchments_tur.geojson
+177.88,-38.72,178.18,-38.38 Turanganui Waimata Taruheru`, then the parts were
+set as Waimata, Taruheru and the lower Tūranganui (the Tūranganui less the
+other two), saved as `waimata/inputs/catchments.geojson`; the rest as above.
 
 - `boundary.mjs` traces each named river upstream through NIWA's REC2 network
   and merges the REC2 watersheds (holes filled). `--coast` adds the small

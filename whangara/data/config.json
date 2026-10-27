@@ -1,0 +1,9 @@
+{
+  "slug": "whangara",
+  "pageTitle": "Whangārā Biodiversity Map",
+  "title": "Whangārā catchments biodiversity map",
+  "mapLabel": "the Whangārā catchments",
+  "description": "Layers for the Whangārā community catchments, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
+  "areaText": "The Turihaua, Pouawa, Waiomoko and Pakarae catchments and the coastal streams between them",
+  "boundaryNote": "The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal streams between them, traced from NIWA's river network (REC2). Check the boundary with the catchment group."
+}

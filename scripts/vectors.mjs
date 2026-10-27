@@ -9,6 +9,8 @@ const parts = JSON.parse(fs.readFileSync(areaFile, 'utf8')).features;
 let area = parts[0]; for (const p of parts.slice(1)) area = turf.union(area, p);
 // Fill any holes left where the parts meet
 area = area.geometry.type === 'Polygon' ? turf.polygon([area.geometry.coordinates[0]]) : turf.multiPolygon(area.geometry.coordinates.map(p => [p[0]]));
+// and drop specks under 1 ha left where the parts' edges don't quite meet
+if (area.geometry.type === 'MultiPolygon') { const keep = area.geometry.coordinates.filter(p => turf.area(turf.polygon(p)) > 1e4); area = keep.length === 1 ? turf.polygon(keep[0]) : turf.multiPolygon(keep); }
 area = turf.truncate(area, { precision: 5 });
 const [w, s, e, n] = turf.bbox(area), env = [w, s, e, n].map(v => v.toFixed(4)).join(',');
 fs.mkdirSync(outDir, { recursive: true });
@@ -49,7 +51,8 @@ async function fetchAll(L) {
   for (let off = 0; ; ) {
     const body = new URLSearchParams({ f: 'json', where: '1=1', geometry: env, geometryType: 'esriGeometryEnvelope', inSR: '4326', spatialRel: 'esriSpatialRelIntersects', outFields: 'OBJECTID,' + L.fields, orderByFields: 'OBJECTID', outSR: '4326', returnGeometry: 'true', maxAllowableOffset: String(L.tol), geometryPrecision: '6', resultOffset: String(off), resultRecordCount: '1000' });
     let j;
-    for (let i = 0; i < 3; i++) { try { j = await (await fetch(L.url + '/query', { method: 'POST', body })).json(); if (j.error) throw new Error(JSON.stringify(j.error)); break; } catch (err) { if (i === 2) throw err; } }
+    // ArcGIS Online limits requests per minute: on 429, wait and retry
+    for (let i = 0; i < 5; i++) { try { j = await (await fetch(L.url + '/query', { method: 'POST', body })).json(); if (j.error) throw Object.assign(new Error(JSON.stringify(j.error)), { code: j.error.code }); break; } catch (err) { if (i === 4) throw err; await new Promise(r => setTimeout(r, err.code === 429 ? 65000 : 2000)); } }
     for (const f of j.features) { const id = f.attributes.OBJECTID; if (!f.geometry || seen.has(id)) continue; seen.add(id); feats.push({ type: 'Feature', properties: f.attributes, geometry: esriToGeo(f.geometry) }); }
     if (!j.features.length || !j.exceededTransferLimit) break;
     off += j.features.length;

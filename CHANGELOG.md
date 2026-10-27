@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.0 — 2026-10-27
+
+- **Waimata.** Second catchment, `waimata/`: the Waimata and Taruheru rivers
+  and the lower Tūranganui (309 km², the same system as NIWA's Waimata
+  catchment), with the same layers as Whangārā.
+- **One shared map page.** `map.html` is the master; `scripts/pages.mjs`
+  copies it into each catchment folder. Each catchment's wording is in its
+  `data/config.json`. The project home page lists both catchments.
+- Vector fetches wait and retry when ArcGIS Online's per-minute limit is hit,
+  and specks under 1 ha left where catchment parts meet are dropped.
+- GBIF snapshots split any box holding over 8,000 records into quarters
+  (GBIF's search stalls past an offset of about 10,000), and every request has
+  a 60 s timeout with retries.
+
 ## v0.1.1 — 2026-10-27
 
 - Sea species recorded at the coast are left out of the species records

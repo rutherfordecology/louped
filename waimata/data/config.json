@@ -1,0 +1,9 @@
+{
+  "slug": "waimata",
+  "pageTitle": "Waimata Biodiversity Map",
+  "title": "Waimata catchment biodiversity map",
+  "mapLabel": "the Waimata catchment",
+  "description": "Layers for the Waimata catchment, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
+  "areaText": "The Waimata and Taruheru rivers and the lower Tūranganui",
+  "boundaryNote": "The area is the Waimata River catchment plus the Taruheru River and the lower Tūranganui, which they join to form in Gisborne (the same system as NIWA's Waimata catchment), traced from NIWA's river network (REC2). Check the boundary with the catchment group."
+}

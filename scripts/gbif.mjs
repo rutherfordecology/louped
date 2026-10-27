@@ -8,17 +8,32 @@ const [areaFile, outFile] = process.argv.slice(2);
 const area = JSON.parse(fs.readFileSync(areaFile, 'utf8')).outline;
 const [w, s, e, n] = turf.bbox(area);
 const API = 'https://api.gbif.org/v1/';
-const get = async (url) => { for (let i = 0; ; i++) { try { const r = await fetch(url); if (!r.ok) throw new Error(r.status); return await r.json(); } catch (err) { if (i === 3) throw err; await new Promise(r => setTimeout(r, 1500 * (i + 1))); } } };
+// A request that never answers would stall the run: give each one 60 s and retry
+const get = async (url) => { for (let i = 0; ; i++) { try { const r = await fetch(url, { signal: AbortSignal.timeout(60000) }); if (!r.ok) throw new Error(r.status); return await r.json(); } catch (err) { if (i === 5) throw err; await new Promise(r => setTimeout(r, 3000 * (i + 1))); } } };
 
-const base = API + 'occurrence/search?hasCoordinate=true&hasGeospatialIssue=false&occurrenceStatus=PRESENT' +
-  '&decimalLongitude=' + w.toFixed(4) + ',' + e.toFixed(4) + '&decimalLatitude=' + s.toFixed(4) + ',' + n.toFixed(4) + '&limit=300';
-const recs = [];
-for (let off = 0; ; off += 300) {
-  const j = await get(base + '&offset=' + off);
-  recs.push(...j.results);
-  if (off === 0) console.error(j.count + ' records in the box');
-  if (j.endOfRecords || !j.results.length) break;
+// GBIF's search stalls past an offset of about 10,000, so any box holding
+// more than 8,000 records is split into quarters until each is small enough.
+const recs = [], seen = new Set();
+const q = (b) => API + 'occurrence/search?hasCoordinate=true&hasGeospatialIssue=false&occurrenceStatus=PRESENT' +
+  '&decimalLongitude=' + b[0].toFixed(5) + ',' + b[2].toFixed(5) + '&decimalLatitude=' + b[1].toFixed(5) + ',' + b[3].toFixed(5);
+async function fetchBox(b) {
+  if (!turf.booleanIntersects(turf.bboxPolygon(b), area)) return;
+  const count = (await get(q(b) + '&limit=0')).count;
+  if (count > 8000) {
+    const mx = (b[0] + b[2]) / 2, my = (b[1] + b[3]) / 2;
+    for (const c of [[b[0], b[1], mx, my], [mx, b[1], b[2], my], [b[0], my, mx, b[3]], [mx, my, b[2], b[3]]]) await fetchBox(c);
+    return;
+  }
+  for (let off = 0; off < count; off += 300) {
+    const j = await get(q(b) + '&limit=300&offset=' + off);
+    for (const r of j.results) if (!seen.has(r.key)) { seen.add(r.key); recs.push(r); }
+    if (j.endOfRecords || !j.results.length) break;
+  }
+  console.error('  ' + recs.length + ' so far');
 }
+await fetchBox([w, s, e, n]);
+console.error(recs.length + ' records in the box');
+
 // Left out: records GBIF couldn't match to any name (they say nothing about
 // what was found); records whose location was deliberately obscured (e.g.
 // iNaturalist's ~28 km for threatened taxa) or could be more than MAX_UNC_M
