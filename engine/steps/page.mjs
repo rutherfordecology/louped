@@ -13,15 +13,18 @@ const fill = (tpl, vals) => fs.readFileSync('engine/templates/' + tpl, 'utf8').r
 
 const area = JSON.parse(fs.readFileSync(path('data/layers/area.json'), 'utf8'));
 const gbif = JSON.parse(fs.readFileSync(path('data/gbif.json'), 'utf8'));
-// LINZ Basemaps need an API key (site.json); without one the map falls back to Esri's
-cfg.basemapKey = loadSite().linzBasemapsKey || '';
-if (!cfg.basemapKey) console.error('warning: no linzBasemapsKey in site.json, so the map uses Esri basemaps');
-const sources = SOURCES.filter(s => s.uses(cfg)).map(s => ({ ...s, by: typeof s.by === 'function' ? s.by(cfg) : s.by }));
+// LINZ Data Service tiles need an API key (site.json, "ldsKey"); without one,
+// or without an aerial layer in catchment.json, the map falls back to Esri's
+cfg.basemapKey = loadSite().ldsKey || '';
+cfg.aerialLayer = cfg.basemap?.aerialLayer || null;
+if (!cfg.basemapKey) console.error('warning: no ldsKey in site.json, so the map uses Esri basemaps');
+else if (!cfg.aerialLayer) console.error('warning: no basemap.aerialLayer in catchment.json, so the aerial photo is from Esri');
+const sources = SOURCES.filter(s => s.uses(cfg)).map(s => ({ ...s, by: typeof s.by === 'function' ? s.by(cfg) : s.by, name: typeof s.name === 'function' ? s.name(cfg) : s.name }));
 
 // Map settings
 fs.writeFileSync(path('data/config.json'), JSON.stringify({
   slug: cfg.slug, name: cfg.name, title: cfg.title, mapLabel: cfg.mapLabel, areaText: cfg.areaText, boundaryNote: cfg.boundaryNote,
-  layers: cfg.layers, version: ENGINE_VERSION, basemapKey: cfg.basemapKey,
+  layers: cfg.layers, version: ENGINE_VERSION, aerialLayer: cfg.aerialLayer,
   sources: sources.map(s => ({ key: s.key, short: s.short, attr: s.attr || '' }))
 }, null, 2) + '\n');
 
@@ -50,6 +53,8 @@ console.error('wrote ' + path('index.html') + ', ' + path('about.html') + ', ' +
 fs.mkdirSync('assets', { recursive: true });
 fs.copyFileSync('engine/assets/logo.png', 'assets/logo.png');
 fs.copyFileSync('engine/templates/site.css', 'assets/site.css');
+// The LDS key goes in its own file, kept out of git like site.json; the map reads it when it loads
+fs.writeFileSync('assets/keys.json', JSON.stringify({ lds: cfg.basemapKey }) + '\n');
 const cards = allCatchments().sort((a, b) => a.cfg.name.localeCompare(b.cfg.name, 'en'))
   .map(({ dir, cfg: c }) => '<a class="card" href="' + esc(dir) + '/"><b>' + esc(c.name) + '</b><span>' + esc(c.card) + (c.region ? ' · ' + esc(c.region) : '') + '</span></a>').join('\n    ');
 fs.writeFileSync('index.html', fill('home.html', { CARDS: cards, VERSION: ENGINE_VERSION }));

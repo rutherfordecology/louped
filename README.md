@@ -20,10 +20,11 @@ area to get its species list and land cover.
 
 Steps, in order: `boundary`, `vectors`, `gbif`, `names`, `lidar`, `page`.
 
-`site.json` holds the project-wide LINZ Basemaps API key (`linzBasemapsKey`).
-A standard key comes from https://basemaps.linz.govt.nz and lasts 90 days; a
-hosted site needs a developer key from LINZ, tied to its domain. With no key
-the maps use Esri's basemaps.
+`site.json` holds the project-wide LINZ Data Service API key (`ldsKey`, from
+data.linz.govt.nz; it only needs the tiles scope) for the base maps; copy
+`site.example.json` to start. It is kept out of git, and so is
+`assets/keys.json`, where the page step puts the key for the maps to read.
+With no key the maps use Esri's basemaps.
 
 A new catchment: make a folder with a `catchment.json` (copy one of the
 others), set its name, wording and boundary, and run `node engine/build.mjs
@@ -44,6 +45,8 @@ others), set its name, wording and boundary, and run `node engine/build.mjs
   `{ "region": "gisborne", "now": "gisborne_2023", "before": "gisborne_2018-2020", "nowLabel": "2023", "beforeLabel": "2018–20", "credit": "..." }`;
   `credit` names the surveys' licensors for the About page.
   Leave it out for no LiDAR; leave out `before` for no height change.
+- **`basemap`:** the LINZ Data Service aerial imagery layer for the region,
+  e.g. `{ "aerialLayer": 121749, "aerialName": "Gisborne 0.1m Rural Aerial Photos (2024–2025)" }`.
 - **`gbif`:** `maxUncertaintyM` (records that could be further off are left
   out) and `exclude` (species to leave out, e.g. marine species recorded at
   the coast).
@@ -69,6 +72,6 @@ Edit the templates in `engine/templates/`, never the generated pages.
 
 Data and licences: see any catchment's About page. In short, NIWA REC2
 (boundaries and rivers) is CC BY-NC 4.0, GBIF records are CC0, CC BY or
-CC BY-NC per record, and the iNaturalist names, Esri basemaps and LookLike
-photos have terms to check before commercial use. The rest, LINZ Basemaps
+CC BY-NC per record, and the iNaturalist names and LookLike
+photos have terms to check before commercial use. The rest, the LINZ base maps
 and LiDAR included, is CC BY 4.0.

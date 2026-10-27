@@ -249,6 +249,9 @@ document.getElementById('ver').textContent = APP_VERSION;
   ALL_VECTORS.forEach(k => V[k] = V[k] || { type: 'FeatureCollection', features: [] });
   const has = (k) => cfg.layers.includes(k) || !ALL_VECTORS.includes(k);
 
+  // The LINZ Data Service key, kept out of the catchment data (assets/keys.json)
+  cfg.basemapKey = (await getJSON('../assets/keys.json').catch(() => ({}))).lds || '';
+
   // This catchment's wording (data/config.json, written by the engine)
   document.getElementById('heading').textContent = cfg.title;
   document.getElementById('map').setAttribute('aria-label', 'Map of ' + cfg.mapLabel);
@@ -260,11 +263,12 @@ document.getElementById('ver').textContent = APP_VERSION;
   map.attributionControl.setPrefix(false);
   [['rasters', 250], ['fills', 410], ['lines', 430], ['points', 450]].forEach(([p, z]) => { map.createPane(p); map.getPane(p).style.zIndex = z; });
   const fillR = L.canvas({ pane: 'fills', padding: 0.3 }), lineR = L.canvas({ pane: 'lines', padding: 0.3 }), pointR = L.canvas({ pane: 'points', padding: 0.3, tolerance: 4 });
-  // Base maps: LINZ Basemaps (CC BY 4.0) with the project's key; Esri's if no key is set
-  const LINZ_ATTR = '<a href="https://www.linz.govt.nz/copyright" target="_blank" rel="noopener">© Toitū Te Whenua LINZ</a> CC BY 4.0 · <a href="https://basemaps.linz.govt.nz/" target="_blank" rel="noopener">LINZ Basemaps</a>';
-  const linz = (set, maxNative) => L.tileLayer('https://basemaps.linz.govt.nz/v1/tiles/' + set + '/3857/{z}/{x}/{y}.webp?api=' + encodeURIComponent(cfg.basemapKey), { attribution: LINZ_ATTR, maxNativeZoom: maxNative, maxZoom: 19 });
-  const aerial = cfg.basemapKey ? linz('aerial', 19) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 });
-  const topo = cfg.basemapKey ? linz('topo-raster', 17) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 });
+  // Base maps: LINZ Data Service tiles (CC BY 4.0) with the project's key, the
+  // catchment's regional aerial photos and Topo50; Esri's if no key is set
+  const LINZ_ATTR = 'Base maps sourced from the <a href="https://data.linz.govt.nz/" target="_blank" rel="noopener">LINZ Data Service</a>, CC BY 4.0';
+  const linz = (layer, maxNative) => L.tileLayer('https://tiles-{s}.data-cdn.linz.govt.nz/services;key=' + encodeURIComponent(cfg.basemapKey) + '/tiles/v4/layer=' + layer + '/EPSG:3857/{z}/{x}/{y}.png', { subdomains: 'abcd', attribution: LINZ_ATTR, maxNativeZoom: maxNative, maxZoom: 19 });
+  const aerial = cfg.basemapKey && cfg.aerialLayer ? linz(cfg.aerialLayer, 19) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 });
+  const topo = cfg.basemapKey ? linz(50767, 17) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 });
   map.attributionControl.addAttribution(cfg.sources.filter(s => s.attr).map(s => s.attr).join(' · ') + ' · <a href="about.html">Sources</a>');
   const outline = L.geoJSON(area.outline, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 2.5, opacity: 1, fill: false }) });
   const parts = L.geoJSON(area.parts, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 1, opacity: .8, dashArray: '5 4', fill: false }) });

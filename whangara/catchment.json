@@ -53,5 +53,9 @@
       "Cookia sulcata",
       "Maoricolpus roseus"
     ]
+  },
+  "basemap": {
+    "aerialLayer": 121749,
+    "aerialName": "Gisborne 0.1m Rural Aerial Photos (2024–2025)"
   }
 }

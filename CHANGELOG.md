@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.3.2 — 2026-10-27
+
+- **LINZ base maps switched on, through the LINZ Data Service.** The aerial photo is the catchment's
+  regional LINZ aerial imagery (for Tairāwhiti, Gisborne 0.1m Rural Aerial
+  Photos 2024–2025) and the topographic map is NZ Topo50, both from the
+  LINZ Data Service under CC BY 4.0, so they can be used commercially. The
+  LDS API key goes in `site.json` (`ldsKey`) and the imagery layer in
+  catchment.json (`basemap.aerialLayer`); without them the maps fall back
+  to Esri's and the page step warns.
+- This replaces v0.3.1's LINZ Basemaps setup (`linzBasemapsKey`): Basemaps
+  and Data Service keys are different, and a Data Service key serves both
+  layers.
+- The key stays out of git: `site.json` is ignored, and the page step copies
+  the key to `assets/keys.json` (also ignored), which the map reads when it
+  loads. `site.example.json` shows the format.
+
 ## v0.3.1 — 2026-10-27
 
 - **LINZ Basemaps instead of Esri.** The aerial photo and topographic map

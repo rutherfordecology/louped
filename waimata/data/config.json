@@ -16,8 +16,8 @@
     "overlays",
     "rivers"
   ],
-  "version": "v0.3.1",
-  "basemapKey": "",
+  "version": "v0.3.2",
+  "aerialLayer": 121749,
   "sources": [
     {
       "key": "boundary",
@@ -65,8 +65,8 @@
       "attr": "LINZ"
     },
     {
-      "key": "basemap",
-      "short": "Esri basemaps",
+      "key": "linz-basemaps",
+      "short": "LINZ aerial photos and Topo50",
       "attr": ""
     },
     {
