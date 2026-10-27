@@ -24,7 +24,7 @@ for (let off = 0; ; off += 300) {
 // iNaturalist's ~28 km for threatened taxa) or could be more than MAX_UNC_M
 // off; and taxa that don't belong on a land map (marine species recorded at
 // the coast).
-const MAX_UNC_M = 5000, EXCLUDE = new Set(['Jasus edwardsii']);
+const MAX_UNC_M = 5000, EXCLUDE = new Set(['Jasus edwardsii', 'Evechinus chloroticus', 'Haliotis iris', 'Prionace glauca', 'Cookia sulcata', 'Maoricolpus roseus']);
 const why = {}, drop = (k) => { why[k] = (why[k] || 0) + 1; return false; };
 const inside = recs.filter(r => {
   if (!turf.booleanPointInPolygon([r.decimalLongitude, r.decimalLatitude], area)) return false;

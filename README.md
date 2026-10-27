@@ -30,7 +30,8 @@ or draw an area to get its species list and land cover.
   GBIF publishes, with English and Māori common names where GBIF has them.
   Left out: records with no name, records whose location was obscured or
   could be more than 5 km off (`MAX_UNC_M`), and taxa listed in `EXCLUDE`
-  (marine species recorded at the coast, e.g. rock lobster).
+  (marine species recorded at the coast: rock lobster, kina, pāua, blue
+  shark, Cook's turban, turret shell).
 - `lidar.mjs` renders hillshade, canopy height (DSM − DEM, 2023) and height
   change since 2018–20 from LINZ's 1 m COGs: 4 m images per LINZ 1:10k tile
   and a 16 m overview, warped to Web Mercator and cut to the area.

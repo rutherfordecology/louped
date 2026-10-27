@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.1 — 2026-10-27
+
+- Sea species recorded at the coast are left out of the species records
+  along with rock lobster: kina, pāua, blue shark, Cook's turban and the
+  turret shell (*Maoricolpus roseus*).
+
 ## v0.1.0 — 2026-10-27
 
 - First version, as the `catchment_reports` project: shared build scripts,
