@@ -1,0 +1,23 @@
+# Changelog
+
+## v0.1.0 — 2026-10-27
+
+- First version, as the `catchment_reports` project: shared build scripts,
+  one folder per catchment. First catchment: `whangara/`, a layers map of the Whangārā community catchments (Turihaua,
+  Pouawa, Waiomoko, Pakarae and the coastal streams between them, 389 km²),
+  traced from NIWA's REC2 river network.
+- Layers: GBIF species records, rivers and streams, council wetland
+  assessment, QEII covenants, council protection management areas, DOC land,
+  catchment boundaries, LCDB 2023 land cover, land use capability, council
+  erosion overlays, LiDAR canopy height, height change since 2018–20,
+  hillshade, aerial photo and topographic base maps. Each has an eye and an
+  opacity slider.
+- Click anywhere for every layer at that spot, plus nearby species records
+  with their location uncertainty drawn as a circle.
+- Draw an area for its size, native cover, protected and wetland area,
+  river length, land cover breakdown and species list; download the species
+  list, the records or the drawn area.
+- Species records filter by group, year and location precision; search
+  species and click one to show only its records. Left out: records with no
+  name, obscured locations (e.g. iNaturalist's ~28 km for threatened taxa),
+  locations that could be over 5 km off, and rock lobster.
