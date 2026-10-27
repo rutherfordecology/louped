@@ -1,0 +1,53 @@
+{
+  "name": "Waimata",
+  "slug": "waimata",
+  "region": "Tairāwhiti",
+  "title": "Waimata catchment biodiversity map",
+  "pageTitle": "Waimata Biodiversity Map",
+  "mapLabel": "the Waimata catchment",
+  "description": "Layers for the Waimata catchment, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
+  "areaText": "The Waimata River above the Taruheru confluence",
+  "card": "Waimata River, above the Taruheru confluence",
+  "boundaryNote": "The area is the Waimata River catchment above where the Taruheru joins it in Gisborne, traced from NIWA's river network (REC2). Check the boundary with the catchment group.",
+  "boundary": {
+    "bbox": [
+      177.88,
+      -38.72,
+      178.18,
+      -38.38
+    ],
+    "rivers": [
+      "Waimata"
+    ],
+    "coast": false
+  },
+  "layers": [
+    "landcover",
+    "qeii",
+    "pma",
+    "doc",
+    "wetlands",
+    "luc",
+    "overlay3a",
+    "overlays",
+    "rivers"
+  ],
+  "lidar": {
+    "region": "gisborne",
+    "now": "gisborne_2023",
+    "before": "gisborne_2018-2020",
+    "nowLabel": "2023",
+    "beforeLabel": "2018–20"
+  },
+  "gbif": {
+    "maxUncertaintyM": 5000,
+    "exclude": [
+      "Jasus edwardsii",
+      "Evechinus chloroticus",
+      "Haliotis iris",
+      "Prionace glauca",
+      "Cookia sulcata",
+      "Maoricolpus roseus"
+    ]
+  }
+}

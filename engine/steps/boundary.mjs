@@ -1,10 +1,19 @@
 // Catchment boundaries for named rivers, traced upstream through NIWA's REC2
-// river network and merged from REC2 watersheds.
-// usage: node scripts/boundary.mjs <out.geojson> <minLng,minLat,maxLng,maxLat> <River name> [...] [--coast]
+// river network and merged from REC2 watersheds. Settings in catchment.json:
+//   "boundary": { "bbox": [minLng, minLat, maxLng, maxLat], "rivers": ["Waimata"], "coast": false }
+// "coast" also takes in the small streams reaching the sea between the rivers.
+// A boundary from elsewhere: "boundary": { "file": "inputs/catchments.geojson" }
+// (a FeatureCollection with a "name" on each part); this step then does nothing.
+// usage: node engine/steps/boundary.mjs <catchment folder>
 import * as turf from '@turf/turf';
 import fs from 'node:fs';
+import { loadCatchment } from '../lib.mjs';
 
-const [outFile, bboxArg, ...names] = process.argv.slice(2);
+const { cfg, path } = loadCatchment(process.argv[2]);
+const outFile = path('inputs/catchments.geojson');
+if (cfg.boundary.file) { console.error('boundary from ' + cfg.boundary.file); process.exit(0); }
+fs.mkdirSync(path('inputs'), { recursive: true });
+const bboxArg = cfg.boundary.bbox.join(','), names = [...cfg.boundary.rivers];
 const RIV = 'https://services3.arcgis.com/fp1tibNcN9mbExhG/arcgis/rest/services/NZ_Rivers_and_Names_WFL1/FeatureServer/0/query';
 const WS = 'https://services3.arcgis.com/fp1tibNcN9mbExhG/arcgis/rest/services/REC2_Layers/FeatureServer/1/query';
 
@@ -33,8 +42,7 @@ const upstream = (mouths) => {
   while (stack.length) { const s = stack.pop(); if (ids.has(s.nzsegment)) continue; ids.add(s.nzsegment); (byTo.get(s.FROM_NODE) || []).forEach(u => stack.push(u)); }
   return ids;
 };
-// "--coast": also the small streams reaching the sea between the named rivers
-const coast = names.includes('--coast'); if (coast) names.splice(names.indexOf('--coast'), 1);
+const coast = !!cfg.boundary.coast;
 
 const out = [], mouths = [];
 for (const name of names) {

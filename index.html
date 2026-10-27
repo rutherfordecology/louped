@@ -3,26 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Catchment Reports</title>
-<style>
-:root { --bg: #eef1ed; --ink: #18211c; --ink2: #4b5a51; --line: #d3dbd4; --card: #f8faf7; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #111613; --ink: #e5ece6; --ink2: #a9b7ad; --line: #2b352f; --card: #171d19; color-scheme: dark; } }
-:root[data-theme="dark"] { --bg: #111613; --ink: #e5ece6; --ink2: #a9b7ad; --line: #2b352f; --card: #171d19; color-scheme: dark; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 'Segoe UI', system-ui, sans-serif; }
-main { max-width: 640px; margin: 0 auto; padding: 40px 16px; display: grid; gap: 14px; }
-h1 { margin: 0; font-size: 28px; }
-p { margin: 0; color: var(--ink2); }
-a.card { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; color: inherit; text-decoration: none; }
-a.card:hover { border-color: var(--ink2); }
-a.card b { display: block; font-size: 17px; }
-</style>
+<title>Catchment Maps</title>
+<meta name="description" content="Biodiversity maps for catchment groups, by Rutherford Ecology.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
+<header class="brandbar">
+  <div class="who"><a class="wordmark" href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener"><strong>Rutherford</strong> <em>ecology</em></a><span class="what">Catchment maps</span></div>
+</header>
 <main>
-  <h1>Catchment reports</h1>
-  <p>Biodiversity maps for catchment groups in Tairāwhiti, built from public data.</p>
-  <a class="card" href="whangara/"><b>Whangārā</b><span>Turihaua, Pouawa, Waiomoko and Pakarae catchments</span></a>
-  <a class="card" href="waimata/"><b>Waimata</b><span>Waimata River, above the Taruheru confluence</span></a>
+  <img class="logo" src="assets/logo.png" alt="">
+  <h1>Catchment biodiversity maps</h1>
+  <p class="lede">Interactive maps for catchment groups and landowners: species records, LiDAR canopy height, land cover, wetlands, rivers, protected areas and land use, built from public data.</p>
+  <div class="cards"><a class="card" href="waimata/"><b>Waimata</b><span>Waimata River, above the Taruheru confluence · Tairāwhiti</span></a>
+    <a class="card" href="whangara/"><b>Whangārā</b><span>Turihaua, Pouawa, Waiomoko and Pakarae catchments · Tairāwhiti</span></a></div>
+  <footer>© Rutherford Ecology · <a href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener">rutherfordecology.co.nz</a> · <a href="mailto:rutherfordecology@gmail.com">rutherfordecology@gmail.com</a> · Map engine v0.3.0</footer>
 </main>
 </body>
 </html>

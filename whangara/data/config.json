@@ -1,9 +1,77 @@
 {
   "slug": "whangara",
-  "pageTitle": "Whangārā Biodiversity Map",
+  "name": "Whangārā",
   "title": "Whangārā catchments biodiversity map",
   "mapLabel": "the Whangārā catchments",
-  "description": "Layers for the Whangārā community catchments, Tairāwhiti: species records, LiDAR canopy height, land cover, wetlands, rivers, protection and land use.",
   "areaText": "The Turihaua, Pouawa, Waiomoko and Pakarae catchments and the coastal streams between them",
-  "boundaryNote": "The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal streams between them, traced from NIWA's river network (REC2). Check the boundary with the catchment group."
+  "boundaryNote": "The area is the Turihaua, Pouawa, Waiomoko and Pakarae river catchments plus the small coastal streams between them, traced from NIWA's river network (REC2). Check the boundary with the catchment group.",
+  "layers": [
+    "landcover",
+    "qeii",
+    "pma",
+    "doc",
+    "wetlands",
+    "luc",
+    "overlay3a",
+    "overlays",
+    "rivers"
+  ],
+  "version": "v0.3.0",
+  "sources": [
+    {
+      "key": "boundary",
+      "short": "NIWA REC2",
+      "attr": "NIWA"
+    },
+    {
+      "key": "gbif",
+      "short": "GBIF.org",
+      "attr": "GBIF.org"
+    },
+    {
+      "key": "names",
+      "short": "iNaturalist and GBIF names",
+      "attr": ""
+    },
+    {
+      "key": "landcover",
+      "short": "LCDB v6, Manaaki Whenua",
+      "attr": "LCDB Manaaki Whenua"
+    },
+    {
+      "key": "luc",
+      "short": "NZLRI",
+      "attr": "NZLRI"
+    },
+    {
+      "key": "gdc",
+      "short": "Gisborne District Council",
+      "attr": "GDC"
+    },
+    {
+      "key": "qeii",
+      "short": "QEII National Trust",
+      "attr": "QEII"
+    },
+    {
+      "key": "doc",
+      "short": "DOC",
+      "attr": "DOC"
+    },
+    {
+      "key": "lidar",
+      "short": "LINZ LiDAR",
+      "attr": "LINZ"
+    },
+    {
+      "key": "basemap",
+      "short": "Esri basemaps",
+      "attr": ""
+    },
+    {
+      "key": "looklike",
+      "short": "LookLike",
+      "attr": ""
+    }
+  ]
 }

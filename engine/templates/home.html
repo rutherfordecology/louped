@@ -1,0 +1,26 @@
+<!-- Project home template: the engine's page step writes it to index.html at the top, listing every catchment. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catchment Maps</title>
+<meta name="description" content="Biodiversity maps for catchment groups, by Rutherford Ecology.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="brandbar">
+  <div class="who"><a class="wordmark" href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener"><strong>Rutherford</strong> <em>ecology</em></a><span class="what">Catchment maps</span></div>
+</header>
+<main>
+  <img class="logo" src="assets/logo.png" alt="">
+  <h1>Catchment biodiversity maps</h1>
+  <p class="lede">Interactive maps for catchment groups and landowners: species records, LiDAR canopy height, land cover, wetlands, rivers, protected areas and land use, built from public data.</p>
+  <div class="cards">{{CARDS}}</div>
+  <footer>© Rutherford Ecology · <a href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener">rutherfordecology.co.nz</a> · <a href="mailto:rutherfordecology@gmail.com">rutherfordecology@gmail.com</a> · Map engine {{VERSION}}</footer>
+</main>
+</body>
+</html>

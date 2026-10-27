@@ -2,19 +2,27 @@
 // hillshade, canopy height (DSM - DEM) and canopy height change. One 4 m
 // image per LINZ 1:10k tile, plus a 16 m overview of the whole area; all
 // warped to Web Mercator and cut to the area outline.
-// usage: node scripts/lidar.mjs <data/layers/area.json> <out dir>
+// Settings in catchment.json (LINZ nz-elevation region and survey names):
+//   "lidar": { "region": "gisborne", "now": "gisborne_2023", "before": "gisborne_2018-2020",
+//              "nowLabel": "2023", "beforeLabel": "2018–20" }
+// No "lidar", no LiDAR layers. Without "before", no height change.
+// usage: node engine/steps/lidar.mjs <catchment folder>
 import { fromUrl } from 'geotiff';
 import proj4 from 'proj4';
 import * as turf from '@turf/turf';
 import { PNG } from 'pngjs';
 import fs from 'node:fs';
+import { loadCatchment } from '../lib.mjs';
 
-const [areaFile, outDir] = process.argv.slice(2);
+const { cfg, path } = loadCatchment(process.argv[2]);
+if (!cfg.lidar) { console.error('no lidar in catchment.json'); process.exit(0); }
+const areaFile = path('data/layers/area.json'), outDir = path('data/lidar');
+fs.rmSync(outDir, { recursive: true, force: true }); // no stale tiles from an earlier boundary
 const area = JSON.parse(fs.readFileSync(areaFile, 'utf8')).outline;
 proj4.defs('EPSG:2193', '+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 +y_0=10000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
 const toNZ = (p) => proj4('EPSG:4326', 'EPSG:2193', p), toLL = (p) => proj4('EPSG:2193', 'EPSG:4326', p);
-const B = 'https://nz-elevation.s3.ap-southeast-2.amazonaws.com/gisborne/';
-const NEW = 'gisborne_2023', OLD = 'gisborne_2018-2020';
+const B = 'https://nz-elevation.s3.ap-southeast-2.amazonaws.com/' + cfg.lidar.region + '/';
+const NEW = cfg.lidar.now, OLD = cfg.lidar.before;
 const OX = 988000, OY = 6234000, TW = 4800, TH = 7200;
 const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ', p2 = v => String(v).padStart(2, '0');
 const tileName = (tx, ty) => { const col = Math.floor((tx - OX) / 24000), row = Math.floor((OY - ty) / 36000), sx0 = OX + col * 24000, sy0 = OY - row * 36000, idx = row + 16; return L[Math.floor(idx / 24)] + L[idx % 24] + p2(col) + '_10000_' + p2((sy0 - ty) / TH + 1) + p2((tx - sx0) / TW + 1); };
@@ -32,9 +40,9 @@ function maskRow(y, x0, res, n) { // inside flags for n cells along a row, by cr
 }
 
 const items = {};
-for (const s of [NEW, OLD]) for (const k of ['dem_1m', 'dsm_1m']) items[s + k] = new Set((await (await fetch(B + s + '/' + k + '/2193/collection.json')).json()).links.filter(l => l.rel === 'item').map(l => l.href.replace(/^\.\//, '').replace(/\.json$/, '')));
+for (const s of [NEW, OLD].filter(Boolean)) for (const k of ['dem_1m', 'dsm_1m']) items[s + k] = new Set((await (await fetch(B + s + '/' + k + '/2193/collection.json')).json()).links.filter(l => l.rel === 'item').map(l => l.href.replace(/^\.\//, '').replace(/\.json$/, '')));
 async function read(survey, kind, name, level) {
-  if (!items[survey + kind].has(name)) return null;
+  if (!survey || !items[survey + kind].has(name)) return null;
   for (let i = 0; i < 3; i++) {
     try { const im = await (await fromUrl(B + survey + '/' + kind + '/2193/' + name + '.tiff')).getImage(level); const nd = im.getGDALNoData(); const r = (await im.readRasters({ samples: [0] }))[0]; return { r, nd, w: im.getWidth(), h: im.getHeight() }; }
     catch (err) { if (i === 2) { console.error('read failed', survey, kind, name, err.message); return null; } }
@@ -128,4 +136,4 @@ for (const t of tiles) {
 const obb = [w - 0.003, s - 0.003, e + 0.003, n + 0.003];
 const opng = warp(ov, OR, ow, oh, gx0, gy1, obb, 1600);
 for (const key in opng) console.error('overview', key, Math.round(save(opng[key], outDir + '/' + key + '/overview.png') / 1024) + ' KB');
-fs.writeFileSync(outDir + '/index.json', JSON.stringify({ surveys: { now: '2023', before: '2018–20' }, overview: [[obb[1], obb[0]], [obb[3], obb[2]]], tiles: index }));
+fs.writeFileSync(outDir + '/index.json', JSON.stringify({ surveys: { now: cfg.lidar.nowLabel, before: OLD ? cfg.lidar.beforeLabel : null }, overview: [[obb[1], obb[0]], [obb[3], obb[2]]], tiles: index }));

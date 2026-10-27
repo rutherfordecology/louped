@@ -1,10 +1,14 @@
 // Public vector layers for the area, clipped to it: land cover, protection,
 // rivers, wetlands, land use capability and council erosion overlays.
-// usage: node scripts/vectors.mjs <catchments.geojson> <out dir>
+// Which layers: "layers" in catchment.json (keys of LAYERS below); regional
+// council layers only exist for their region.
+// usage: node engine/steps/vectors.mjs <catchment folder>
 import * as turf from '@turf/turf';
 import fs from 'node:fs';
+import { loadCatchment } from '../lib.mjs';
 
-const [areaFile, outDir] = process.argv.slice(2);
+const { cfg, path } = loadCatchment(process.argv[2]);
+const areaFile = path(cfg.boundary.file || 'inputs/catchments.geojson'), outDir = path('data/layers');
 const parts = JSON.parse(fs.readFileSync(areaFile, 'utf8')).features;
 let area = parts[0]; for (const p of parts.slice(1)) area = turf.union(area, p);
 // Fill any holes left where the parts meet
@@ -15,6 +19,7 @@ area = turf.truncate(area, { precision: 5 });
 const [w, s, e, n] = turf.bbox(area), env = [w, s, e, n].map(v => v.toFixed(4)).join(',');
 fs.mkdirSync(outDir, { recursive: true });
 
+// National layers, then Gisborne District Council's (AGO), which only cover Tairāwhiti
 const AGO = 'https://services7.arcgis.com/8G10QCd84QpdcTJ9/arcgis/rest/services/';
 const LAYERS = {
   landcover: { url: 'https://services.arcgis.com/XTtANUDT8Va4DLwI/arcgis/rest/services/New_Zealand_Land_Cover/FeatureServer/0', fields: 'Name_2023,Name_2018,Name_2012,Name_2001', props: a => ({ c: a.Name_2023, c18: a.Name_2018, c12: a.Name_2012, c01: a.Name_2001 }), clip: true, tol: 0.00003 },
@@ -62,7 +67,9 @@ async function fetchAll(L) {
 
 const round = (g) => turf.truncate(g, { precision: 5, mutate: true });
 const summary = {};
-for (const [key, L] of Object.entries(LAYERS)) {
+const unknown = cfg.layers.filter(k => !LAYERS[k]);
+if (unknown.length) throw new Error('unknown layers in catchment.json: ' + unknown.join(', ') + ' (known: ' + Object.keys(LAYERS).join(', ') + ')');
+for (const [key, L] of Object.entries(LAYERS).filter(([k]) => cfg.layers.includes(k))) {
   const raw = await fetchAll(L), out = [];
   for (const f of raw) {
     if (!f.geometry) continue;

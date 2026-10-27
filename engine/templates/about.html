@@ -1,0 +1,62 @@
+<!-- About page template: the engine's page step writes it into each catchment folder as about.html. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About the {{NAME}} map</title>
+<meta name="description" content="About the {{NAME}} catchment biodiversity map: what it shows, where the data comes from and how it can be used.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="brandbar">
+  <div class="who"><a class="wordmark" href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener"><strong>Rutherford</strong> <em>ecology</em></a><span class="what">{{NAME}} catchment map</span></div>
+  <nav><a href="./">Map</a><a href="../">All catchments</a></nav>
+</header>
+<main>
+  <img class="logo" src="../assets/logo.png" alt="">
+  <div>
+    <div class="eyebrow">About this map</div>
+    <h1>{{TITLE}}</h1>
+  </div>
+  <p class="lede">An interactive map for the {{NAME}} catchment group and landowners: the public information about the catchment's land, water and wildlife, in one place. It shows layers to turn on and off, not a score or ranking.</p>
+
+  <h2>Using the map</h2>
+  <ul>
+    <li><b>Layers.</b> Turn layers on and off with the eye, and fade them with the slider. Under land cover, <i>classes</i> lets you show only some kinds of cover, such as native vegetation.</li>
+    <li><b>What's here.</b> Click anywhere to see every layer at that spot, and any species records nearby.</li>
+    <li><b>Your block.</b> <i>Draw an area</i> around a property or block to get its species list, land cover and protected areas, and download them.</li>
+    <li><b>Species.</b> Species are grouped; click a group to open it. Tick species to show them on the map, click a name to see only its records, and use the camera (or <i>Photos in LookLike</i>) to see photos.</li>
+  </ul>
+
+  <h2>The catchment</h2>
+  <p>{{BOUNDARY_NOTE}} Area: {{AREA_HA}} ha.</p>
+
+  <h2>Species records</h2>
+  <p>{{GBIF_SUMMARY}}</p>
+  <ul>
+    <li>Records are shown where GBIF publishes them. Nothing is blurred on this map.</li>
+    <li>Left out: records whose location was already hidden by their source (for example iNaturalist obscures threatened species to about 28 km), records that could be more than {{MAX_UNC_KM}} km off, records with no name, and sea species recorded at the coast{{EXCLUDED}}.</li>
+    <li>Records cluster along roads, tracks and towns, where people go. Few records means few visits, not few species.</li>
+  </ul>
+
+  <h2>Data sources and licences</h2>
+  <p class="note">Whether each source can be used commercially, for example in paid work for a catchment group. Checked {{CHECKED}}; check the source before relying on it.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Source</th><th>Used for</th><th>Licence</th><th>Commercial use</th></tr></thead>
+    <tbody>{{SOURCES_ROWS}}</tbody>
+  </table></div>
+  <p class="note">{{LICENCE_SUMMARY}}</p>
+
+  <h2>Citing this map</h2>
+  <p>Rutherford Ecology ({{YEAR}}). {{TITLE}}. Built with the Rutherford Ecology catchment map engine {{VERSION}}. Species records: GBIF.org, snapshot {{GBIF_DATE}}.</p>
+
+  <footer>
+    © Rutherford Ecology · <a href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener">rutherfordecology.co.nz</a> · <a href="mailto:rutherfordecology@gmail.com">rutherfordecology@gmail.com</a> · Map engine {{VERSION}}
+  </footer>
+</main>
+</body>
+</html>

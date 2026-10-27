@@ -13,8 +13,8 @@
 /* Map on the left, layers and species on the right (stacked on phones).
    Survey-sheet type; data colours carry meaning, chrome stays quiet. */
 :root {
-  --bg: #eef1ed; --panel: #f8faf7; --ink: #18211c; --ink2: #4b5a51; --ink3: #7d8a81;
-  --line: #d3dbd4; --hover: #e4ebe5; --sel: #0b4d47; --accent: #0b4d47;
+  --bg: #f3f2ee; --panel: #fbfaf7; --ink: #1c1b18; --ink2: #56544c; --ink3: #8a877e;
+  --line: #dddbd3; --hover: #e8f4ef; --sel: #1a5940; --accent: #2a7a58; --brand: #1a5940;
   --river: #2f7fd0; --wet: #17a2a2; --qeii: #c96a00; --pma: #7348c9; --doc: #1f5fd1; --draw: #e0218a;
   --g-bird: #d6336c; --g-plant: #2f9e44; --g-fungi: #9c5d2e; --g-insect: #f08c00; --g-mammal: #6741d9; --g-herp: #0ca678; --g-fish: #1c7ed6; --g-inv: #e8590c; --g-other: #868e96;
   --mapbg: #dfe5df;
@@ -24,17 +24,27 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
-  --line: #2b352f; --hover: #202923; --sel: #9be3c6; --accent: #9be3c6;
+  --line: #2b352f; --hover: #1d2b24; --sel: #9be3c6; --accent: #6dba9a; --brand: #143f2e;
   --river: #6eb3ff; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
-  --line: #2b352f; --hover: #202923; --sel: #9be3c6; --accent: #9be3c6;
+  --line: #2b352f; --hover: #1d2b24; --sel: #9be3c6; --accent: #6dba9a; --brand: #143f2e;
   --river: #6eb3ff; --qeii: #f2a23a; --pma: #b49af2; --doc: #6ea0ff; --draw: #ff5cb0; --mapbg: #1b211d; color-scheme: dark; }
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; }
-.app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 410px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; display: flex; flex-direction: column; }
+/* Rutherford Ecology header, as on Occurd */
+.brandbar { background: var(--brand); color: #fff; height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
+.brandbar .who { display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap; font-family: system-ui, -apple-system, sans-serif; }
+.brandbar .wordmark { color: #fff; text-decoration: none; font-size: 16px; }
+.brandbar .wordmark strong { font-weight: 700; }
+.brandbar .wordmark em { font-weight: 300; font-style: normal; }
+.brandbar .what { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 300; overflow: hidden; text-overflow: ellipsis; }
+.brandbar nav { display: flex; gap: 4px; flex: none; }
+.brandbar nav a { color: #fff; text-decoration: none; font: 600 12px var(--f-body); padding: 5px 9px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); }
+.brandbar nav a:hover { background: rgba(255,255,255,.12); }
+.app { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 410px; }
 #map { height: 100%; background: var(--mapbg); }
 .leaflet-container { background: var(--mapbg); font-family: var(--f-body); }
 .drawing .leaflet-container { cursor: crosshair; }
@@ -78,6 +88,16 @@ input[type=search] { width: 100%; }
 .legend .lg { display: grid; gap: 3px; }
 .legend .keys { display: flex; flex-wrap: wrap; gap: 3px 10px; }
 .legend .keys span { display: inline-flex; gap: 5px; align-items: center; }
+/* Land cover classes: a dropdown under the land cover layer */
+.lc-more { border: 0; background: none; color: var(--ink3); cursor: pointer; padding: 0 4px; font-size: 11px; }
+.lc-more[aria-expanded="true"] { color: var(--ink); }
+.lc-classes { border-bottom: 1px solid var(--line); padding: 6px 0 8px 32px; display: grid; gap: 4px; font-size: 12px; }
+.lc-classes .row { gap: 4px; }
+.lc-classes label { display: grid; grid-template-columns: 16px 14px minmax(0, 1fr) auto; gap: 6px; align-items: center; cursor: pointer; }
+.lc-classes label span:nth-child(3) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-classes .v { font: 10.5px var(--f-data); color: var(--ink3); }
+.mini { font: 600 11px var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+.mini:hover { background: var(--hover); }
 .ramp { height: 8px; border-radius: 2px; }
 .ticks { display: flex; justify-content: space-between; font: 10.5px var(--f-data); color: var(--ink3); }
 /* Species */
@@ -85,8 +105,24 @@ input[type=search] { width: 100%; }
 .stat { background: var(--bg); border-radius: 4px; padding: 7px 8px; min-width: 0; }
 .stat b { display: block; font: 500 15px var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stat span { font-size: 10.5px; color: var(--ink3); letter-spacing: .04em; text-transform: uppercase; }
+/* Species grouped like Occurd's checklist: a header per group that folds away */
+.spgroups { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.spg-head { display: grid; grid-template-columns: 12px 8px minmax(0, 1fr) auto 18px; gap: 7px; align-items: center; padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1; font: 600 11px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); }
+.spg-head:hover { background: var(--hover); }
+.spg-head .chev { font-size: 9px; color: var(--ink3); transition: transform .15s; }
+.spg-head[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+.spg-head .n { font: 400 10.5px var(--f-data); letter-spacing: 0; text-transform: none; color: var(--ink3); }
+.spg-head.off > span { opacity: .45; }
+.spg:last-child .splist { border-bottom: 0; }
 .splist { list-style: none; margin: 0; padding: 0; }
-.sp { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.spg .splist { border-bottom: 1px solid var(--line); }
+.sp { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto 22px; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.sp:last-child { border-bottom: 0; }
+.sp.off .sp-name { opacity: .45; }
+input[type=checkbox] { accent-color: var(--accent); margin: 0; cursor: pointer; }
+.ll { color: var(--ink3); display: grid; place-items: center; border-radius: 4px; height: 22px; }
+.ll:hover { color: var(--accent); background: var(--bg); }
+.ll svg { width: 15px; height: 15px; }
 .sp:hover { background: var(--hover); }
 .sp[aria-current="true"] { background: var(--hover); box-shadow: inset 3px 0 0 var(--sel); }
 .sp-name { min-width: 0; display: grid; }
@@ -113,10 +149,16 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 @media (max-width: 760px) {
   .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 50vh minmax(0, 1fr); }
   .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .brandbar .what { display: none; }
 }
 </style>
 </head>
 <body>
+
+<header class="brandbar">
+  <div class="who"><a class="wordmark" href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener"><strong>Rutherford</strong> <em>ecology</em></a><span class="what">Waimata catchment map</span></div>
+  <nav><a href="about.html">About</a><a href="../">All catchments</a></nav>
+</header>
 
 <div class="app">
   <div id="map" role="region" aria-label="Map of the catchment"></div>
@@ -151,15 +193,15 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 
       <section class="sec" aria-labelledby="spTitle">
         <div class="row" style="justify-content: space-between;"><h2 id="spTitle">Species records</h2><span class="eyebrow" id="gbifDate"></span></div>
-        <div class="row" id="groupChips" role="group" aria-label="Groups shown"></div>
         <div class="row2">
           <label>Since <select id="sinceSel"><option value="0">any year</option><option value="2000">2000</option><option value="2010">2010</option><option value="2020">2020</option></select></label>
           <label>Location within <select id="precSel"><option value="0">any distance</option><option value="1000">1 km</option><option value="100">100 m</option></select></label>
+          <label>Licence <select id="licSel"><option value="0">any</option><option value="1">commercial use allowed</option></select></label>
         </div>
         <input type="search" id="spSearch" placeholder="Find a species" aria-label="Find a species">
-        <div class="row" style="justify-content: space-between;"><span class="eyebrow" id="spCount"></span><button class="btn" type="button" id="spClear" hidden>Show all species</button></div>
-        <ul class="splist" id="spList"></ul>
-        <div class="more"><button class="btn" type="button" id="spMore" hidden>Show more</button></div>
+        <div class="row" style="justify-content: space-between;"><span class="eyebrow" id="spCount"></span><span class="row"><button class="btn" type="button" id="spClear" hidden>Show all species</button><button class="btn" type="button" id="llBtn" title="Photos of the ticked species in LookLike">Photos in LookLike</button></span></div>
+        <div class="note" id="spHelp">Tick species to show them on the map and to see their photos in LookLike. Click a name to show only its records.</div>
+        <div class="spgroups" id="spList"></div>
       </section>
 
       <section class="sec">
@@ -167,13 +209,12 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
           <summary>About the data</summary>
           <ul>
             <li id="boundaryNote"></li>
-            <li>Species records are every public GBIF record in the area, at the location GBIF publishes. Some records are already blurred by their source (for example iNaturalist hides threatened species); their circle shows how far off they could be. Records cluster where people go, so few records means few visits, not few species.</li>
-            <li>Canopy height is the LINZ LiDAR surface model less the ground model (2023), shown at 4 m when zoomed in and 16 m when zoomed out. Height change is against the 2018–20 survey; changes under 2 m are left clear.</li>
-            <li>Land cover is LCDB v6 (2023). Wetlands are Gisborne District Council's provisional regional wetland assessment (2022), not all field-checked. Land use capability is NZLRI. Land Overlays 1–3 and 3A are the council's erosion-susceptibility overlays.</li>
+            <li>Species records are public GBIF records in the area, at the location GBIF publishes. Records whose location was hidden by their source, or could be more than 5 km off, are left out. Records cluster where people go, so few records means few visits, not few species.</li>
             <li>Click anywhere on the map to see every layer at that spot.</li>
           </ul>
-          <p style="margin:10px 0 0;">Data: GBIF.org (snapshot <span id="gbifDate2"></span>); LINZ LiDAR 1 m DEM and DSM, Gisborne 2018–20 and 2023 (CC BY 4.0); LCDB v6, Manaaki Whenua (CC BY 4.0); NIWA REC2; NZLRI; Gisborne District Council; QEII National Trust; DOC (CC BY 4.0). Imagery: Esri, Maxar, Earthstar Geographics. Built by <a href="https://sites.google.com/view/rutherford-ecology/home" target="_blank" rel="noopener">Rutherford Ecology</a>. <span id="ver"></span></p>
+          <p style="margin:10px 0 0;">Data: <span id="sourcesShort"></span> Sources, licences and methods: <a href="about.html">About this map</a>.</p>
         </details>
+        <p class="note" style="margin:0;">© Rutherford Ecology · <a href="mailto:rutherfordecology@gmail.com">rutherfordecology@gmail.com</a> · <span id="ver"></span></p>
       </section>
     </div>
   </aside>
@@ -182,7 +223,9 @@ details.about ul { padding-left: 18px; margin: 8px 0 0; display: grid; gap: 4px;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const APP_VERSION = 'v0.2.2';
+const APP_VERSION = 'v0.3.0';
+const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
+const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17.3 17.3 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 document.getElementById('ver').textContent = APP_VERSION;
@@ -191,19 +234,25 @@ document.getElementById('ver').textContent = APP_VERSION;
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmtHa = (m2) => { const ha = m2 / 1e4; return ha >= 100 ? Math.round(ha).toLocaleString() + ' ha' : ha >= 1 ? ha.toFixed(1) + ' ha' : ha.toFixed(2) + ' ha'; };
-  const getJSON = async (u) => (await fetch(u)).json();
+  // Always check for newer data: a rebuilt catchment must not show cached files
+  const getJSON = async (u) => (await fetch(u, { cache: 'no-cache' })).json();
 
   let area, lidar, gbif, cfg; const V = {};
   try {
     [cfg, area, lidar, gbif] = await Promise.all([getJSON('data/config.json'), getJSON('data/layers/area.json'), getJSON('data/lidar/index.json').catch(() => ({ tiles: [], overview: null })), getJSON('data/gbif.json')]);
-    const keys = ['landcover', 'luc', 'overlays', 'overlay3a', 'wetlands', 'rivers', 'qeii', 'pma', 'doc'];
+    // Only the layers this catchment has (catchment.json "layers"); the rest stay empty
+    const keys = cfg.layers;
     (await Promise.all(keys.map(k => getJSON('data/layers/' + k + '.json')))).forEach((fc, i) => V[keys[i]] = fc);
   } catch (e) { document.getElementById('summary').textContent = 'The map data didn\'t load. Reload the page to try again.'; return; }
+  const ALL_VECTORS = ['landcover', 'luc', 'overlays', 'overlay3a', 'wetlands', 'rivers', 'qeii', 'pma', 'doc'];
+  ALL_VECTORS.forEach(k => V[k] = V[k] || { type: 'FeatureCollection', features: [] });
+  const has = (k) => cfg.layers.includes(k) || !ALL_VECTORS.includes(k);
 
-  // This catchment's wording (data/config.json)
+  // This catchment's wording (data/config.json, written by the engine)
   document.getElementById('heading').textContent = cfg.title;
   document.getElementById('map').setAttribute('aria-label', 'Map of ' + cfg.mapLabel);
   document.getElementById('boundaryNote').textContent = cfg.boundaryNote;
+  document.getElementById('sourcesShort').textContent = cfg.sources.map(s => s.short).join('; ') + '.';
 
   // Map, panes bottom to top
   const map = L.map('map', { zoomSnap: 0.25, maxZoom: 19 });
@@ -212,7 +261,7 @@ document.getElementById('ver').textContent = APP_VERSION;
   const fillR = L.canvas({ pane: 'fills', padding: 0.3 }), lineR = L.canvas({ pane: 'lines', padding: 0.3 }), pointR = L.canvas({ pane: 'points', padding: 0.3, tolerance: 4 });
   const aerial = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 });
   const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 });
-  map.attributionControl.addAttribution('GBIF.org · LiDAR: LINZ CC BY 4.0 · LCDB v6 Manaaki Whenua · NIWA · GDC · QEII · DOC');
+  map.attributionControl.addAttribution(cfg.sources.filter(s => s.attr).map(s => s.attr).join(' · ') + ' · <a href="about.html">Sources</a>');
   const outline = L.geoJSON(area.outline, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 2.5, opacity: 1, fill: false }) });
   const parts = L.geoJSON(area.parts, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 1, opacity: .8, dashArray: '5 4', fill: false }) });
   const boundary = L.layerGroup([parts, outline]);
@@ -250,12 +299,17 @@ document.getElementById('ver').textContent = APP_VERSION;
   });
   gbif.rows = gbif.rows.filter(r => gbif.taxa[r[2]].name); // unnamed records say nothing about what was found
 
+  // Land cover classes shown (all to start); the dropdown under the layer ticks them
+  const LC_HA = {}; V.landcover.features.forEach(f => { LC_HA[f.properties.c] = (LC_HA[f.properties.c] || 0) + turf.area(f) / 1e4; });
+  const lcOn = new Set(Object.keys(LC_HA));
+  const lcStyle = (f, op) => ({ stroke: false, fillColor: lcCol(f.properties.c), fillOpacity: lcOn.has(f.properties.c) ? op : 0 });
+
   // Vector layers (not clickable themselves: a map click reports everything at that spot)
   const poly = (fc, style, r = fillR) => L.geoJSON(fc, { renderer: r, interactive: false, style });
   // Small headwater streams thin and faint; rivers wider
   const riverStyle = (f, op) => { const o = f.properties.order || 1; return { color: css('--river'), weight: [0, .7, 1, 1.6, 2.4, 3.2, 4][Math.min(6, o)], opacity: (o <= 2 ? .55 : 1) * op }; };
   const LAYER = {
-    landcover: poly(V.landcover, f => ({ stroke: false, fillColor: lcCol(f.properties.c), fillOpacity: 1 })),
+    landcover: poly(V.landcover, f => lcStyle(f, 1)),
     luc: poly(V.luc, f => ({ color: '#333', weight: .4, opacity: .5, fillColor: LUC_COL[f.properties.cls] || '#ccc', fillOpacity: 1 })),
     overlays: poly(V.overlays, f => ({ stroke: false, fillColor: OV_COL[f.properties.ov] || '#ddd', fillOpacity: 1 })),
     overlay3a: poly(V.overlay3a, () => ({ color: '#9b1c1c', weight: .6, fillColor: '#d7301f', fillOpacity: 1 })),
@@ -305,18 +359,22 @@ document.getElementById('ver').textContent = APP_VERSION;
       ['doc', 'DOC land', '<span class="swatch" style="border-color: var(--doc)"></span>', true, 1],
       ['boundary', 'Catchment boundaries', '<span class="swatch" style="border-color: var(--ink3); border-top-style: dashed"></span>', true, 1]]],
     ['Land', [
-      ['landcover', 'Land cover 2023 (LCDB)', '<span class="lfill" style="background: linear-gradient(90deg, #1d5e3a 33%, #dbe9a6 33% 66%, #7d6b3a 66%)"></span>', false, 0.7],
+      ['landcover', 'Land cover 2023', '<span class="lfill" style="background: linear-gradient(90deg, #1d5e3a 33%, #dbe9a6 33% 66%, #7d6b3a 66%)"></span>', false, 0.7],
       ['luc', 'Land use capability', '<span class="lfill" style="background: linear-gradient(90deg, #66bd63, #fee08b, #f46d43)"></span>', false, 0.6],
       ['overlay3a', 'Erosion: Land Overlay 3A', '<span class="lfill" style="background: #d7301f"></span>', false, 0.6],
       ['overlays', 'Erosion: Land Overlays 1–3', '<span class="lfill" style="background: linear-gradient(90deg, #fff3b0, #ffd166, #f4845f)"></span>', false, 0.6]]],
     ['LiDAR', [
-      ['chm', 'Canopy height 2023', '<span class="lfill" style="background: linear-gradient(90deg, #edf8b1, #41b6c4, #253494, #4a1486)"></span>', false, 0.85],
-      ['change', 'Height change since 2018–20', '<span class="lfill" style="background: linear-gradient(90deg, #e31a1c, #fee090 45%, #c7e9c0 55%, #238b45)"></span>', false, 0.85],
+      ['chm', 'Canopy height ' + lidar.surveys?.now, '<span class="lfill" style="background: linear-gradient(90deg, #edf8b1, #41b6c4, #253494, #4a1486)"></span>', false, 0.85],
+      ['change', 'Height change since ' + lidar.surveys?.before, '<span class="lfill" style="background: linear-gradient(90deg, #e31a1c, #fee090 45%, #c7e9c0 55%, #238b45)"></span>', false, 0.85],
       ['hillshade', 'Hillshade', '<span class="lfill" style="background: linear-gradient(135deg, #eee, #555)"></span>', false, 0.6]]],
     ['Base map', [
       ['aerial', 'Aerial photo', '<span class="lfill" style="background: linear-gradient(135deg, #6b8f4e, #2f4a2a)"></span>', true, 1],
       ['topo', 'Topographic map', '<span class="lfill" style="background: linear-gradient(135deg, #f3efe2, #c9d8b6)"></span>', false, 1]]]
   ];
+  // Drop layers this catchment doesn't have, and groups left empty
+  const hasLidar = lidar.tiles.length > 0;
+  GROUPS_UI.forEach(g => { g[1] = g[1].filter(([k]) => has(k) && (!['chm', 'change', 'hillshade'].includes(k) || hasLidar) && (k !== 'change' || lidar.surveys?.before)); });
+  for (let i = GROUPS_UI.length - 1; i >= 0; i--) if (!GROUPS_UI[i][1].length) GROUPS_UI.splice(i, 1);
   const LSTATE = {};
   GROUPS_UI.forEach(([, list]) => list.forEach(([k, name, sw, on, op]) => LSTATE[k] = { name, sw, on, op }));
   function applyLayer(k) {
@@ -326,6 +384,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     else if (k === 'records') drawRecords();
     else if (k === 'rivers') g.eachLayer(l => l.setStyle(riverStyle(l.feature, s.op)));
     else if (k === 'boundary') g.eachLayer(l => l.setStyle({ opacity: s.op }));
+    else if (k === 'landcover') g.setStyle(f => lcStyle(f, s.op));
     else if (['qeii', 'pma', 'doc', 'wetlands'].includes(k)) g.setStyle({ opacity: s.op, fillOpacity: (k === 'wetlands' ? .45 : .12) * s.op });
     else g.setStyle({ fillOpacity: s.op, opacity: .5 * s.op });
     renderLegend();
@@ -333,7 +392,8 @@ document.getElementById('ver').textContent = APP_VERSION;
   document.getElementById('layerGroups').innerHTML = GROUPS_UI.map(([gname, list]) => '<div class="group-name">' + gname + '</div><ul class="layers">' + list.map(([k]) => {
     const s = LSTATE[k];
     return '<li class="layer' + (s.on ? '' : ' off') + '" data-key="' + k + '"><button class="eye" type="button" aria-pressed="' + s.on + '" aria-label="' + (s.on ? 'Hide ' : 'Show ') + esc(s.name) + '">' + (s.on ? EYE : EYE_OFF) + '</button>' +
-      '<span class="lswatch">' + s.sw + '</span><span class="lname">' + esc(s.name) + '</span><input type="range" min="0" max="100" step="5" value="' + Math.round(s.op * 100) + '" aria-label="' + esc(s.name) + ' opacity"></li>';
+      '<span class="lswatch">' + s.sw + '</span><span class="lname">' + esc(s.name) + (k === 'landcover' ? '<button class="lc-more" type="button" aria-expanded="false" aria-controls="lcClasses" title="Choose land cover classes">▾ classes</button>' : '') + '</span><input type="range" min="0" max="100" step="5" value="' + Math.round(s.op * 100) + '" aria-label="' + esc(s.name) + ' opacity"></li>' +
+      (k === 'landcover' ? '<li class="lc-classes" id="lcClasses" hidden></li>' : '');
   }).join('') + '</ul>').join('');
   document.querySelectorAll('.layer').forEach(li => {
     const k = li.dataset.key, s = LSTATE[k], eye = li.querySelector('.eye');
@@ -347,39 +407,50 @@ document.getElementById('ver').textContent = APP_VERSION;
     li.querySelector('input').addEventListener('input', e => { s.op = e.target.value / 100; applyLayer(k); });
   });
 
+  // Land cover classes: tick to show; quick picks for all, native, none
+  const lcBox = document.getElementById('lcClasses');
+  if (lcBox) {
+    const classes = Object.keys(LC_HA).sort((a, b) => LC_HA[b] - LC_HA[a]);
+    const fmt = (ha) => ha >= 100 ? Math.round(ha).toLocaleString() + ' ha' : ha.toFixed(1) + ' ha';
+    lcBox.innerHTML = '<div class="row"><button class="mini" type="button" data-pick="all">All</button><button class="mini" type="button" data-pick="native">Native</button><button class="mini" type="button" data-pick="none">None</button></div>' +
+      classes.map(c => '<label><input type="checkbox" data-c="' + esc(c) + '" checked><i class="lfill" style="background:' + lcCol(c) + '"></i><span>' + esc(c) + '</span><span class="v">' + fmt(LC_HA[c]) + '</span></label>').join('');
+    const sync = () => { lcBox.querySelectorAll('[data-c]').forEach(cb => { cb.checked = lcOn.has(cb.dataset.c); }); if (!LSTATE.landcover.on && lcOn.size) document.querySelector('[data-key="landcover"] .eye').click(); else applyLayer('landcover'); };
+    lcBox.addEventListener('change', e => { const c = e.target.dataset.c; if (c == null) return; e.target.checked ? lcOn.add(c) : lcOn.delete(c); sync(); });
+    lcBox.addEventListener('click', e => { const p = e.target.dataset.pick; if (!p) return; lcOn.clear(); classes.forEach(c => { if (p === 'all' || (p === 'native' && NATIVE.has(c))) lcOn.add(c); }); sync(); });
+    const more = document.querySelector('.lc-more');
+    more.addEventListener('click', () => { const open = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', String(open)); lcBox.hidden = !open; });
+  }
+
   // Legend for the coloured layers that are on
   function renderLegend() {
-    const out = [];
-    if (LSTATE.chm.on) out.push('<div class="lg"><span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div></div>');
-    if (LSTATE.change.on) out.push('<div class="lg"><span>Height change since 2018–20, m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div></div>');
-    if (LSTATE.landcover.on) { const present = [...new Set(V.landcover.features.map(f => f.properties.c))]; out.push('<div class="lg"><span>Land cover 2023</span><div class="keys">' + present.sort().map(c => '<span><i class="lfill" style="background:' + lcCol(c) + '"></i>' + esc(c) + '</span>').join('') + '</div></div>'); }
-    if (LSTATE.luc.on) out.push('<div class="lg"><span>Land use capability class (1 = most versatile, 8 = least)</span><div class="keys">' + Object.entries(LUC_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k + '</span>').join('') + '</div></div>');
-    if (LSTATE.overlays.on || LSTATE.overlay3a.on) out.push('<div class="lg"><span>Council erosion overlays</span><div class="keys">' + (LSTATE.overlay3a.on ? '<span><i class="lfill" style="background:#d7301f"></i>3A, highly erodible</span>' : '') + (LSTATE.overlays.on ? Object.entries(OV_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k.replace('Land ', 'Overlay ') + '</span>').join('') : '') + '</div></div>');
+    const out = [], on = (k) => !!LSTATE[k]?.on;
+    if (on('chm')) out.push('<div class="lg"><span>Canopy height, m</span><div class="ramp" style="background: linear-gradient(90deg, #edf8b1, #c7e9b4, #7fcdbb, #41b6c4, #2c7fb8, #253494, #081d58, #4a1486)"></div><div class="ticks"><span>1</span><span>6</span><span>15</span><span>30</span><span>45+</span></div></div>');
+    if (on('change')) out.push('<div class="lg"><span>Height change since ' + esc(lidar.surveys.before) + ', m</span><div class="ramp" style="background: linear-gradient(90deg, #800026, #e31a1c, #fd8d3c, #fee090 48%, transparent 48% 52%, #c7e9c0 52%, #74c476, #238b45, #00441b)"></div><div class="ticks"><span>−20 lost</span><span>±2 clear</span><span>+20 grew</span></div></div>');
+    if (on('landcover')) { const present = [...lcOn]; out.push('<div class="lg"><span>Land cover 2023</span><div class="keys">' + present.sort().map(c => '<span><i class="lfill" style="background:' + lcCol(c) + '"></i>' + esc(c) + '</span>').join('') + '</div></div>'); }
+    if (on('luc')) out.push('<div class="lg"><span>Land use capability class (1 = most versatile, 8 = least)</span><div class="keys">' + Object.entries(LUC_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k + '</span>').join('') + '</div></div>');
+    if (on('overlays') || on('overlay3a')) out.push('<div class="lg"><span>Council erosion overlays</span><div class="keys">' + (on('overlay3a') ? '<span><i class="lfill" style="background:#d7301f"></i>3A, highly erodible</span>' : '') + (on('overlays') ? Object.entries(OV_COL).map(([k, c]) => '<span><i class="lfill" style="background:' + c + '"></i>' + k.replace('Land ', 'Overlay ') + '</span>').join('') : '') + '</div></div>');
     document.getElementById('legend').innerHTML = out.join('');
   }
 
-  // Species filters
-  const fState = { groups: new Set(GROUPS.map(g => g[0])), since: 0, prec: 0, taxon: null, search: '', shown: 60 };
-  const groupCounts = {}; gbif.rows.forEach(r => { const g = gbif.taxa[r[2]].g; groupCounts[g] = (groupCounts[g] || 0) + 1; });
-  document.getElementById('groupChips').innerHTML = GROUPS.filter(([k]) => groupCounts[k]).map(([k, name]) => '<button class="chip" type="button" data-g="' + k + '" aria-pressed="true"><span class="dot" style="background:' + GCOL[k] + '"></span>' + name + ' <span class="n">' + groupCounts[k].toLocaleString() + '</span></button>').join('');
-  document.querySelectorAll('[data-g]').forEach(c => c.addEventListener('click', () => {
-    const on = c.getAttribute('aria-pressed') !== 'true';
-    // A click on one group when all are on shows that group alone
-    if (!on && fState.groups.size === Object.keys(groupCounts).length) { fState.groups = new Set([c.dataset.g]); document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', String(x === c))); }
-    else { c.setAttribute('aria-pressed', String(on)); on ? fState.groups.add(c.dataset.g) : fState.groups.delete(c.dataset.g); if (!fState.groups.size) { fState.groups = new Set(Object.keys(groupCounts)); document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', 'true')); } }
-    refresh();
-  }));
+  // Species filters. Ticked species show on the map (all to start); groups
+  // fold away like Occurd's checklist.
+  const fState = { since: 0, prec: 0, noNC: false, taxon: null, search: '' };
+  const hiddenTaxa = new Set(), openGroups = new Set();
+  const NC = new Set(gbif.licences ? gbif.licences.map((l, i) => l === 'CC BY-NC' ? i : -1).filter(i => i >= 0) : []);
+  if (!gbif.licences) document.getElementById('licSel').closest('label').hidden = true;
   document.getElementById('sinceSel').addEventListener('change', e => { fState.since = +e.target.value; refresh(); });
   document.getElementById('precSel').addEventListener('change', e => { fState.prec = +e.target.value; refresh(); });
-  document.getElementById('spSearch').addEventListener('input', e => { fState.search = e.target.value.trim().toLowerCase(); fState.shown = 60; renderSpecies(); });
-  document.getElementById('spMore').addEventListener('click', () => { fState.shown += 60; renderSpecies(); });
+  document.getElementById('licSel').addEventListener('change', e => { fState.noNC = e.target.value === '1'; refresh(); });
+  document.getElementById('spSearch').addEventListener('input', e => { fState.search = e.target.value.trim().toLowerCase(); renderSpecies(); });
   document.getElementById('spClear').addEventListener('click', () => { fState.taxon = null; refresh(); });
 
   // Drawn area
   let drawn = null, drawing = false, pts = [], guide = null;
   const drawnLayer = L.layerGroup().addTo(map);
   const inDrawn = (lng, lat) => !drawn || turf.booleanPointInPolygon([lng, lat], drawn);
-  const passes = (r, ignoreTaxon) => { const t = gbif.taxa[r[2]]; return fState.groups.has(t.g) && (!fState.since || r[3] >= fState.since) && (!fState.prec || (r[4] > 0 && r[4] <= fState.prec)) && (ignoreTaxon || fState.taxon == null || r[2] === fState.taxon); };
+  // base: the year, precision and licence filters; passes: also ticked, and the picked species
+  const base = (r) => (!fState.since || r[3] >= fState.since) && (!fState.prec || (r[4] > 0 && r[4] <= fState.prec)) && (!fState.noNC || !NC.has(r[9]));
+  const passes = (r, ignoreTaxon) => base(r) && !hiddenTaxa.has(r[2]) && (ignoreTaxon || fState.taxon == null || r[2] === fState.taxon);
   let scoped = []; // records in the area (whole or drawn), before filters
   const scope = () => { scoped = gbif.rows.filter(r => inDrawn(r[0], r[1])); };
 
@@ -393,24 +464,60 @@ document.getElementById('ver').textContent = APP_VERSION;
     });
   }
 
+  let listed = []; // species in the list now, for LookLike
+  const lookLikeUrl = (names) => LOOKLIKE + '?s=' + encodeURIComponent(names.join('|'));
   function renderSpecies() {
     const counts = new Map();
-    scoped.forEach(r => { if (!passes(r, true)) return; const c = counts.get(r[2]) || { n: 0, last: 0 }; c.n++; c.last = Math.max(c.last, r[3]); counts.set(r[2], c); });
+    scoped.forEach(r => { if (!base(r)) return; const c = counts.get(r[2]) || { n: 0, last: 0 }; c.n++; c.last = Math.max(c.last, r[3]); counts.set(r[2], c); });
     let list = [...counts.entries()].map(([i, c]) => ({ i, t: gbif.taxa[i], ...c }));
     if (fState.search) list = list.filter(x => (x.t.name + ' ' + (x.t.en || '') + ' ' + (x.t.mi || '')).toLowerCase().includes(fState.search));
     list.sort((a, b) => b.n - a.n || a.t.label.localeCompare(b.t.label));
-    const nSp = [...counts.keys()].filter(i => gbif.taxa[i].rank === 'SPECIES').length;
-    document.getElementById('spCount').textContent = nSp.toLocaleString() + ' species · ' + [...counts.values()].reduce((s, c) => s + c.n, 0).toLocaleString() + ' records';
-    document.getElementById('spList').innerHTML = list.slice(0, fState.shown).map(x => '<li class="sp" tabindex="0" data-i="' + x.i + '"' + (fState.taxon === x.i ? ' aria-current="true"' : '') + '><span class="dot" style="background:' + GCOL[x.t.g] + '"></span>' +
+    listed = list;
+    const shown = list.filter(x => !hiddenTaxa.has(x.i));
+    document.getElementById('spCount').textContent = shown.filter(x => x.t.rank === 'SPECIES').length.toLocaleString() + ' species · ' + shown.reduce((s, x) => s + x.n, 0).toLocaleString() + ' records';
+    const row = (x) => '<li class="sp' + (hiddenTaxa.has(x.i) ? ' off' : '') + '" tabindex="0" data-i="' + x.i + '"' + (fState.taxon === x.i ? ' aria-current="true"' : '') + '>' +
+      '<input type="checkbox" class="sp-cb"' + (hiddenTaxa.has(x.i) ? '' : ' checked') + ' aria-label="Show ' + esc(x.t.label) + ' on the map">' +
       '<span class="sp-name"><b>' + esc(x.t.label) + '</b><i>' + esc(x.t.label !== x.t.name ? x.t.name : (x.t.family || x.t.order || '')) + (x.t.miExtra ? ' · ' + esc(x.t.miExtra) : '') + (x.t.iucn && !['LC', 'NE', 'DD', 'NA'].includes(x.t.iucn) ? ' · IUCN ' + x.t.iucn : '') + '</i></span>' +
-      '<span class="sp-n">' + x.n + (x.last ? '<br>' + x.last : '') + '</span></li>').join('');
-    document.getElementById('spMore').hidden = list.length <= fState.shown;
+      '<span class="sp-n">' + x.n + (x.last ? '<br>' + x.last : '') + '</span>' +
+      (x.t.rank === 'SPECIES' ? '<a class="ll" href="' + lookLikeUrl([x.t.name]) + '" target="_blank" rel="noopener" title="Photos of ' + esc(x.t.label) + ' in LookLike">' + CAMERA + '</a>' : '<span></span>') + '</li>';
+    document.getElementById('spList').innerHTML = GROUPS.map(([g, name]) => {
+      const items = list.filter(x => x.t.g === g); if (!items.length) return '';
+      const on = items.filter(x => !hiddenTaxa.has(x.i)).length, nSp = items.filter(x => x.t.rank === 'SPECIES').length;
+      const open = openGroups.has(g) || !!fState.search || items.some(x => x.i === fState.taxon);
+      return '<div class="spg" data-g="' + g + '"><div class="spg-head' + (on ? '' : ' off') + '" role="button" tabindex="0" aria-expanded="' + open + '">' +
+        '<span class="chev">▼</span><span class="dot" style="background:' + GCOL[g] + '"></span><span>' + name + '</span><span class="n">' + nSp.toLocaleString() + ' sp · ' + items.reduce((s, x) => s + x.n, 0).toLocaleString() + '</span>' +
+        '<input type="checkbox" class="spg-cb"' + (on ? ' checked' : '') + (on && on < items.length ? ' data-mixed="1"' : '') + ' aria-label="Show all ' + name + ' on the map"></div>' +
+        (open ? '<ul class="splist">' + items.map(row).join('') + '</ul>' : '') + '</div>';
+    }).join('') || '<p class="note" style="padding:10px;margin:0;">No records match.</p>';
+    document.querySelectorAll('.spg-cb[data-mixed]').forEach(cb => { cb.indeterminate = true; });
     document.getElementById('spClear').hidden = fState.taxon == null;
   }
   const spList = document.getElementById('spList');
-  const pickTaxon = (li) => { const i = +li.dataset.i; fState.taxon = fState.taxon === i ? null : i; drawRecords(); renderSpecies(); if (fState.taxon != null) { const b = L.latLngBounds(scoped.filter(r => r[2] === i && passes(r)).map(r => [r[1], r[0]])); if (b.isValid() && !LSTATE.records.on) document.querySelector('[data-key="records"] .eye').click(); if (b.isValid()) map.fitBounds(b, { padding: [40, 40], maxZoom: 15 }); } };
-  spList.addEventListener('click', e => { const li = e.target.closest('.sp'); if (li) pickTaxon(li); });
-  spList.addEventListener('keydown', e => { const li = e.target.closest('.sp'); if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pickTaxon(li); } });
+  const pickTaxon = (li) => { const i = +li.dataset.i; fState.taxon = fState.taxon === i ? null : i; if (fState.taxon != null) hiddenTaxa.delete(i); drawRecords(); renderSpecies(); if (fState.taxon != null) { const b = L.latLngBounds(scoped.filter(r => r[2] === i && passes(r)).map(r => [r[1], r[0]])); if (b.isValid() && !LSTATE.records.on) document.querySelector('[data-key="records"] .eye').click(); if (b.isValid()) map.fitBounds(b, { padding: [40, 40], maxZoom: 15 }); } };
+  const toggleGroup = (head) => { const g = head.closest('.spg').dataset.g; openGroups.has(g) ? openGroups.delete(g) : openGroups.add(g); renderSpecies(); };
+  spList.addEventListener('change', e => {
+    if (e.target.classList.contains('sp-cb')) { const i = +e.target.closest('.sp').dataset.i; e.target.checked ? hiddenTaxa.delete(i) : hiddenTaxa.add(i); if (!e.target.checked && fState.taxon === i) fState.taxon = null; }
+    else if (e.target.classList.contains('spg-cb')) { const g = e.target.closest('.spg').dataset.g; listed.filter(x => x.t.g === g).forEach(x => e.target.checked ? hiddenTaxa.delete(x.i) : hiddenTaxa.add(x.i)); }
+    else return;
+    drawRecords(); renderSpecies();
+  });
+  spList.addEventListener('click', e => {
+    if (e.target.closest('input, a')) return;
+    const head = e.target.closest('.spg-head'); if (head) { toggleGroup(head); return; }
+    const li = e.target.closest('.sp'); if (li) pickTaxon(li);
+  });
+  spList.addEventListener('keydown', e => {
+    if (e.target.matches('input') || !(e.key === 'Enter' || e.key === ' ')) return;
+    const head = e.target.closest('.spg-head'), li = e.target.closest('.sp');
+    if (head) { e.preventDefault(); toggleGroup(head); } else if (li) { e.preventDefault(); pickTaxon(li); }
+  });
+  // LookLike takes a list of names: the most-recorded ticked species, up to 50
+  document.getElementById('llBtn').addEventListener('click', () => {
+    const names = listed.filter(x => !hiddenTaxa.has(x.i) && x.t.rank === 'SPECIES').map(x => x.t.name);
+    if (!names.length) { alert('Tick at least one species first.'); return; }
+    if (names.length > 50 && !confirm('LookLike shows up to 50 species at once. Open the 50 most-recorded of the ' + names.length + ' ticked?')) return;
+    window.open(lookLikeUrl(names.slice(0, 50)), '_blank', 'noopener');
+  });
 
   // Area summary: size, protection, wetlands, land cover
   const shapeArea = drawnShape => drawnShape || area.outline;
@@ -439,8 +546,8 @@ document.getElementById('ver').textContent = APP_VERSION;
     save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_species' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
   }
   function downloadRecords() {
-    const rows = [['gbif_id', 'scientific_name', 'common_name', 'group', 'date', 'year', 'latitude', 'longitude', 'uncertainty_m', 'basis_of_record', 'dataset', 'gbif_url']];
-    scoped.filter(r => passes(r)).forEach(r => { const t = gbif.taxa[r[2]]; rows.push([r[7], t.name, t.en || '', GROUPS.find(g => g[0] === t.g)[1], r[8], r[3] || '', r[1], r[0], r[4] || '', gbif.bases[r[5]], gbif.datasets[r[6]].name, 'https://www.gbif.org/occurrence/' + r[7]]); });
+    const rows = [['gbif_id', 'scientific_name', 'common_name', 'group', 'date', 'year', 'latitude', 'longitude', 'uncertainty_m', 'basis_of_record', 'dataset', 'licence', 'gbif_url']];
+    scoped.filter(r => passes(r)).forEach(r => { const t = gbif.taxa[r[2]]; rows.push([r[7], t.name, t.en || '', GROUPS.find(g => g[0] === t.g)[1], r[8], r[3] || '', r[1], r[0], r[4] || '', gbif.bases[r[5]], gbif.datasets[r[6]].name, gbif.licences ? gbif.licences[r[9]] : '', 'https://www.gbif.org/occurrence/' + r[7]]); });
     save(rows.map(r => r.map(csvCell).join(',')).join('\n'), cfg.slug + '_gbif_records' + (drawn ? '_drawn_area' : '') + '.csv', 'text/csv');
   }
 
@@ -478,7 +585,7 @@ document.getElementById('ver').textContent = APP_VERSION;
     const near = []; if (LSTATE.records.on) { const p0 = map.latLngToContainerPoint(latlng); scoped.forEach(r => { if (passes(r) && map.latLngToContainerPoint([r[1], r[0]]).distanceTo(p0) < 8) near.push(r); }); }
     if (rec && !near.includes(rec)) near.unshift(rec);
     if (near.length) {
-      out.push('<h3>Species records (' + near.length + ')</h3>' + near.slice(0, 6).map(r => { const t = gbif.taxa[r[2]]; return '<div class="rec"><b>' + esc(t.label) + '</b>' + (t.label !== t.name ? ' <i>' + esc(t.name) + '</i>' : '') + '<br>' + esc(r[8] || r[3] || 'no date') + ' · ' + (r[4] ? 'within ' + (r[4] >= 1000 ? (r[4] / 1000).toFixed(1) + ' km' : Math.round(r[4]) + ' m') : 'precision not given') + '<br>' + esc(gbif.datasets[r[6]].name) + ' · <a href="https://www.gbif.org/occurrence/' + r[7] + '" target="_blank" rel="noopener">GBIF record</a></div>'; }).join('') + (near.length > 6 ? '<div class="rec">and ' + (near.length - 6) + ' more here</div>' : ''));
+      out.push('<h3>Species records (' + near.length + ')</h3>' + near.slice(0, 6).map(r => { const t = gbif.taxa[r[2]]; return '<div class="rec"><b>' + esc(t.label) + '</b>' + (t.label !== t.name ? ' <i>' + esc(t.name) + '</i>' : '') + '<br>' + esc(r[8] || r[3] || 'no date') + ' · ' + (r[4] ? 'within ' + (r[4] >= 1000 ? (r[4] / 1000).toFixed(1) + ' km' : Math.round(r[4]) + ' m') : 'precision not given') + '<br>' + esc(gbif.datasets[r[6]].name) + (gbif.licences ? ' · ' + esc(gbif.licences[r[9]]) : '') + ' · <a href="https://www.gbif.org/occurrence/' + r[7] + '" target="_blank" rel="noopener">GBIF record</a></div>'; }).join('') + (near.length > 6 ? '<div class="rec">and ' + (near.length - 6) + ' more here</div>' : ''));
       unc.clearLayers(); near.slice(0, 6).forEach(r => { if (r[4] > 0) L.circle([r[1], r[0]], { radius: r[4], renderer: lineR, color: GCOL[gbif.taxa[r[2]].g], weight: 1.5, fillOpacity: .08, interactive: false }).addTo(unc); });
     } else unc.clearLayers();
     const inArea = turf.booleanPointInPolygon(pt, area.outline);
@@ -499,7 +606,7 @@ document.getElementById('ver').textContent = APP_VERSION;
   map.on('popupclose', () => unc.clearLayers());
 
   function refresh(withArea) { drawRecords(); renderSpecies(); if (withArea) renderArea(); }
-  const fetched = gbif.fetched; document.getElementById('gbifDate').textContent = 'GBIF, ' + fetched; document.getElementById('gbifDate2').textContent = fetched;
+  const fetched = gbif.fetched; document.getElementById('gbifDate').textContent = 'GBIF, ' + fetched;
   document.getElementById('summary').textContent = cfg.areaText + ': ' + Math.round(area.km2 * 100).toLocaleString() + ' ha. Turn layers on and off, click the map to see what\'s at a spot, or draw an area for its species list and land cover.';
   scope();
   Object.keys(LSTATE).forEach(applyLayer);

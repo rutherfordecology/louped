@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.3.0 — 2026-10-27
+
+- **Catchment map engine.** Every catchment is now built from one settings
+  file, `<catchment>/catchment.json` (wording, boundary recipe, layers,
+  LiDAR surveys, species exclusions), by `node engine/build.mjs <catchment>`.
+  The build scripts, templates and data-source register live in `engine/`;
+  `scripts/` and the old master page are gone.
+- **Waimata figures corrected.** After v0.2.1's boundary change the area is
+  17% native cover, 1,410 ha protected and 41.0 ha of mapped wetlands; the
+  figures read off the map then came from cached data files.
+- **Species list like Occurd's.** Species are grouped (birds, plants, fungi
+  and so on) under headers that fold away. Tick species or whole groups to
+  show them on the map. Each species links to its photos in LookLike, and
+  *Photos in LookLike* opens the ticked species (up to 50).
+- **Land cover classes.** The land cover layer has a *classes* dropdown:
+  tick the LCDB classes to show, or pick all, native or none.
+- **Licences.** Each species record now carries its licence (CC0, CC BY or
+  CC BY-NC), shown in the record popup and the records download, with a
+  filter for records that allow commercial use.
+- **Rutherford Ecology branding and an About page** for each catchment:
+  how to use the map, the boundary, what was left out, a table of data
+  sources with their licences and whether they allow commercial use, and how
+  to cite the map. The project home page is branded too.
+- The map always checks for newer data files, so a rebuilt catchment never
+  shows cached data.
+
 ## v0.2.2 — 2026-10-27
 
 - **Better common names.** Species now take iNaturalist's preferred name for

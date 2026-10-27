@@ -1,11 +1,13 @@
 // Snapshot of public GBIF occurrence records inside the area, at the
 // coordinates GBIF publishes (nothing blurred or gridded here).
-// usage: node scripts/gbif.mjs <data/layers/area.json> <out.json>
+// Settings in catchment.json: "gbif": { "exclude": [species...], "maxUncertaintyM": 5000 }
+// usage: node engine/steps/gbif.mjs <catchment folder>
 import * as turf from '@turf/turf';
 import fs from 'node:fs';
-import { commonNames } from './names.mjs';
+import { loadCatchment } from '../lib.mjs';
 
-const [areaFile, outFile] = process.argv.slice(2);
+const { cfg, path } = loadCatchment(process.argv[2]);
+const areaFile = path('data/layers/area.json'), outFile = path('data/gbif.json');
 const area = JSON.parse(fs.readFileSync(areaFile, 'utf8')).outline;
 const [w, s, e, n] = turf.bbox(area);
 const API = 'https://api.gbif.org/v1/';
@@ -40,7 +42,7 @@ console.error(recs.length + ' records in the box');
 // iNaturalist's ~28 km for threatened taxa) or could be more than MAX_UNC_M
 // off; and taxa that don't belong on a land map (marine species recorded at
 // the coast).
-const MAX_UNC_M = 5000, EXCLUDE = new Set(['Jasus edwardsii', 'Evechinus chloroticus', 'Haliotis iris', 'Prionace glauca', 'Cookia sulcata', 'Maoricolpus roseus']);
+const MAX_UNC_M = cfg.gbif?.maxUncertaintyM ?? 5000, EXCLUDE = new Set(cfg.gbif?.exclude || []);
 const why = {}, drop = (k) => { why[k] = (why[k] || 0) + 1; return false; };
 const inside = recs.filter(r => {
   if (!turf.booleanPointInPolygon([r.decimalLongitude, r.decimalLatitude], area)) return false;
@@ -54,18 +56,20 @@ console.error(inside.length + ' kept inside the area; left out: ' + JSON.stringi
 
 // Lookup tables keep the file small: species, datasets, record types
 const idx = (arr, map, key, make) => { if (!map.has(key)) { map.set(key, arr.length); arr.push(make()); } return map.get(key); };
-const taxa = [], taxaM = new Map(), datasets = [], dsM = new Map(), bases = [], bM = new Map();
+const taxa = [], taxaM = new Map(), datasets = [], dsM = new Map(), bases = [], bM = new Map(), licences = [], lM = new Map();
+// Each record's licence, short form: CC0, CC BY or CC BY-NC
+const licence = (u) => /zero|publicdomain/i.test(u || '') ? 'CC0' : /by-nc/i.test(u || '') ? 'CC BY-NC' : /\/by\//i.test(u || '') ? 'CC BY' : (u || 'unknown');
 const rows = inside.map(r => {
   const key = r.speciesKey || r.genusKey || r.familyKey || r.taxonKey;
   const t = idx(taxa, taxaM, key, () => ({ key, name: r.species || r.scientificName.split(' ')[0], rank: r.speciesKey ? 'SPECIES' : (r.taxonRank || ''), kingdom: r.kingdom || '', phylum: r.phylum || '', cls: r.class || '', order: r.order || '', family: r.family || '', iucn: r.iucnRedListCategory || '' }));
   const d = idx(datasets, dsM, r.datasetKey, () => ({ key: r.datasetKey, name: r.datasetName || '' }));
   const b = idx(bases, bM, r.basisOfRecord, () => r.basisOfRecord);
-  return [+r.decimalLongitude.toFixed(5), +r.decimalLatitude.toFixed(5), t, r.year || 0, r.coordinateUncertaintyInMeters || 0, b, d, r.key, (r.eventDate || '').slice(0, 10)];
+  const lic = licence(r.license), l = idx(licences, lM, lic, () => lic);
+  return [+r.decimalLongitude.toFixed(5), +r.decimalLatitude.toFixed(5), t, r.year || 0, r.coordinateUncertaintyInMeters || 0, b, d, r.key, (r.eventDate || '').slice(0, 10), l];
 });
 
-// Common names (see names.mjs)
-await commonNames(taxa);
+// Common names: the names step, next
 for (const d of datasets) if (!d.name) { try { d.name = (await get(API + 'dataset/' + d.key)).title; } catch (err) {} }
 
-fs.writeFileSync(outFile, JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), cols: ['lng', 'lat', 'taxon', 'year', 'uncertainty_m', 'basis', 'dataset', 'gbifID', 'date'], rows, taxa, datasets, bases }));
+fs.writeFileSync(outFile, JSON.stringify({ fetched: new Date().toISOString().slice(0, 10), cols: ['lng', 'lat', 'taxon', 'year', 'uncertainty_m', 'basis', 'dataset', 'gbifID', 'date', 'licence'], rows, taxa, datasets, bases, licences }));
 console.error('wrote', outFile, rows.length + ' records,', taxa.length + ' taxa,', Math.round(fs.statSync(outFile).size / 1024) + ' KB');

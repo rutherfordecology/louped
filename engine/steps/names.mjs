@@ -2,8 +2,9 @@
 // preferred name for New Zealand first (e.g. Tūī, Chaffinch), then GBIF's
 // NZ-sourced English name, then any GBIF English name that isn't a code
 // like "COST". Māori: GBIF's Māori name.
-// usage: node scripts/names.mjs <data/gbif.json>   (re-picks names in place)
+// usage: node engine/steps/names.mjs <catchment folder>   (names in data/gbif.json, in place)
 import fs from 'node:fs';
+import { loadCatchment } from '../lib.mjs';
 
 const GBIF = 'https://api.gbif.org/v1/', INAT = 'https://api.inaturalist.org/v1/';
 const get = async (url) => { for (let i = 0; ; i++) { try { const r = await fetch(url, { signal: AbortSignal.timeout(60000) }); if (!r.ok) throw new Error(r.status); return await r.json(); } catch (err) { if (i === 5) throw err; await new Promise(r => setTimeout(r, 3000 * (i + 1))); } } };
@@ -39,7 +40,7 @@ export async function commonNames(taxa) {
 }
 
 if (process.argv[1] && process.argv[1].endsWith('names.mjs')) {
-  const file = process.argv[2], data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const file = loadCatchment(process.argv[2]).path('data/gbif.json'), data = JSON.parse(fs.readFileSync(file, 'utf8'));
   await commonNames(data.taxa);
   fs.writeFileSync(file, JSON.stringify(data));
   console.error('wrote', file);

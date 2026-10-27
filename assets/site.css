@@ -1,0 +1,43 @@
+/* About and landing pages: Rutherford Ecology header, Occurd colours */
+:root { --bg: #f3f2ee; --panel: #fbfaf7; --ink: #1c1b18; --ink2: #56544c; --ink3: #8a877e; --line: #dddbd3; --accent: #2a7a58; --brand: #1a5940; --hover: #e8f4ef;
+  --f-display: 'Barlow Condensed', 'Arial Narrow', sans-serif; --f-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif; --f-data: 'IBM Plex Mono', ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e; --line: #2b352f; --accent: #6dba9a; --brand: #143f2e; --hover: #1d2b24; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e; --line: #2b352f; --accent: #6dba9a; --brand: #143f2e; --hover: #1d2b24; color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); }
+a { color: var(--accent); }
+.brandbar { background: var(--brand); color: #fff; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; }
+.brandbar .who { display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap; font-family: system-ui, -apple-system, sans-serif; }
+.brandbar .wordmark { color: #fff; text-decoration: none; font-size: 16px; }
+.brandbar .wordmark strong { font-weight: 700; }
+.brandbar .wordmark em { font-weight: 300; font-style: normal; }
+.brandbar .what { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 300; overflow: hidden; text-overflow: ellipsis; }
+.brandbar nav { display: flex; gap: 4px; flex: none; }
+.brandbar nav a { color: #fff; text-decoration: none; font: 600 12px var(--f-body); padding: 5px 9px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); }
+.brandbar nav a:hover { background: rgba(255,255,255,.12); }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; display: grid; gap: 18px; }
+h1 { font: 700 34px/1.05 var(--f-display); margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h2 { font: 600 22px var(--f-display); margin: 12px 0 0; }
+p, ul { margin: 0; }
+ul { padding-left: 20px; display: grid; gap: 6px; }
+.lede { color: var(--ink2); font-size: 16.5px; }
+.eyebrow { font: 600 11px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.logo { width: min(420px, 100%); height: auto; opacity: .8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo { filter: invert(1); opacity: .6; } }
+.cards { display: grid; gap: 12px; }
+a.card { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; color: inherit; text-decoration: none; }
+a.card:hover { border-color: var(--accent); background: var(--hover); }
+a.card b { display: block; font: 600 20px var(--f-display); }
+a.card span { color: var(--ink2); font-size: 14px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font: 600 11px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+.tag { display: inline-block; font: 600 11.5px var(--f-body); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.tag.yes { background: #e3f1e8; color: #1f6a43; }
+.tag.no { background: #f8e1e1; color: #8a2c2c; }
+.tag.mixed, .tag.check { background: #faf0d9; color: #7a5410; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tag.yes { background: #1d3527; color: #9be3c6; } :root:not([data-theme="light"]) .tag.no { background: #3a1f1f; color: #f2a7a7; } :root:not([data-theme="light"]) .tag.mixed, :root:not([data-theme="light"]) .tag.check { background: #3a2f17; color: #f2cf7a; } }
+.note { font-size: 13.5px; color: var(--ink2); }
+footer { border-top: 1px solid var(--line); padding-top: 14px; font-size: 13px; color: var(--ink2); }
