@@ -20,6 +20,11 @@ area to get its species list and land cover.
 
 Steps, in order: `boundary`, `vectors`, `gbif`, `names`, `lidar`, `page`.
 
+`site.json` holds the project-wide LINZ Basemaps API key (`linzBasemapsKey`).
+A standard key comes from https://basemaps.linz.govt.nz and lasts 90 days; a
+hosted site needs a developer key from LINZ, tied to its domain. With no key
+the maps use Esri's basemaps.
+
 A new catchment: make a folder with a `catchment.json` (copy one of the
 others), set its name, wording and boundary, and run `node engine/build.mjs
 <folder>`. The page step adds it to the project home page.
@@ -36,7 +41,8 @@ others), set its name, wording and boundary, and run `node engine/build.mjs
   `rivers`, `luc`, and the Gisborne District Council layers `wetlands`, `pma`,
   `overlay3a`, `overlays`, `stability`.
 - **`lidar`:** LINZ nz-elevation region and survey names, e.g.
-  `{ "region": "gisborne", "now": "gisborne_2023", "before": "gisborne_2018-2020", "nowLabel": "2023", "beforeLabel": "2018–20" }`.
+  `{ "region": "gisborne", "now": "gisborne_2023", "before": "gisborne_2018-2020", "nowLabel": "2023", "beforeLabel": "2018–20", "credit": "..." }`;
+  `credit` names the surveys' licensors for the About page.
   Leave it out for no LiDAR; leave out `before` for no height change.
 - **`gbif`:** `maxUncertaintyM` (records that could be further off are left
   out) and `exclude` (species to leave out, e.g. marine species recorded at
@@ -64,4 +70,5 @@ Edit the templates in `engine/templates/`, never the generated pages.
 Data and licences: see any catchment's About page. In short, NIWA REC2
 (boundaries and rivers) is CC BY-NC 4.0, GBIF records are CC0, CC BY or
 CC BY-NC per record, and the iNaturalist names, Esri basemaps and LookLike
-photos have terms to check before commercial use. The rest is CC BY 4.0.
+photos have terms to check before commercial use. The rest, LINZ Basemaps
+and LiDAR included, is CC BY 4.0.

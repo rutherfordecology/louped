@@ -1,7 +1,7 @@
 // Shared by the engine's steps: a catchment's settings and folder paths.
 import fs from 'node:fs';
 
-export const ENGINE_VERSION = 'v0.3.0';
+export const ENGINE_VERSION = 'v0.3.1';
 
 // A catchment is a folder with a catchment.json; every step takes its folder name
 export function loadCatchment(slug) {
@@ -13,6 +13,9 @@ export function loadCatchment(slug) {
   cfg.slug = cfg.slug || dir;
   return { dir, cfg, path: (...parts) => [dir, ...parts].join('/') };
 }
+
+// Project-wide settings (site.json): the LINZ Basemaps API key
+export const loadSite = () => fs.existsSync('site.json') ? JSON.parse(fs.readFileSync('site.json', 'utf8')) : {};
 
 // Every folder in the project that holds a catchment
 export const allCatchments = () => fs.readdirSync('.', { withFileTypes: true })

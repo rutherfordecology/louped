@@ -4,7 +4,7 @@
 // catchment, and copies the shared assets.
 // usage: node engine/steps/page.mjs <catchment folder>
 import fs from 'node:fs';
-import { loadCatchment, allCatchments, ENGINE_VERSION } from '../lib.mjs';
+import { loadCatchment, allCatchments, loadSite, ENGINE_VERSION } from '../lib.mjs';
 import { SOURCES } from '../sources.mjs';
 
 const { cfg, path } = loadCatchment(process.argv[2]);
@@ -13,12 +13,15 @@ const fill = (tpl, vals) => fs.readFileSync('engine/templates/' + tpl, 'utf8').r
 
 const area = JSON.parse(fs.readFileSync(path('data/layers/area.json'), 'utf8'));
 const gbif = JSON.parse(fs.readFileSync(path('data/gbif.json'), 'utf8'));
-const sources = SOURCES.filter(s => s.uses(cfg));
+// LINZ Basemaps need an API key (site.json); without one the map falls back to Esri's
+cfg.basemapKey = loadSite().linzBasemapsKey || '';
+if (!cfg.basemapKey) console.error('warning: no linzBasemapsKey in site.json, so the map uses Esri basemaps');
+const sources = SOURCES.filter(s => s.uses(cfg)).map(s => ({ ...s, by: typeof s.by === 'function' ? s.by(cfg) : s.by }));
 
 // Map settings
 fs.writeFileSync(path('data/config.json'), JSON.stringify({
   slug: cfg.slug, name: cfg.name, title: cfg.title, mapLabel: cfg.mapLabel, areaText: cfg.areaText, boundaryNote: cfg.boundaryNote,
-  layers: cfg.layers, version: ENGINE_VERSION,
+  layers: cfg.layers, version: ENGINE_VERSION, basemapKey: cfg.basemapKey,
   sources: sources.map(s => ({ key: s.key, short: s.short, attr: s.attr || '' }))
 }, null, 2) + '\n');
 

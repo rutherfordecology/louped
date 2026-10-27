@@ -260,8 +260,11 @@ document.getElementById('ver').textContent = APP_VERSION;
   map.attributionControl.setPrefix(false);
   [['rasters', 250], ['fills', 410], ['lines', 430], ['points', 450]].forEach(([p, z]) => { map.createPane(p); map.getPane(p).style.zIndex = z; });
   const fillR = L.canvas({ pane: 'fills', padding: 0.3 }), lineR = L.canvas({ pane: 'lines', padding: 0.3 }), pointR = L.canvas({ pane: 'points', padding: 0.3, tolerance: 4 });
-  const aerial = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 });
-  const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 });
+  // Base maps: LINZ Basemaps (CC BY 4.0) with the project's key; Esri's if no key is set
+  const LINZ_ATTR = '<a href="https://www.linz.govt.nz/copyright" target="_blank" rel="noopener">© Toitū Te Whenua LINZ</a> CC BY 4.0 · <a href="https://basemaps.linz.govt.nz/" target="_blank" rel="noopener">LINZ Basemaps</a>';
+  const linz = (set, maxNative) => L.tileLayer('https://basemaps.linz.govt.nz/v1/tiles/' + set + '/3857/{z}/{x}/{y}.webp?api=' + encodeURIComponent(cfg.basemapKey), { attribution: LINZ_ATTR, maxNativeZoom: maxNative, maxZoom: 19 });
+  const aerial = cfg.basemapKey ? linz('aerial', 19) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 });
+  const topo = cfg.basemapKey ? linz('topo-raster', 17) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 });
   map.attributionControl.addAttribution(cfg.sources.filter(s => s.attr).map(s => s.attr).join(' · ') + ' · <a href="about.html">Sources</a>');
   const outline = L.geoJSON(area.outline, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 2.5, opacity: 1, fill: false }) });
   const parts = L.geoJSON(area.parts, { renderer: lineR, interactive: false, style: () => ({ color: '#fff', weight: 1, opacity: .8, dashArray: '5 4', fill: false }) });

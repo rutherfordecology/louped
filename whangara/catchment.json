@@ -40,7 +40,8 @@
     "now": "gisborne_2023",
     "before": "gisborne_2018-2020",
     "nowLabel": "2023",
-    "beforeLabel": "2018–20"
+    "beforeLabel": "2018–20",
+    "credit": "Gisborne LiDAR 2023 (NIWA, CC BY 4.0) and 2018–2020 (Gisborne District Council, CC BY 4.0)"
   },
   "gbif": {
     "maxUncertaintyM": 5000,

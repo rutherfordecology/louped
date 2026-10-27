@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.1 — 2026-10-27
+
+- **LINZ Basemaps instead of Esri.** The aerial photo and topographic map
+  come from LINZ Basemaps (aerial imagery and Topo50, CC BY 4.0), which can
+  be used commercially. They need a LINZ Basemaps API key in `site.json`
+  (`linzBasemapsKey`); until one is set, the maps fall back to Esri's and
+  the page step warns.
+- The LiDAR is credited to its licensors: NIWA (2023 survey) and Gisborne
+  District Council (2018–2020), both CC BY 4.0 (`lidar.credit` in
+  catchment.json).
+
 ## v0.3.0 — 2026-10-27
 
 - **Catchment map engine.** Every catchment is now built from one settings
