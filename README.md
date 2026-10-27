@@ -12,7 +12,7 @@ or draw an area to get its species list and land cover.
 | Folder | Area |
 |---|---|
 | `whangara/` | Whangārā community catchments: Turihaua, Pouawa, Waiomoko and Pakarae rivers plus the coastal streams between them |
-| `waimata/` | Waimata catchment: Waimata and Taruheru rivers and the lower Tūranganui they join to form (NIWA's Waimata catchment) |
+| `waimata/` | Waimata River catchment above its confluence with the Taruheru |
 
 ## Build a catchment (Whangārā shown; run from this folder)
     npm install
@@ -22,10 +22,10 @@ or draw an area to get its species list and land cover.
     node scripts/lidar.mjs whangara/data/layers/area.json whangara/data/lidar
     node scripts/pages.mjs
 
-Waimata: `node scripts/boundary.mjs waimata/inputs/catchments_tur.geojson
-177.88,-38.72,178.18,-38.38 Turanganui Waimata Taruheru`, then the parts were
-set as Waimata, Taruheru and the lower Tūranganui (the Tūranganui less the
-other two), saved as `waimata/inputs/catchments.geojson`; the rest as above.
+Waimata: `node scripts/boundary.mjs waimata/inputs/catchments.geojson
+177.88,-38.72,178.18,-38.38 Waimata`; the rest as above. REC2's Waimata ends
+where the Taruheru joins it (REC2 labels the lower Taruheru "Turanganui
+River"), so the trace stops at the confluence.
 
 - `boundary.mjs` traces each named river upstream through NIWA's REC2 network
   and merges the REC2 watersheds (holes filled). `--coast` adds the small

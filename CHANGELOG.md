@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.1 — 2026-10-27
+
+- **Waimata stops at the Taruheru confluence.** The Waimata area is now the
+  Waimata River catchment above where the Taruheru joins it at Marina Park
+  (224 km²). The Taruheru and the lower Tūranganui are out, and the layers,
+  species records and LiDAR were rebuilt for the new area.
+
 ## v0.2.0 — 2026-10-27
 
 - **Waimata.** Second catchment, `waimata/`: the Waimata and Taruheru rivers
