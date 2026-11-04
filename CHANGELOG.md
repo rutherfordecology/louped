@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.7 — 2026-11-05
+
+- **DESIGN.md** sets out where this is going, as agreed: the repo is now
+  `rutherfordecology/louped`, a viewer that turns packages exported from
+  Occurd, inferrd. and the catchment engine into client sites, where you
+  only add the title and wording. Nothing is built yet; open questions are
+  listed at the end of the file.
+
 ## v0.4.6 — 2026-10-27
 
 - **Canopy height layer removed:** it didn't add enough. The LiDAR step still

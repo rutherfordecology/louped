@@ -1,0 +1,93 @@
+# Louped: design
+
+Status: agreed direction, 2026-11-05. Nothing in this file is built yet.
+The catchment map engine described in README.md is what exists today.
+
+## What Louped is
+
+Louped turns an exported package into a web viewer for a client or
+stakeholder. It shows and labels; it does not fetch, select or analyse.
+Those choices are made in the tools that already make them:
+
+- **Occurd**: species records (Big Data downloads, with their GBIF DOI).
+- **inferrd.**: drawn areas, vegetation trends, maps.
+- **The catchment engine**: boundaries, council and national layers, LiDAR.
+
+You should never have to pick layers or records again in Louped. The only
+things you add there are presentation: title, subtitle, client, intro
+text, contact, date.
+
+## The flow
+
+1. **Export.** In Occurd or inferrd, set up the job as usual and press
+   **Export for Louped**. That writes one package (a zip).
+2. **Present.** In Louped, open the package and add the title and
+   wording. They are saved in the job's own file, not in the package.
+3. **Publish.** Louped writes a finished site folder, one per job, for
+   example `waimata-2026/`.
+4. **Update.** Export again and drop the new package in. The data is
+   replaced; the title and wording are kept.
+
+A site is a snapshot. It shows what was true when the package was
+exported, and it says that date. It is not live.
+
+## The package
+
+One zip from one export. Several packages can make one site, for example
+an Occurd package and an inferrd package for the same area.
+
+    manifest.json        what made it, when, the area, layers, sources
+    layers/*.geojson     vector layers: boundaries, rivers, land cover, areas
+    records/*.json       species records (Occurd)
+    images/*.png         rasters, each with its bounds in the manifest
+                         (inferrd vegetation maps, hillshade, height change)
+
+`manifest.json` holds:
+
+- `producer`: tool and version, for example `{ "tool": "occurd", "version": "v7.49" }`.
+- `exported`: date and time.
+- `area`: a name and the bounding box.
+- `layers`: for each one, its file, display name, group, style, legend
+  text, whether it starts on, and its source key.
+- `sources`: name, licence, citation and link for each source. Occurd
+  records carry the GBIF download DOI, as Occurd's exports already do.
+- `basemaps`: listed by reference (for example LINZ Data Service layer
+  121749), not copied in, because they are tiles.
+
+The package is meant to be the same thing the report Workflow reads, so
+one export can also go into `OneDrive\Workflow\projects/<job>/data/`.
+Occurd and inferrd already export most of it: Occurd's Big Data CSV with
+its `# GBIF citation:` line, and inferrd's `areas.geojson`,
+`summary.json` and `map.png`. Export for Louped mostly repackages those.
+
+## The job file
+
+Everything you type in Louped, kept apart from the data so an update
+never overwrites it:
+
+    job.json   title, subtitle, client, intro, contact, date shown,
+               which packages make up the site, About page text
+
+## What changes in this repo
+
+- The map page, About page and species list (`engine/templates/`) become
+  the general viewer. It reads packages instead of the engine's
+  `data/config.json`, which today mixes wording and data.
+- The catchment engine becomes one more producer: its build ends by
+  writing a package. Waimata and Whangārā keep working, as a package plus
+  a `job.json` each.
+- The project rules stay: Rutherford Ecology branding, records at their
+  published coordinates, every record linked to its source and licence.
+
+## Not decided yet
+
+1. **Who can see a site.** This repo is public, so a GitHub Pages site
+   would be too, threatened species points included. Clients who need
+   privacy need another host or a password in front of the site.
+2. **Where the title goes in.** An editor page (open the zip, fill in a
+   form, preview, save) or a `job.json` edited by hand. The editor is
+   nicer; the file is quicker to build.
+3. **Which tool exports first:** Occurd, inferrd or both.
+4. **Base map key on a hosted site.** The LINZ key is kept out of git.
+   A key in a web page is visible to anyone, so a hosted site needs its
+   own key used only for that.

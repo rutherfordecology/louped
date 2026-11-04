@@ -7,6 +7,9 @@ Nothing about a catchment is coded by hand. No scoring or ranking: people
 turn layers on and off, click a spot to see every layer there, or draw an
 area to get its species list and land cover.
 
+Where the project is heading (Louped, a viewer for exported packages) is
+in [DESIGN.md](DESIGN.md).
+
 | Folder | Area |
 |---|---|
 | `whangara/` | Whangārā community catchments: Turihaua, Pouawa, Waiomoko and Pakarae rivers plus the coastal streams between them |
