@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Louped Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root { --bg: #f3f2ee; --panel: #fbfaf7; --ink: #1c1b18; --ink2: #56544c; --ink3: #8a877e; --line: #dddbd3; --accent: #2a7a58; --brand: #1a5940; --hover: #e8f4ef; --warn: #8a5a10; --warnbg: #faf0d9; --err: #8a2c2c;
+  --f-display: 'Barlow Condensed', 'Arial Narrow', sans-serif; --f-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif; --f-data: 'IBM Plex Mono', ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e; --line: #2b352f; --accent: #6dba9a; --brand: #143f2e; --hover: #1d2b24; --warn: #f2cf7a; --warnbg: #3a2f17; --err: #f2a7a7; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e; --line: #2b352f; --accent: #6dba9a; --brand: #143f2e; --hover: #1d2b24; --warn: #f2cf7a; --warnbg: #3a2f17; --err: #f2a7a7; color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); display: flex; flex-direction: column; }
+a { color: var(--accent); }
+.brandbar { background: var(--brand); color: #fff; height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-family: system-ui, sans-serif; }
+.brandbar strong { font-size: 16px; }
+.brandbar span { font-size: 12px; color: rgba(255,255,255,.65); }
+.app { flex: 1; min-height: 0; display: grid; grid-template-columns: 380px minmax(0, 1fr); }
+.side { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
+.sec { padding: 14px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+h1 { font: 700 24px/1.1 var(--f-display); margin: 0; }
+h2 { font: 600 18px var(--f-display); margin: 0; }
+.eyebrow { font: 600 10.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.note { font-size: 12.5px; color: var(--ink2); margin: 0; }
+label.f { display: grid; gap: 3px; font: 600 12px var(--f-body); color: var(--ink2); }
+input[type=text], textarea, select { font: 13.5px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; }
+textarea { min-height: 90px; resize: vertical; line-height: 1.45; }
+.btn { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { background: var(--hover); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn[disabled] { opacity: .45; cursor: default; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.drop { border: 1.5px dashed var(--line); border-radius: 6px; padding: 14px; text-align: center; color: var(--ink2); cursor: pointer; font-size: 13px; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--hover); }
+.sites { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.sites button { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 5px; padding: 7px 10px; cursor: pointer; font: 13px var(--f-body); display: grid; }
+.sites button[aria-current="true"] { border-color: var(--accent); background: var(--hover); }
+.sites small { color: var(--ink3); font-size: 11.5px; }
+.status { font-size: 12.5px; padding: 7px 10px; border-radius: 4px; background: var(--hover); }
+.status.err { color: var(--err); background: var(--warnbg); }
+.warnbox { background: var(--warnbg); color: var(--warn); border-radius: 4px; padding: 8px 10px; font-size: 12.5px; }
+.warnbox ul { margin: 4px 0 0; padding-left: 18px; }
+.facts { font-size: 12.5px; color: var(--ink2); display: grid; gap: 2px; }
+.facts code { font: 11.5px var(--f-data); }
+.preview { display: flex; flex-direction: column; min-width: 0; }
+.preview .bar { padding: 6px 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink2); background: var(--panel); }
+iframe { flex: 1; border: 0; width: 100%; background: var(--bg); }
+.empty { margin: auto; color: var(--ink3); padding: 24px; text-align: center; max-width: 420px; }
+@media (max-width: 860px) { .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 70vh; } .side { border-right: 0; border-bottom: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header class="brandbar"><strong>Louped Studio</strong><span>Client sites from inferrd. packages · on this computer only</span></header>
+<div class="app">
+  <div class="side">
+    <section class="sec">
+      <h1>Sites</h1>
+      <ul class="sites" id="sites"></ul>
+      <p class="note" id="noSites" hidden>No sites yet. Start one from a package below.</p>
+    </section>
+    <section class="sec">
+      <h2>New site</h2>
+      <label class="f">Site name (in its web address)<input type="text" id="newSlug" placeholder="waimata-2026" pattern="[a-z0-9-]+"></label>
+      <label class="drop" id="newDrop">Drop a <b>.louped.zip</b> here, or click to choose it<input type="file" id="newFile" accept=".zip" hidden></label>
+      <p class="note">Make the package in inferrd.: Report tab → Export for Louped, with the Layers panel set up as the client should see it.</p>
+    </section>
+    <div id="edit" hidden>
+      <section class="sec">
+        <h2 id="editName"></h2>
+        <div class="facts" id="facts"></div>
+        <div class="warnbox" id="leftOut" hidden></div>
+      </section>
+      <section class="sec">
+        <div class="eyebrow">Wording</div>
+        <label class="f">Title<input type="text" id="f_title"></label>
+        <label class="f">Subtitle<input type="text" id="f_subtitle" placeholder="Optional"></label>
+        <label class="f">Client or group (in the header)<input type="text" id="f_client" placeholder="Optional"></label>
+        <label class="f">Date shown<input type="text" id="f_date" placeholder="e.g. November 2026 (optional)"></label>
+        <label class="f">Introduction (a blank line starts a new paragraph)<textarea id="f_intro"></textarea></label>
+        <label class="f">Name for the areas layer<input type="text" id="f_areasName" placeholder="Area / Areas"></label>
+        <label class="f">About page text<textarea id="f_about" placeholder="Optional: methods, caveats, who it's for"></textarea></label>
+        <label class="f">Contact line<input type="text" id="f_contact" placeholder="e.g. Malcolm Rutherford, rutherfordecology@gmail.com"></label>
+        <label class="f">LINZ aerial photo layer (optional)<input type="text" id="f_aerial" placeholder="LDS layer number, e.g. 121749 for Gisborne 2024–25"></label>
+        <div class="row"><button class="btn primary" type="button" id="saveBtn">Save</button><span class="note" id="saved"></span></div>
+      </section>
+      <section class="sec">
+        <div class="eyebrow">Update the data</div>
+        <label class="drop" id="updDrop">Drop a newer <b>.louped.zip</b> to replace this site's data. Your wording stays.<input type="file" id="updFile" accept=".zip" hidden></label>
+      </section>
+    </div>
+    <section class="sec"><div class="status" id="status" hidden></div></section>
+  </div>
+  <div class="preview">
+    <div class="bar" id="pbar" hidden><span id="purl"></span><span class="row"><button class="btn" type="button" id="reloadBtn">Reload</button><a class="btn" id="openBtn" target="_blank" rel="noopener">Open in a tab</a></span></div>
+    <iframe id="frame" title="Site preview" hidden></iframe>
+    <div class="empty" id="pempty">Choose a site, or start one from a package, to see it here.</div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const FIELDS = ['title', 'subtitle', 'client', 'date', 'intro', 'areasName', 'about', 'contact'];
+let sites = [], cur = null;
+
+function status(msg, err) { const s = $('status'); s.hidden = !msg; s.textContent = msg || ''; s.className = 'status' + (err ? ' err' : ''); }
+async function api(method, url, data) {
+  const r = await fetch(url, { method, headers: data ? { 'Content-Type': 'application/json' } : {}, body: data ? JSON.stringify(data) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+  return j;
+}
+const when = (iso) => iso ? new Date(iso).toLocaleString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+async function loadSites(select) {
+  sites = await api('GET', '/api/sites');
+  $('noSites').hidden = sites.length > 0;
+  $('sites').innerHTML = sites.map(s => '<li><button type="button" data-slug="' + esc(s.slug) + '"' + (cur && cur.slug === s.slug ? ' aria-current="true"' : '') + '><b>' + esc(s.job.title || s.slug) + '</b><small>' + esc(s.slug) + (s.packages[0] ? ' · data from ' + esc(when(s.packages[0].exported)) : '') + '</small></button></li>').join('');
+  if (select) show(sites.find(s => s.slug === select));
+}
+$('sites').addEventListener('click', e => { const b = e.target.closest('[data-slug]'); if (b) show(sites.find(s => s.slug === b.dataset.slug)); });
+
+function show(s) {
+  cur = s || null;
+  $('sites').querySelectorAll('[data-slug]').forEach(b => b.setAttribute('aria-current', String(!!cur && b.dataset.slug === cur.slug)));
+  $('edit').hidden = !cur;
+  $('pbar').hidden = $('frame').hidden = !cur;
+  $('pempty').hidden = !!cur;
+  if (!cur) return;
+  $('editName').textContent = cur.slug;
+  FIELDS.forEach(k => { $('f_' + k).value = cur.job[k] || ''; });
+  $('f_aerial').value = cur.job.basemap && cur.job.basemap.aerialLayer || '';
+  const p = cur.packages[0];
+  $('facts').innerHTML = p ? '<div>Data from <b>' + esc(p.producer.tool + ' ' + p.producer.version) + '</b>, exported ' + esc(when(p.exported)) + '</div>' +
+    '<div>' + p.layers.length + (p.layers.length === 1 ? ' layer' : ' layers') + (p.layers.length ? ': ' + p.layers.map(l => esc(l.name) + ' <code>' + (l.features || 0) + '</code>').join(', ') : '') + '</div>' +
+    '<div>' + p.records.reduce((t, r) => t + r.rows, 0).toLocaleString() + ' species records' + (p.records.length ? (p.records.every(r => r.citation) ? ', citable (GBIF DOI)' : ', <b>not all citable</b>: no GBIF DOI') : '') + '</div>' : '<div>No package.</div>';
+  const left = p ? p.leftOut : [];
+  $('leftOut').hidden = !left.length;
+  $('leftOut').innerHTML = '<b>Left out of the package</b> (only you see this):<ul>' + left.map(x => '<li>' + esc(x.name) + ': ' + esc(x.reason) + '</li>').join('') + '</ul>';
+  $('saved').textContent = '';
+  const url = '/sites/' + cur.slug + '/';
+  $('purl').textContent = url;
+  $('openBtn').href = url;
+  $('frame').src = url + '?t=' + Date.now();
+}
+$('reloadBtn').addEventListener('click', () => { if (cur) $('frame').src = '/sites/' + cur.slug + '/?t=' + Date.now(); });
+
+$('saveBtn').addEventListener('click', async () => {
+  if (!cur) return;
+  const data = Object.fromEntries(FIELDS.map(k => [k, $('f_' + k).value]));
+  data.basemap = { aerialLayer: $('f_aerial').value.trim() };
+  try { await api('PUT', '/api/sites/' + cur.slug + '/job', data); await loadSites(cur.slug); $('saved').textContent = 'Saved ' + new Date().toLocaleTimeString(); status(''); }
+  catch (e) { status('Couldn\'t save: ' + e.message, true); }
+});
+
+// Unzip in the browser, send the files as base64
+async function sendPackage(slug, file) {
+  status('Reading ' + file.name + '…');
+  const zip = await JSZip.loadAsync(file), files = {};
+  for (const f of Object.values(zip.files)) if (!f.dir) files[f.name.replace(/^\.?\//, '')] = await f.async('base64');
+  status('Saving…');
+  await api('POST', '/api/sites/' + slug + '/package', { files });
+  await loadSites(slug);
+  status('Data from ' + file.name + ' is in ' + slug + '.');
+}
+function dropZone(zone, input, handler) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('over'); if (e.dataTransfer.files[0]) handler(e.dataTransfer.files[0]); });
+  input.addEventListener('change', () => { if (input.files[0]) handler(input.files[0]); input.value = ''; });
+}
+const slugFrom = (name) => name.replace(/\.louped\.zip$|\.zip$/i, '').replace(/^\d{4}-\d{2}-\d{2}_/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+dropZone($('newDrop'), $('newFile'), async (file) => {
+  const slug = ($('newSlug').value.trim() || slugFrom(file.name)).toLowerCase();
+  if (!/^[a-z0-9][a-z0-9-]{0,62}$/.test(slug)) { status('A site name is lower-case letters, numbers and dashes.', true); return; }
+  if (sites.some(s => s.slug === slug) && !confirm('There is already a site called ' + slug + '. Replace its data with this package? Its wording stays.')) return;
+  try { await sendPackage(slug, file); $('newSlug').value = ''; } catch (e) { status('Couldn\'t use ' + file.name + ': ' + e.message, true); }
+});
+dropZone($('updDrop'), $('updFile'), async (file) => {
+  if (!cur) return;
+  try { await sendPackage(cur.slug, file); } catch (e) { status('Couldn\'t use ' + file.name + ': ' + e.message, true); }
+});
+loadSites().catch(e => status('The studio server isn\'t answering: ' + e.message, true));
+</script>
+</body>
+</html>

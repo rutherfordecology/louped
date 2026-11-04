@@ -7,8 +7,17 @@ Nothing about a catchment is coded by hand. No scoring or ranking: people
 turn layers on and off, click a spot to see every layer there, or draw an
 area to get its species list and land cover.
 
-Where the project is heading (Louped, a viewer for exported packages) is
-in [DESIGN.md](DESIGN.md).
+## Louped: client maps from packages
+
+    npm run studio        # then open http://localhost:7884/
+
+In inferrd., set up the Layers panel as the client should see it, then
+Report tab → **Export for Louped**. Drop the `.louped.zip` into the
+studio, add the title and wording, and save. Each site is a static folder
+in `sites/<name>/` (`index.html`, `job.json` with your wording, and
+`package/` with the data); a newer package replaces only `package/`.
+The viewer is `viewer/index.html`; the studio copies it into each site on
+every save. The plan and the package format are in [DESIGN.md](DESIGN.md).
 
 | Folder | Area |
 |---|---|

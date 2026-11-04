@@ -2,5 +2,13 @@
   "name": "catchment-reports",
   "private": true,
   "type": "module",
-  "dependencies": { "geotiff": "3.0.5", "proj4": "2.11.0", "@turf/turf": "6.5.0", "pngjs": "7.0.0" }
+  "dependencies": {
+    "geotiff": "3.0.5",
+    "proj4": "2.11.0",
+    "@turf/turf": "6.5.0",
+    "pngjs": "7.0.0"
+  },
+  "scripts": {
+    "studio": "node studio/server.mjs"
+  }
 }

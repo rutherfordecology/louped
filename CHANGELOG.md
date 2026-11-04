@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.5.0 — 2026-11-05
+
+Louped, phase 1: client maps from packages, as set out in DESIGN.md.
+
+- **Viewer** (`viewer/index.html`): a general map page that reads a site's
+  `job.json` (your wording) and its package (the data). Layers in the
+  package's order, colours and opacity, each with an eye, an opacity
+  slider and its key; click the map for every layer at that spot; species
+  grouped like occurd.'s checklist with NZTCS badges, a Threatened & at
+  risk filter, LookLike links and a records download that carries the
+  GBIF citation; an About view listing every source, licence note and DOI.
+  The page says the date the data was exported: it is a snapshot.
+- **Studio** (`npm run studio`, http://localhost:7884/): drop a
+  `.louped.zip` from inferrd.'s Export for Louped to start a site, fill in
+  the title, subtitle, client, date, introduction, About text and contact,
+  and save; the site shows beside the form. Dropping a newer package
+  replaces the data and keeps the wording. The studio listens on this
+  computer only and takes changes only from its own page.
+- Sites are written to `sites/<name>/`, kept out of git for now: this repo
+  is public, and who can see client sites isn't decided.
+- The catchment engine and the Waimata and Whangārā maps are unchanged.
+
 ## v0.4.7 — 2026-11-05
 
 - **DESIGN.md** sets out where this is going, as agreed: the repo is now

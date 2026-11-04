@@ -1,0 +1,503 @@
+<!-- Louped viewer: the studio copies it into each site folder (sites/<job>/index.html). Edit this, not the copies. It reads job.json (your wording) and the packages it names (the data). -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Map on the left, the story and layers on the right (stacked on phones). */
+:root {
+  --bg: #f3f2ee; --panel: #fbfaf7; --ink: #1c1b18; --ink2: #56544c; --ink3: #8a877e;
+  --line: #dddbd3; --hover: #e8f4ef; --sel: #1a5940; --accent: #2a7a58; --brand: #1a5940; --mapbg: #dfe5df; --area: #ffffff;
+  --f-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --f-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --f-data: 'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
+  --line: #2b352f; --hover: #1d2b24; --sel: #9be3c6; --accent: #6dba9a; --brand: #143f2e; --mapbg: #1b211d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111613; --panel: #171d19; --ink: #e5ece6; --ink2: #a9b7ad; --ink3: #7a887e;
+  --line: #2b352f; --hover: #1d2b24; --sel: #9be3c6; --accent: #6dba9a; --brand: #143f2e; --mapbg: #1b211d; color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; display: flex; flex-direction: column; }
+a { color: var(--accent); }
+.brandbar { background: var(--brand); color: #fff; height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
+.brandbar .who { display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap; font-family: system-ui, -apple-system, sans-serif; }
+.brandbar .wordmark { color: #fff; text-decoration: none; font-size: 16px; }
+.brandbar .wordmark strong { font-weight: 700; }
+.brandbar .wordmark em { font-weight: 300; font-style: normal; }
+.brandbar .what { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 300; overflow: hidden; text-overflow: ellipsis; }
+.brandbar nav { display: flex; gap: 4px; flex: none; }
+.brandbar nav button { color: #fff; background: none; font: 600 12px var(--f-body); padding: 5px 9px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); cursor: pointer; }
+.brandbar nav button:hover, .brandbar nav button[aria-pressed="true"] { background: rgba(255,255,255,.14); }
+.app { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 410px; }
+#map { height: 100%; background: var(--mapbg); }
+.leaflet-container { background: var(--mapbg); font-family: var(--f-body); }
+.panel { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.scroll { overflow-y: auto; min-height: 0; flex: 1; }
+.sec { padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0; }
+.subtitle { font: 600 15px var(--f-body); color: var(--ink2); margin: -4px 0 0; }
+.intro { font-size: 13.5px; line-height: 1.55; color: var(--ink); display: grid; gap: 8px; }
+.intro p { margin: 0; }
+.meta { color: var(--ink3); font-size: 12px; }
+.eyebrow { font: 600 10.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.btn { font: 600 12px var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 4px; padding: 5px 10px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.btn:hover { background: var(--hover); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+input[type=range], input[type=checkbox] { accent-color: var(--accent); }
+input[type=checkbox] { margin: 0; cursor: pointer; }
+input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px 7px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+/* Layers */
+.group-name { font: 600 10.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); padding: 8px 0 2px; }
+.layers { list-style: none; margin: 0; padding: 0; display: grid; }
+.layer { display: grid; grid-template-columns: 26px 18px minmax(0, 1fr) 64px; gap: 6px; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.layer.off .lname, .layer.off .lsw { opacity: .4; }
+.eye { width: 24px; height: 22px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); cursor: pointer; display: grid; place-items: center; padding: 0; }
+.eye svg { width: 15px; height: 15px; }
+.lname { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lsw { width: 16px; height: 11px; border-radius: 2px; display: inline-block; border: 1.5px solid transparent; }
+.layer input[type=range] { width: 64px; min-width: 0; margin: 0; }
+.lkey { padding: 4px 0 8px 32px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; font-size: 11.5px; color: var(--ink2); }
+.lkey .keys { display: flex; flex-wrap: wrap; gap: 3px 10px; }
+.lkey .keys span { display: inline-flex; gap: 5px; align-items: center; }
+.lfill { width: 14px; height: 10px; border-radius: 2px; display: inline-block; flex: none; }
+/* Species */
+.nzchips { display: flex; flex-wrap: wrap; gap: 4px; }
+.nzchip { font: 600 11.5px var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 999px; padding: 2px 9px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; }
+.nzchip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.nzchip .n { font: 400 10.5px var(--f-data); opacity: .75; }
+.nztcs-badge { display: inline-block; font: 700 9.5px var(--f-body); letter-spacing: .03em; padding: 1px 4px; border-radius: 3px; vertical-align: 1px; margin-left: 5px; white-space: nowrap; color: #fff; }
+.nb-nc { background: #7B0D1E; } .nb-ne { background: #A3213A; } .nb-nv { background: #C0006E; } .nb-ar { background: #D4580A; }
+.nb-rc { background: #7AAE00; } .nb-ex { background: #1F2937; } .nb-oi { background: #6B21A8; }
+.spgroups { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.spg-head { display: grid; grid-template-columns: 12px 8px minmax(0, 1fr) auto; gap: 7px; align-items: center; padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; font: 600 11px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); }
+.spg-head:hover { background: var(--hover); }
+.spg-head .chev { font-size: 9px; color: var(--ink3); transition: transform .15s; }
+.spg-head[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+.spg-head .n { font: 400 10.5px var(--f-data); letter-spacing: 0; text-transform: none; color: var(--ink3); }
+.splist { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.spg:last-child .splist { border-bottom: 0; }
+.sp { display: grid; grid-template-columns: minmax(0, 1fr) auto 22px; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.sp:last-child { border-bottom: 0; }
+.sp:hover { background: var(--hover); }
+.sp[aria-current="true"] { background: var(--hover); box-shadow: inset 3px 0 0 var(--sel); }
+.sp-name { min-width: 0; display: grid; }
+.sp-name b { font-weight: 600; font-size: 13px; display: flex; align-items: center; min-width: 0; }
+.sp-name b .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sp-name i { font-size: 11.5px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-n { font: 11px var(--f-data); color: var(--ink3); text-align: right; font-variant-numeric: tabular-nums; }
+.ll { color: var(--ink3); display: grid; place-items: center; border-radius: 4px; height: 22px; }
+.ll:hover { color: var(--accent); background: var(--bg); }
+.ll svg { width: 15px; height: 15px; }
+.note { font-size: 12px; color: var(--ink2); line-height: 1.5; margin: 0; }
+/* About */
+.about { font-size: 13px; color: var(--ink2); line-height: 1.55; display: grid; gap: 10px; }
+.about ul { padding-left: 18px; margin: 0; display: grid; gap: 6px; }
+.about b { color: var(--ink); }
+.cite { font: 11.5px var(--f-data); word-break: break-word; }
+.leaflet-popup-content { font: 12.5px/1.45 var(--f-body); margin: 10px 12px; }
+.leaflet-popup-content h3 { font: 600 11px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #6b776f; margin: 8px 0 2px; }
+.leaflet-popup-content h3:first-child { margin-top: 0; }
+.leaflet-popup-content .rec { padding: 3px 0; border-top: 1px solid #e3e8e4; white-space: pre-line; }
+.leaflet-control-attribution { font-size: 10px; }
+.fail { padding: 24px; max-width: 560px; }
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 50vh minmax(0, 1fr); }
+  .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .brandbar .what { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="brandbar">
+  <div class="who"><a class="wordmark" href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener"><strong>Rutherford</strong> <em>ecology</em></a><span class="what" id="what"></span></div>
+  <nav><button type="button" id="aboutBtn" aria-pressed="false">About</button></nav>
+</header>
+
+<div class="app">
+  <div id="map" role="region" aria-label="Map"></div>
+  <aside class="panel">
+    <div class="scroll" id="mainView">
+      <section class="sec">
+        <h1 id="title">Loading…</h1>
+        <p class="subtitle" id="subtitle" hidden></p>
+        <div class="intro" id="intro"></div>
+        <div class="meta" id="meta"></div>
+      </section>
+      <section class="sec">
+        <div class="eyebrow">Layers</div>
+        <div id="layerGroups"></div>
+        <p class="note">Click the map to see what's at a spot.</p>
+      </section>
+      <section class="sec" id="spSec" hidden>
+        <h2>Species recorded</h2>
+        <div class="nzchips" id="nzChips" role="group" aria-label="Threat status (NZTCS)"></div>
+        <input type="search" id="spSearch" placeholder="Find a species" aria-label="Find a species">
+        <div class="row" style="justify-content: space-between;"><span class="eyebrow" id="spCount"></span><span class="row"><button class="btn" type="button" id="llBtn" title="Photos of the listed species in LookLike">Photos in LookLike</button><button class="btn" type="button" id="dlRecords">Records (CSV)</button></span></div>
+        <p class="note">Click a species to show where it was recorded. Records cluster where people go, so few records means few visits, not few species.</p>
+        <div class="spgroups" id="spList"></div>
+      </section>
+      <section class="sec">
+        <p class="note" id="contact"></p>
+      </section>
+    </div>
+    <div class="scroll" id="aboutView" hidden>
+      <section class="sec">
+        <h2>About this map</h2>
+        <div class="about" id="about"></div>
+      </section>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<script>
+const VIEWER_VERSION = 'v0.5.0';
+const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
+const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17.3 17.3 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const getJSON = async (u) => { const r = await fetch(u, { cache: 'no-cache' }); if (!r.ok) throw new Error(u + ': HTTP ' + r.status); return r.json(); };
+const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return iso; } };
+const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>').join('');
+
+(async function () {
+  // ── Load: job.json (the wording) and its packages (the data) ──
+  let job, packs = [];
+  try {
+    job = await getJSON('job.json');
+    const dirs = job.packages && job.packages.length ? job.packages : ['package'];
+    for (const d of dirs) {
+      const m = await getJSON(d + '/louped.json');
+      if (m.format !== 'louped-package') throw new Error(d + '/louped.json isn\'t a Louped package');
+      m.dir = d;
+      m.areaFc = m.areas ? await getJSON(d + '/' + m.areas.file) : null;
+      m.layerFc = await Promise.all((m.layers || []).map(l => getJSON(d + '/' + l.file)));
+      m.recData = await Promise.all((m.records || []).map(r => getJSON(d + '/' + r.file)));
+      packs.push(m);
+    }
+  } catch (e) {
+    document.querySelector('.app').innerHTML = '<div class="fail"><h1>The map didn\'t load</h1><p>' + esc(e.message) + '</p><p>Reload the page to try again.</p></div>';
+    return;
+  }
+  const keys = await getJSON('../../assets/keys.json').catch(() => ({}));
+
+  // ── Wording ──
+  const title = job.title || packs[0].title || 'Map';
+  document.title = title;
+  document.getElementById('title').textContent = title;
+  document.getElementById('what').textContent = job.client || '';
+  if (job.subtitle) { const s = document.getElementById('subtitle'); s.textContent = job.subtitle; s.hidden = false; }
+  document.getElementById('intro').innerHTML = paras(job.intro);
+  const exported = packs.map(p => p.exported).sort().pop();
+  document.getElementById('meta').textContent = (job.date ? job.date + ' · ' : '') + 'Data as exported ' + fmtDate(exported) + '. This map is a snapshot, not live.';
+  document.getElementById('contact').innerHTML = '© Rutherford Ecology · ' + (job.contact ? esc(job.contact) + ' · ' : '') + '<a href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener">rutherfordecology.co.nz</a> · Louped ' + VIEWER_VERSION;
+
+  // ── Map and base maps ──
+  const map = L.map('map', { zoomSnap: 0.25, maxZoom: 19 });
+  window.loupedMap = map; // for checking the page from the console
+  map.attributionControl.setPrefix(false);
+  const LINZ_ATTR = 'Base maps sourced from the <a href="https://data.linz.govt.nz/" target="_blank" rel="noopener">LINZ Data Service</a>, CC BY 4.0';
+  const linz = (layer, maxNative) => L.tileLayer('https://tiles-{s}.data-cdn.linz.govt.nz/services;key=' + encodeURIComponent(keys.lds) + '/tiles/v4/layer=' + layer + '/EPSG:3857/{z}/{x}/{y}.png', { subdomains: 'abcd', attribution: LINZ_ATTR, maxNativeZoom: maxNative, maxZoom: 19 });
+  const bm = job.basemap || {};
+  const BASE = {
+    aerial: keys.lds && bm.aerialLayer ? linz(bm.aerialLayer, 19) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery: Esri, Maxar, Earthstar Geographics', maxNativeZoom: 19, maxZoom: 19 }),
+    topo: keys.lds ? linz(50767, 17) : L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Topo: Esri', maxNativeZoom: 19, maxZoom: 19 })
+  };
+
+  // ── Layers: each package layer gets its own pane, top of the map first ──
+  const L_ = []; // { key, name, group, on, op, kind, layer, fc, style, legend, swatch }
+  let z = 640;
+  const pane = (key) => { map.createPane(key); map.getPane(key).style.zIndex = z--; return key; };
+  // A line never takes a fill (Leaflet would fill it as if it were closed)
+  const sOf = (layerStyle, f) => { const s = Object.assign({ c: '#333', w: 1.5, o: 1, fo: 0.2 }, layerStyle || {}, (f.properties && f.properties._s) || {}); if (f.geometry && /LineString/.test(f.geometry.type)) s.f = null; return s; };
+  const pathStyle = (s, op) => ({ stroke: s.c != null, color: s.c || '#000', weight: s.w ?? 1.5, opacity: (s.o ?? 1) * op, dashArray: s.d || null,
+    fill: s.f != null, fillColor: s.f || s.c, fillOpacity: (s.fo ?? 0.2) * op });
+  const swatchOf = (st, fc) => {
+    const f = fc.features[0], s = sOf(st, f || {});
+    return 'background:' + (s.f ? s.f : 'transparent') + ';border-color:' + (s.c || 'transparent') + (s.d ? ';border-style:dashed' : '');
+  };
+
+  // Records first (they draw on top), then the areas, then each package's layers in its order
+  const RECS = [];
+  packs.forEach(p => (p.recData || []).forEach((d, i) => {
+    const c = Object.fromEntries(d.cols.map((k, j) => [k, j]));
+    d.rows.forEach(r => RECS.push({ id: r[c.gbifID], lat: r[c.lat], lng: r[c.lng], sp: r[c.species] || r[c.scientificName], sn: r[c.scientificName], vn: r[c.vernacularName], kingdom: r[c.kingdom], phylum: r[c.phylum], cls: r[c.class], order: r[c.order], family: r[c.family],
+      year: r[c.year], date: r[c.eventDate], unc: r[c.uncertainty_m], basis: r[c.basisOfRecord], ds: r[c.datasetName], st: r[c.nztcs_status], cat: r[c.nztcs_category], sy: r[c.nztcs_year], src: p.records[i] }));
+  }));
+
+  // Occurd's taxon groups and colours (TAXON_COLOURS and getTaxonGroup, as in the catchment maps)
+  const TAXON_COLOURS = { Aves: ['#2563EB', 'Birds'], Mammalia: ['#7C3AED', 'Mammals'], Reptilia: ['#D97706', 'Reptiles'], Amphibia: ['#059669', 'Amphibians'], Fish: ['#0891B2', 'Fish'], Insecta: ['#DC2626', 'Insects'], Arachnida: ['#92400E', 'Spiders & mites'], Crustacea: ['#0E7490', 'Crustaceans'], Mollusca: ['#7E22CE', 'Molluscs'], Echinodermata: ['#BE185D', 'Echinoderms'], Cnidaria: ['#0369A1', 'Cnidarians'], Annelida: ['#854D0E', 'Worms'], Angiosperms: ['#16A34A', 'Flowering plants'], Gymnosperms: ['#166534', 'Conifers'], Ferns: ['#4ADE80', 'Ferns & allies'], Bryophytes: ['#86EFAC', 'Mosses & liverworts'], Algae: ['#06B6D4', 'Algae'], Fungi: ['#D97706', 'Fungi & lichens'], Other: ['#6B7280', 'Other'] };
+  const FISH_CLASSES = new Set(['Actinopterygii', 'Actinopteri', 'Chondrichthyes', 'Elasmobranchii', 'Holocephali', 'Myxini', 'Petromyzontida', 'Cephalaspidomorphi', 'Teleostei']);
+  const FISH_ORDERS = /^(anguilli|galaxii|osmeri|perci|gobii|salmoni|cyprini|mugili|pleuronecti|clupei|siluri|scorpaeni|carcharhini|lamni|squali|raji|myliobati|gadi|zei|beryci|syngnathi|tetraodonti|carangi|labri|blenni|scombri|atherini|beloni|lophii|ophidii|stomii|aulopi|myctophi|petromyzonti)formes$/i;
+  const CRUST = new Set(['Malacostraca', 'Maxillopoda', 'Branchiopoda', 'Ostracoda', 'Cirripedia', 'Copepoda', 'Hexanauplia', 'Thecostraca']);
+  const ANGIO = new Set(['Magnoliopsida', 'Liliopsida']), FERN = new Set(['Polypodiopsida', 'Marattiopsida', 'Psilotopsida', 'Equisetopsida', 'Lycopodiopsida']);
+  const BRYO = new Set(['Bryopsida', 'Jungermanniopsida', 'Marchantiopsida', 'Anthocerotopsida', 'Polytrichopsida', 'Sphagnopsida', 'Andreaeopsida']), GYMNO = new Set(['Pinopsida', 'Cycadopsida', 'Gnetopsida', 'Ginkgoopsida']);
+  const ALGAE = new Set(['Ochrophyta', 'Phaeophyta', 'Rhodophyta', 'Chlorophyta', 'Charophyta', 'Cyanobacteria', 'Bacillariophyta']);
+  function taxonGroup(t) {
+    const cls = t.cls || '', ph = t.phylum || '', k = t.kingdom || '', o = t.order || '';
+    if (cls === 'Aves') return 'Aves';
+    if (cls === 'Mammalia') return 'Mammalia';
+    if (['Reptilia', 'Squamata', 'Lepidosauria', 'Testudines', 'Rhynchocephalia'].includes(cls)) return 'Reptilia';
+    if (cls === 'Amphibia') return 'Amphibia';
+    if (FISH_CLASSES.has(cls) || FISH_ORDERS.test(o)) return 'Fish';
+    if (cls === 'Insecta') return 'Insecta';
+    if (cls === 'Arachnida') return 'Arachnida';
+    if (CRUST.has(cls)) return 'Crustacea';
+    if (ph === 'Mollusca') return 'Mollusca';
+    if (ph === 'Echinodermata') return 'Echinodermata';
+    if (ph === 'Cnidaria') return 'Cnidaria';
+    if (ph === 'Annelida') return 'Annelida';
+    if (ANGIO.has(cls)) return 'Angiosperms';
+    if (GYMNO.has(cls)) return 'Gymnosperms';
+    if (FERN.has(cls)) return 'Ferns';
+    if (BRYO.has(cls)) return 'Bryophytes';
+    if (k === 'Chromista' || ALGAE.has(ph)) return 'Algae';
+    if (k === 'Fungi') return 'Fungi';
+    if (k === 'Plantae') return 'Angiosperms';
+    return 'Other';
+  }
+  // NZTCS, as occurd. exported it
+  const NZ_CFG = { 'Nationally Critical': ['nc', 'NC'], 'Nationally Endangered': ['ne', 'NE'], 'Nationally Vulnerable': ['nv', 'NV'], 'Nationally Increasing': ['rc', 'NI'], 'Declining': ['ar', 'De'], 'Naturally Uncommon': ['ar', 'NU'], 'Relict': ['ar', 'Re'], 'Recovering': ['rc', 'Rc'], 'Extinct': ['ex', 'Ex'], 'Introduced and Naturalised': ['oi', 'I&N'], 'Vagrant': ['oi', 'Va'] };
+  const listed = (st, cat) => /^(threatened|at risk)$/i.test((cat || '').trim()) || /^(nationally (critical|endangered|vulnerable|increasing)|declining|recovering|relict|naturally uncommon)$/i.test((st || '').trim());
+
+  // One entry per taxon
+  const TAXA = new Map();
+  RECS.forEach(r => {
+    if (!r.sp || !isFinite(r.lat) || !isFinite(r.lng)) return;
+    let t = TAXA.get(r.sp);
+    if (!t) {
+      t = { name: r.sp, vn: r.vn, kingdom: r.kingdom, phylum: r.phylum, cls: r.cls, order: r.order, family: r.family, st: r.st, cat: r.cat, sy: r.sy, n: 0, last: 0, recs: [] };
+      t.g = taxonGroup(t);
+      t.threat = listed(t.st, t.cat);
+      const c = NZ_CFG[(t.st || '').trim()];
+      t.badge = t.st && c ? '<span class="nztcs-badge nb-' + c[0] + '" title="' + esc(t.st + (t.sy ? ' (' + t.sy + ')' : '')) + '">' + c[1] + '</span>' : t.threat ? '<span class="nztcs-badge nb-ar" title="' + esc(t.st || t.cat) + '">' + esc((t.st || t.cat).slice(0, 2)) + '</span>' : '';
+      t.label = t.vn || t.name;
+      TAXA.set(r.sp, t);
+    }
+    if (!t.vn && r.vn) { t.vn = r.vn; t.label = r.vn; }
+    t.n++; t.last = Math.max(t.last, r.year || 0); t.recs.push(r);
+    r.t = t;
+  });
+  const RECS_OK = RECS.filter(r => r.t);
+
+  const recPane = pane('recs');
+  const recR = L.canvas({ pane: recPane, tolerance: 4 });
+  const recLayer = (filter) => {
+    const g = L.layerGroup();
+    g.draw = (op) => {
+      g.clearLayers();
+      RECS_OK.filter(filter).forEach(r => L.circleMarker([r.lat, r.lng], { renderer: recR, radius: picked && r.t === picked ? 6.5 : 4.5, color: '#fff', weight: 1, opacity: op, fillColor: TAXON_COLOURS[r.t.g][0], fillOpacity: .95 * op, interactive: false }).addTo(g));
+    };
+    return g;
+  };
+  let picked = null;
+  if (RECS_OK.length) {
+    const groupsTh = [...new Set(RECS_OK.filter(r => r.t.threat).map(r => r.t.g))];
+    if (RECS_OK.some(r => r.t.threat)) L_.push({ key: 'rec_th', name: 'Threatened & at-risk species', group: 'Species', on: true, op: 1, kind: 'records', filter: r => r.t.threat || r.t === picked,
+      swatch: 'background:#D4580A;border-radius:50%;width:10px;height:10px', legendHtml: '<span>Threatened and At Risk species (NZTCS), coloured by group as in occurd.</span><div class="keys">' + groupsTh.map(g => '<span><i class="dot" style="background:' + TAXON_COLOURS[g][0] + '"></i>' + TAXON_COLOURS[g][1] + '</span>').join('') + '</div>' });
+    L_.push({ key: 'rec_all', name: 'All species records', group: 'Species', on: !RECS_OK.some(r => r.t.threat), op: 1, kind: 'records', filter: r => !picked || r.t === picked,
+      swatch: 'background:#6B7280;border-radius:50%;width:10px;height:10px', legendHtml: '<div class="keys">' + [...new Set(RECS_OK.map(r => r.t.g))].map(g => '<span><i class="dot" style="background:' + TAXON_COLOURS[g][0] + '"></i>' + TAXON_COLOURS[g][1] + '</span>').join('') + '</div>' });
+    L_.filter(e => e.kind === 'records').forEach(e => { e.layer = recLayer(e.filter); });
+  }
+
+  packs.forEach(p => {
+    if (p.areaFc && p.areaFc.features.length) {
+      const k = pane('areas_' + p.dir);
+      L_.push({ key: k, name: job.areasName || (p.areaFc.features.length === 1 ? 'Area' : 'Areas'), group: 'Areas', on: true, op: 1, kind: 'vector', fc: p.areaFc,
+        style: { c: '#ffffff', w: 3, o: 1 }, notes: '', legend: [] });
+    }
+    (p.layers || []).forEach((l, i) => {
+      L_.push({ key: pane('l_' + p.dir + '_' + l.id), name: l.name, group: l.group || 'Layers', on: l.on !== false, op: l.opacity ?? 1, kind: 'vector', fc: p.layerFc[i], style: l.style, notes: l.notes, legend: l.legend || [], src: l.source, pack: p });
+    });
+  });
+  L_.filter(e => e.kind === 'vector').forEach(e => {
+    const r = L.canvas({ pane: e.key, padding: 0.3 });
+    e.layer = L.geoJSON(e.fc, { renderer: r, interactive: false, style: f => pathStyle(sOf(e.style, f), e.op),
+      pointToLayer: (f, ll) => L.circleMarker(ll, Object.assign({ renderer: r, radius: sOf(e.style, f).r || 5 }, pathStyle(sOf(e.style, f), e.op))) });
+    e.swatch = e.swatch || swatchOf(e.style, e.fc);
+  });
+  L_.push({ key: 'aerial', name: 'Aerial photo', group: 'Base map', on: true, op: 1, kind: 'base', layer: BASE.aerial, swatch: 'background:linear-gradient(135deg,#6b8f4e,#2f4a2a)' });
+  L_.push({ key: 'topo', name: 'Topographic map', group: 'Base map', on: false, op: 1, kind: 'base', layer: BASE.topo, swatch: 'background:linear-gradient(135deg,#f3efe2,#c9d8b6)' });
+
+  function apply(e) {
+    if (e.on && !map.hasLayer(e.layer)) e.layer.addTo(map); else if (!e.on && map.hasLayer(e.layer)) map.removeLayer(e.layer);
+    if (e.kind === 'base') e.layer.setOpacity(e.op);
+    else if (e.kind === 'records') e.layer.draw(e.op);
+    else e.layer.eachLayer(l => l.setStyle(pathStyle(sOf(e.style, l.feature), e.op)));
+  }
+  const keyHtml = (e) => e.legendHtml || ((e.notes ? '<span>' + esc(e.notes) + '</span>' : '') + (e.legend && e.legend.length ? '<div class="keys">' + e.legend.map(([c, l]) => '<span><i class="lfill" style="background:' + esc(c) + '"></i>' + esc(l) + '</span>').join('') + '</div>' : ''));
+  function renderLayers() {
+    const groups = [];
+    L_.forEach(e => { if (!groups.includes(e.group)) groups.push(e.group); });
+    document.getElementById('layerGroups').innerHTML = groups.map(g => '<div class="group-name">' + esc(g) + '</div><ul class="layers">' + L_.filter(e => e.group === g).map(e => {
+      const k = e.on ? keyHtml(e) : '';
+      return '<li class="layer' + (e.on ? '' : ' off') + '" data-key="' + esc(e.key) + '"><button class="eye" type="button" aria-pressed="' + e.on + '" aria-label="' + (e.on ? 'Hide ' : 'Show ') + esc(e.name) + '">' + (e.on ? EYE : EYE_OFF) + '</button>' +
+        '<span><i class="lsw" style="' + e.swatch + '"></i></span><span class="lname" title="' + esc(e.name) + '">' + esc(e.name) + '</span>' +
+        '<input type="range" min="0" max="100" step="5" value="' + Math.round(e.op * 100) + '" aria-label="' + esc(e.name) + ' opacity"></li>' + (k ? '<li class="lkey">' + k + '</li>' : '');
+    }).join('') + '</ul>').join('');
+  }
+  const box = document.getElementById('layerGroups');
+  box.addEventListener('click', ev => {
+    const b = ev.target.closest('.eye'); if (!b) return;
+    const e = L_.find(x => x.key === b.closest('.layer').dataset.key);
+    e.on = !e.on;
+    // One base map at a time
+    if (e.kind === 'base' && e.on) L_.filter(x => x.kind === 'base' && x !== e && x.on).forEach(x => { x.on = false; apply(x); });
+    apply(e); renderLayers();
+  });
+  box.addEventListener('input', ev => {
+    if (ev.target.type !== 'range') return;
+    const e = L_.find(x => x.key === ev.target.closest('.layer').dataset.key);
+    e.op = ev.target.value / 100; apply(e);
+  });
+
+  // Fit the areas, or everything
+  const fitTo = packs.map(p => p.areaFc).filter(fc => fc && fc.features.length);
+  const b = fitTo.length ? L.geoJSON({ type: 'FeatureCollection', features: fitTo.flatMap(fc => fc.features) }).getBounds() : null;
+  if (b && b.isValid()) map.fitBounds(b, { padding: [16, 16] });
+  else { const bb = packs[0].bbox; map.fitBounds([[bb[1], bb[0]], [bb[3], bb[2]]]); }
+  L_.forEach(apply);
+  renderLayers();
+
+  // ── What's here: every visible layer at a clicked spot ──
+  const labelOf = (f) => {
+    const p = f.properties || {};
+    if (p._label) return p._label;
+    const nameKey = Object.keys(p).find(k => /^(name|label|title)$/i.test(k)) || Object.keys(p).find(k => /name/i.test(k) && typeof p[k] === 'string' && p[k]);
+    const rest = Object.entries(p).filter(([k, v]) => k[0] !== '_' && k !== nameKey && v !== '' && v != null && !/^(objectid|fid|shape_.*|globalid|id)$/i.test(k)).slice(0, 4);
+    return [nameKey ? p[nameKey] : null, ...rest.map(([k, v]) => k + ': ' + v)].filter(Boolean).join('\n');
+  };
+  map.on('click', (ev) => {
+    const pt = turf.point([ev.latlng.lng, ev.latlng.lat]), p0 = map.latLngToContainerPoint(ev.latlng), out = [];
+    const tolM = 8 * 40075016 * Math.cos(ev.latlng.lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+    // Species records within a few pixels
+    const recOn = L_.filter(e => e.kind === 'records' && e.on);
+    if (recOn.length) {
+      const near = RECS_OK.filter(r => recOn.some(e => e.filter(r)) && map.latLngToContainerPoint([r.lat, r.lng]).distanceTo(p0) < 8);
+      if (near.length) out.push('<h3>Species records (' + near.length + ')</h3>' + near.slice(0, 6).map(r => '<div class="rec"><b>' + esc(r.t.label) + '</b>' + r.t.badge + (r.t.label !== r.t.name ? ' <i>' + esc(r.t.name) + '</i>' : '') +
+        '\n' + esc(r.date || r.year || 'no date') + (r.unc ? ' · within ' + (r.unc >= 1000 ? (r.unc / 1000).toFixed(1) + ' km' : Math.round(r.unc) + ' m') : '') + (r.ds ? '\n' + esc(r.ds) : '') +
+        (r.id && /^\d+$/.test(String(r.id)) ? ' · <a href="https://www.gbif.org/occurrence/' + esc(r.id) + '" target="_blank" rel="noopener">GBIF record</a>' : '') + '</div>').join('') + (near.length > 6 ? '<div class="rec">and ' + (near.length - 6) + ' more here</div>' : ''));
+    }
+    L_.filter(e => e.kind === 'vector' && e.on).forEach(e => {
+      const hits = e.fc.features.filter(f => {
+        try {
+          const t = f.geometry.type;
+          if (/Polygon/.test(t)) return turf.booleanPointInPolygon(pt, f);
+          if (/LineString/.test(t)) return turf.pointToLineDistance(pt, f, { units: 'meters' }) < tolM;
+          if (/Point/.test(t)) return map.latLngToContainerPoint([f.geometry.coordinates[1], f.geometry.coordinates[0]]).distanceTo(p0) < 10;
+        } catch (err) {}
+        return false;
+      });
+      if (hits.length) out.push('<h3>' + esc(e.name) + '</h3>' + hits.slice(0, 3).map(f => '<div class="rec">' + esc(labelOf(f) || '(no details)') + '</div>').join('') + (hits.length > 3 ? '<div class="rec">and ' + (hits.length - 3) + ' more here</div>' : ''));
+    });
+    out.push('<h3>Location</h3>' + ev.latlng.lat.toFixed(5) + ', ' + ev.latlng.lng.toFixed(5));
+    L.popup({ maxWidth: 300, maxHeight: 320 }).setLatLng(ev.latlng).setContent(out.join('')).openOn(map);
+  });
+
+  // ── Species list, grouped like occurd.'s checklist ──
+  const fState = { nz: '', search: '' }, open = new Set();
+  const groupOrder = Object.keys(TAXON_COLOURS);
+  const lookLikeUrl = (names) => LOOKLIKE + '?s=' + encodeURIComponent(names.join('|'));
+  let shownTaxa = [];
+  function renderSpecies() {
+    const all = [...TAXA.values()];
+    const th = all.filter(t => t.threat);
+    document.getElementById('nzChips').innerHTML = [['', 'All species', all.length], ['th', 'Threatened & at risk', th.length]].map(([k, l, n]) =>
+      '<button class="nzchip" type="button" data-nz="' + k + '" aria-pressed="' + (fState.nz === k) + '">' + l + ' <span class="n">' + n + '</span></button>').join('');
+    let list = fState.nz === 'th' ? th : all;
+    if (fState.search) list = list.filter(t => (t.name + ' ' + (t.vn || '')).toLowerCase().includes(fState.search));
+    list.sort((a, b) => b.n - a.n || a.label.localeCompare(b.label));
+    shownTaxa = list;
+    document.getElementById('spCount').textContent = list.length.toLocaleString() + ' taxa · ' + list.reduce((s, t) => s + t.n, 0).toLocaleString() + ' records';
+    document.getElementById('spList').innerHTML = groupOrder.map(g => {
+      const items = list.filter(t => t.g === g); if (!items.length) return '';
+      const isOpen = open.has(g) || !!fState.search || fState.nz === 'th' || items.includes(picked);
+      return '<div class="spg" data-g="' + g + '"><div class="spg-head" role="button" tabindex="0" aria-expanded="' + isOpen + '"><span class="chev">▼</span><span class="dot" style="background:' + TAXON_COLOURS[g][0] + '"></span><span>' + TAXON_COLOURS[g][1] + '</span><span class="n">' + items.length + ' · ' + items.reduce((s, t) => s + t.n, 0).toLocaleString() + '</span></div>' +
+        (isOpen ? '<ul class="splist">' + items.map(t => '<li class="sp" tabindex="0" data-sp="' + esc(t.name) + '"' + (t === picked ? ' aria-current="true"' : '') + '><span class="sp-name"><b><span class="nm">' + esc(t.label) + '</span>' + t.badge + '</b><i>' + esc(t.label !== t.name ? t.name : (t.family || t.order || '')) + '</i></span>' +
+          '<span class="sp-n">' + t.n + (t.last ? '<br>' + t.last : '') + '</span>' + (/\s/.test(t.name) ? '<a class="ll" href="' + lookLikeUrl([t.name]) + '" target="_blank" rel="noopener" title="Photos of ' + esc(t.label) + ' in LookLike">' + CAMERA + '</a>' : '<span></span>') + '</li>').join('') + '</ul>' : '') + '</div>';
+    }).join('') || '<p class="note" style="padding:10px;">No species match.</p>';
+  }
+  if (TAXA.size) {
+    document.getElementById('spSec').hidden = false;
+    document.getElementById('nzChips').addEventListener('click', ev => { const b = ev.target.closest('[data-nz]'); if (!b) return; fState.nz = b.dataset.nz; renderSpecies(); });
+    document.getElementById('spSearch').addEventListener('input', ev => { fState.search = ev.target.value.trim().toLowerCase(); renderSpecies(); });
+    const spList = document.getElementById('spList');
+    const pick = (li) => {
+      const t = TAXA.get(li.dataset.sp);
+      picked = picked === t ? null : t;
+      L_.filter(e => e.kind === 'records').forEach(apply);
+      renderSpecies();
+      if (picked) {
+        const rb = L.latLngBounds(picked.recs.map(r => [r.lat, r.lng]));
+        if (!L_.some(e => e.kind === 'records' && e.on && e.filter(picked.recs[0]))) { const e = L_.find(x => x.key === 'rec_all'); e.on = true; apply(e); renderLayers(); }
+        if (rb.isValid()) map.fitBounds(rb, { padding: [40, 40], maxZoom: 15 });
+      }
+    };
+    spList.addEventListener('click', ev => {
+      if (ev.target.closest('a')) return;
+      const h = ev.target.closest('.spg-head'); if (h) { const g = h.closest('.spg').dataset.g; open.has(g) ? open.delete(g) : open.add(g); renderSpecies(); return; }
+      const li = ev.target.closest('.sp'); if (li) pick(li);
+    });
+    spList.addEventListener('keydown', ev => {
+      if (!(ev.key === 'Enter' || ev.key === ' ')) return;
+      const h = ev.target.closest('.spg-head'), li = ev.target.closest('.sp');
+      if (h || li) { ev.preventDefault(); h ? h.click() : pick(li); }
+    });
+    document.getElementById('llBtn').addEventListener('click', () => {
+      const names = shownTaxa.filter(t => /\s/.test(t.name)).map(t => t.name);
+      if (!names.length) return;
+      if (names.length > 50 && !confirm('LookLike shows up to 50 species at once. Open the 50 most-recorded of the ' + names.length + '?')) return;
+      window.open(lookLikeUrl(names.slice(0, 50)), '_blank', 'noopener');
+    });
+    const csvCell = v => /[",\n]/.test(String(v ?? '')) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v ?? '');
+    document.getElementById('dlRecords').addEventListener('click', () => {
+      const cites = [...new Set(RECS_OK.map(r => r.src && r.src.citation).filter(Boolean))];
+      const rows = [['gbif_id', 'scientific_name', 'common_name', 'group', 'nztcs_status', 'date', 'year', 'latitude', 'longitude', 'uncertainty_m', 'basis_of_record', 'dataset']];
+      RECS_OK.forEach(r => rows.push([r.id, r.sn || r.sp, r.t.vn || '', TAXON_COLOURS[r.t.g][1], r.st || '', r.date || '', r.year || '', r.lat, r.lng, r.unc ?? '', r.basis || '', r.ds || '']));
+      const text = cites.map(c => '# GBIF citation: ' + c).join('\n') + (cites.length ? '\n' : '') + rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = (title.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'map') + '_records.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+    renderSpecies();
+  }
+
+  // ── About: your text, then every source and licence ──
+  const sources = packs.flatMap(p => p.sources || []);
+  const seenSrc = new Set();
+  document.getElementById('about').innerHTML = paras(job.about) +
+    '<div><b>Sources</b><ul>' + sources.filter(s => !seenSrc.has(s.key) && seenSrc.add(s.key)).map(s =>
+      '<li>' + (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + '</a>' : esc(s.name)) +
+      (s.attribution ? '. ' + esc(s.attribution) : '') + (s.note ? '. ' + esc(s.note) : '') +
+      (s.citation ? '<div class="cite">' + esc(s.citation).replace(/(https:\/\/doi\.org\/\S+)/, '<a href="$1" target="_blank" rel="noopener">$1</a>') + '</div>' : '') + '</li>').join('') + '</ul></div>' +
+    '<p>Species records are shown at the location their source publishes, with no extra blurring. Threat status is the New Zealand Threat Classification System (NZTCS) as matched in occurd. Layer outlines are published GIS layers, not legal or survey boundaries.</p>' +
+    '<p>Base maps: aerial photos from ' + (keys.lds && bm.aerialLayer ? 'the LINZ Data Service (layer ' + esc(bm.aerialLayer) + '), CC BY 4.0' : 'Esri World Imagery (Esri, Maxar, Earthstar Geographics)') +
+      '; topographic map from ' + (keys.lds ? 'LINZ Topo50 via the LINZ Data Service, CC BY 4.0' : 'Esri World Topographic Map') + '.</p>' +
+    '<p class="meta">Data as exported ' + fmtDate(exported) + ' from ' + [...new Set(packs.map(p => p.producer.tool + ' ' + p.producer.version))].join(', ') + '. Louped ' + VIEWER_VERSION + '.</p>';
+  const aboutBtn = document.getElementById('aboutBtn');
+  aboutBtn.addEventListener('click', () => {
+    const on = aboutBtn.getAttribute('aria-pressed') !== 'true';
+    aboutBtn.setAttribute('aria-pressed', String(on));
+    aboutBtn.textContent = on ? 'Back to map' : 'About';
+    document.getElementById('aboutView').hidden = !on;
+    document.getElementById('mainView').hidden = on;
+  });
+})();
+</script>
+</body>
+</html>

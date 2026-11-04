@@ -2,3 +2,4 @@ node_modules/
 run.log
 site.json
 assets/keys.json
+sites/

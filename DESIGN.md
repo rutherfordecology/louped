@@ -1,7 +1,9 @@
 # Louped: design
 
-Status: agreed direction, 2026-11-05. Nothing in this file is built yet.
-The catchment map engine described in README.md is what exists today.
+Status: phase 1 built, 2026-11-05 (v0.5.0): inferrd.'s Export for
+Louped (v0.62.0), the viewer and the studio, for vector layers and
+species records. Still to come: image layers (phase 2), the catchment
+engine writing packages (phase 3), hosting.
 
 ## What Louped is
 
@@ -36,13 +38,20 @@ exported, and it says that date. It is not live.
 One zip from one export. Several packages can make one site, for example
 an Occurd package and an inferrd package for the same area.
 
-    manifest.json        what made it, when, the area, layers, sources
-    layers/*.geojson     vector layers: boundaries, rivers, land cover, areas
-    records/*.json       species records (Occurd)
+    louped.json          the manifest: what made it, when, the area, layers, sources
+    layers/areas.geojson the areas
+    layers/<id>.geojson  vector layers; each feature's drawn style in
+                         properties._s, its popup text in _label
+    records/<n>.json     species records (occurd.), { cols, rows }
     images/*.png         rasters, each with its bounds in the manifest
-                         (inferrd vegetation maps, hillshade, height change)
+                         (phase 2: inferrd vegetation maps, LiDAR)
 
-`manifest.json` holds:
+A style (`_s`, or a layer's `style`) is `{ c: line colour, w: width,
+o: line opacity, f: fill colour, fo: fill opacity, d: dash, r: point
+radius }`; a missing `c` or `f` means no line or no fill.
+
+`louped.json` holds `format: "louped-package"` and `formatVersion: 1`,
+and:
 
 - `producer`: tool and version, for example `{ "tool": "occurd", "version": "v7.49" }`.
 - `exported`: date and time.
@@ -84,10 +93,11 @@ never overwrites it:
 1. **Who can see a site.** This repo is public, so a GitHub Pages site
    would be too, threatened species points included. Clients who need
    privacy need another host or a password in front of the site.
-2. **Where the title goes in.** An editor page (open the zip, fill in a
-   form, preview, save) or a `job.json` edited by hand. The editor is
-   nicer; the file is quicker to build.
-3. **Which tool exports first:** Occurd, inferrd or both.
+2. ~~Where the title goes in~~: settled in phase 1. The studio is an
+   editor page on this computer (drop the zip, fill in a form, save).
+3. ~~Which tool exports first~~: settled in phase 1. inferrd. exports:
+   occurd. CSVs go into inferrd.'s Report tab, and the Layers panel there
+   is where the map is set up. Occurd needs no change.
 4. **Base map key on a hosted site.** The LINZ key is kept out of git.
    A key in a web page is visible to anyone, so a hosted site needs its
    own key used only for that.
