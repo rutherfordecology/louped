@@ -15,8 +15,10 @@ sites use Esri base maps.
 
 1. Sign in: `npx -y wrangler@4.157.0 login` (the account that has
    `gbif-proxy` and `inferrd-auth`).
-2. Create the project:
-   `npx -y wrangler@4.157.0 pages project create louped --production-branch main`
+2. Create the project (done 2026-11-05):
+   `npx -y wrangler@4.157.0 pages project create louped --production-branch main --force`
+   Wrangler 4.157 sends new Pages projects to Workers unless `--force` is
+   given; it's needed only on create.
 3. Lock the whole domain to you, **before** the first deploy:
    - Workers & Pages → `louped` → Settings → General → **Enable access
      policy**. This protects the preview addresses (`*.louped.pages.dev`).
