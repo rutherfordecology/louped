@@ -86,7 +86,9 @@ async function build(list) {
 }
 
 function wrangler(args) {
-  const r = spawnSync('npx', ['-y', WRANGLER, ...args], { cwd: ROOT, stdio: 'inherit', shell: process.platform === 'win32' });
+  // One command string: the arguments are fixed words and a checked project name
+  if (!args.every(a => /^[A-Za-z0-9=._-]+$/.test(a))) throw new Error('unexpected wrangler argument');
+  const r = spawnSync(['npx', '-y', WRANGLER, ...args].join(' '), { cwd: ROOT, stdio: 'inherit', shell: true });
   if (r.status !== 0) throw new Error('wrangler ' + args[0] + ' ' + (args[1] || '') + ' failed');
 }
 

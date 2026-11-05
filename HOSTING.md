@@ -27,6 +27,12 @@ sites use Esri base maps.
      preview one. Policy: **Allow**, include **Emails** = your own address.
    - Zero Trust → Settings → Authentication: **One-time PIN** is on.
 
+Done 2026-11-05: previews restricted (Settings → General → Preview
+access → Restrict previews) and `louped.pages.dev` added to the
+"louped - Cloudflare Pages" Access application, policy "Allow Members"
+(members of the Cloudflare account). Zero Trust asks for a plan before
+more applications can be made: choose **Free** (up to 50 people).
+
 ## Each client site
 
 1. Make it in the studio (`npm run studio`) and check it there.

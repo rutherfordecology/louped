@@ -13,6 +13,9 @@
   sends `noindex`, and the root and 404 pages say only to use the link
   you were sent.
 - `online.json` and `dist/` are git-ignored, like `sites/`.
+- Set up on 2026-11-05: the `louped` project is live at
+  https://louped.pages.dev/ with the whole domain and its previews behind
+  Access (members of the Cloudflare account only). First site: test-block.
 
 ## v0.5.0 — 2026-11-05
 
