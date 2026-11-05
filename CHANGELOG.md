@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.6.0 — 2026-11-05
+
+- **Client sites online on Cloudflare Pages, behind Cloudflare Access.**
+  `npm run online` (studio/deploy.mjs) builds `dist/` from the sites on the
+  online list (`online.json`) and deploys it to the `louped` Pages project.
+  Each site is at `louped.pages.dev/<site>/` with its own Access
+  application, so each client opens only their own map; the rest of the
+  domain is locked to you. `list`, `add` and `remove` manage the list.
+  HOSTING.md has the steps.
+- Hosted sites never get the LINZ key; they use Esri base maps. Every page
+  sends `noindex`, and the root and 404 pages say only to use the link
+  you were sent.
+- `online.json` and `dist/` are git-ignored, like `sites/`.
+
 ## v0.5.0 — 2026-11-05
 
 Louped, phase 1: client maps from packages, as set out in DESIGN.md.

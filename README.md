@@ -19,6 +19,10 @@ in `sites/<name>/` (`index.html`, `job.json` with your wording, and
 The viewer is `viewer/index.html`; the studio copies it into each site on
 every save. The plan and the package format are in [DESIGN.md](DESIGN.md).
 
+To put a site online for a client, behind a Cloudflare Access email
+sign-in: `npm run online -- add <site>`, then `npm run online`. Set up
+its Access application first; the steps are in [HOSTING.md](HOSTING.md).
+
 | Folder | Area |
 |---|---|
 | `whangara/` | Whangārā community catchments: Turihaua, Pouawa, Waiomoko and Pakarae rivers plus the coastal streams between them |

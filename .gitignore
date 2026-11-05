@@ -3,3 +3,5 @@ run.log
 site.json
 assets/keys.json
 sites/
+online.json
+dist/

@@ -3,7 +3,7 @@
 Status: phase 1 built, 2026-11-05 (v0.5.0): inferrd.'s Export for
 Louped (v0.62.0), the viewer and the studio, for vector layers and
 species records. Still to come: image layers (phase 2), the catchment
-engine writing packages (phase 3), hosting.
+engine writing packages (phase 3). Hosting: v0.6.0, Cloudflare Pages + Access.
 
 ## What Louped is
 
@@ -90,9 +90,8 @@ never overwrites it:
 
 ## Not decided yet
 
-1. **Who can see a site.** This repo is public, so a GitHub Pages site
-   would be too, threatened species points included. Clients who need
-   privacy need another host or a password in front of the site.
+1. ~~Who can see a site~~: settled in v0.6.0. Cloudflare Pages behind
+   Cloudflare Access, one Access application per site (HOSTING.md).
 2. ~~Where the title goes in~~: settled in phase 1. The studio is an
    editor page on this computer (drop the zip, fill in a form, save).
 3. ~~Which tool exports first~~: settled in phase 1. inferrd. exports:
@@ -101,3 +100,5 @@ never overwrites it:
 4. **Base map key on a hosted site.** The LINZ key is kept out of git.
    A key in a web page is visible to anyone, so a hosted site needs its
    own key used only for that.
+   Until then, hosted sites use Esri base maps (the LINZ key is never
+   deployed).

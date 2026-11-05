@@ -9,6 +9,7 @@
     "pngjs": "7.0.0"
   },
   "scripts": {
-    "studio": "node studio/server.mjs"
+    "studio": "node studio/server.mjs",
+    "online": "node studio/deploy.mjs"
   }
 }
