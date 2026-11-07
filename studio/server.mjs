@@ -20,6 +20,10 @@ const PORT = Number(process.env.PORT) || 7884;
 const JOB_FIELDS = ['title', 'subtitle', 'client', 'date', 'intro', 'about', 'contact', 'areasName'];
 const TYPES = { '.html': 'text/html; charset=utf-8', '.json': 'application/json', '.geojson': 'application/geo+json', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 
+// inferrd.'s "Send to Louped": the only other pages that may talk to the
+// studio, and only through /api/inferrd/ (list the sites, send a package).
+// Never the deploy, Access or wording endpoints.
+const INFERRD_ORIGINS = new Set(['https://rutherfordecology.github.io', 'http://localhost:7899', 'http://localhost:7883', 'http://127.0.0.1:7899']);
 const slugOk = (s) => /^[a-z0-9][a-z0-9-]{0,62}$/.test(s);
 // Package paths: louped.json, or a file under layers/, records/ or images/
 const pkgPathOk = (p) => p === 'louped.json' || /^(layers|records|images)\/[A-Za-z0-9._-]+$/.test(p);
@@ -212,12 +216,50 @@ async function serveFile(res, rel) {
   catch (e) { send(res, 404, 'Not found', 'text/plain'); }
 }
 
+// inferrd. → studio. CORS for inferrd.'s origins only, with Chrome's
+// private network preflight (a public page asking for localhost).
+async function inferrdApi(req, res, p) {
+  const origin = req.headers.origin || '';
+  if (!INFERRD_ORIGINS.has(origin)) return send(res, 403, { error: 'only inferrd. can send packages here' });
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Vary', 'Origin');
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, { 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Private-Network': 'true', 'Access-Control-Max-Age': '600' });
+    return res.end();
+  }
+  const studio = 'http://localhost:' + PORT + '/';
+  if (p === '/api/inferrd/sites' && req.method === 'GET') {
+    await fs.mkdir(SITES, { recursive: true });
+    const names = (await fs.readdir(SITES, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name);
+    const list = (await Promise.all(names.map(siteInfo))).filter(Boolean)
+      .map(s => ({ slug: s.slug, title: s.job.title || s.slug, exported: s.packages[0] ? s.packages[0].exported : null }))
+      .sort((a, b) => (b.exported || '').localeCompare(a.exported || ''));
+    return send(res, 200, { studio, sites: list });
+  }
+  const m = p.match(/^\/api\/inferrd\/sites\/([^/]+)\/package$/);
+  if (m && req.method === 'POST') {
+    const slug = m[1];
+    if (!slugOk(slug)) return send(res, 400, { error: 'a site name is lower-case letters, numbers and dashes' });
+    if (!/^application\/json\b/.test(req.headers['content-type'] || '')) return send(res, 415, { error: 'send JSON' });
+    const input = JSON.parse((await body(req)).toString('utf8'));
+    const there = await exists(path.join(SITES, slug, 'job.json'));
+    if (input.create && there) return send(res, 409, { error: 'there\'s already a site called ' + slug });
+    if (!input.create && !there) return send(res, 404, { error: 'no site called ' + slug });
+    await fs.mkdir(path.join(SITES, slug), { recursive: true });
+    if (input.merge) await mergePackage(slug, input.files); else await putPackage(slug, input.files);
+    const s = await siteInfo(slug);
+    return send(res, 200, { slug, title: s.job.title || slug, open: studio + '#' + slug });
+  }
+  return send(res, 404, { error: 'not found' });
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     const p = decodeURIComponent(url.pathname);
     let m;
     if (p === '/' || p === '/studio' || p === '/studio/') return serveFile(res, 'studio/index.html');
+    if (p.startsWith('/api/inferrd/')) return inferrdApi(req, res, p);
     if (p === '/api/sites' && req.method === 'GET') {
       await fs.mkdir(SITES, { recursive: true });
       const names = (await fs.readdir(SITES, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name);

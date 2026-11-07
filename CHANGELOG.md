@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.13.0 — 2026-11-08
+
+- **Packages straight from inferrd.** The studio takes inferrd.'s new
+  "Send to Louped" at `/api/inferrd/`: list the sites, and send a package
+  to a new site or to one already there (replace or merge, as a drop
+  does). Only inferrd.'s own pages (rutherfordecology.github.io, and
+  localhost:7899 and :7883 for testing) may use it, with the CORS and
+  private network answers Chrome needs; they can't reach the wording,
+  Access or deploy endpoints. A new site won't overwrite one of the same
+  name.
+- The studio opens at a site from its address: `http://localhost:7884/#<site>`.
+
 ## v0.12.0 — 2026-11-08
 
 - **3D view in the client viewer.** A site whose package has LiDAR heights

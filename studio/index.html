@@ -286,7 +286,10 @@ $('offBtn').addEventListener('click', () => {
   if (!cur || !confirm('Take ' + cur.slug + ' offline? Its link stops working at once. Your copy here stays.')) return;
   deployRun('/api/sites/' + cur.slug + '/offline', { removeAccess: online.cloudflare && confirm('Also delete its Access application on Cloudflare? (Keep it if you\'ll put the site back.)') }, 'Taking ' + cur.slug + ' offline');
 });
-loadSites().catch(e => status('The studio server isn\'t answering: ' + e.message, true));
+// inferrd.'s "Send to Louped" opens the studio at #<site>
+const fromHash = () => decodeURIComponent(location.hash.slice(1));
+loadSites(fromHash() || undefined).catch(e => status('The studio server isn\'t answering: ' + e.message, true));
+window.addEventListener('hashchange', () => { if (fromHash()) loadSites(fromHash()); });
 </script>
 </body>
 </html>
