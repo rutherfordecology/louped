@@ -19,6 +19,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { hiddenSet, clientManifest } from './hide.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITES = path.join(ROOT, 'sites');
@@ -82,6 +83,11 @@ async function build(list) {
     for (const d of job.packages || ['package']) {
       if (!/^[a-z0-9._-]+$/i.test(d) || !await exists(path.join(src, d, 'louped.json'))) throw new Error(slug + ': package folder "' + d + '" is missing');
       await copyDir(path.join(src, d), path.join(out, d));
+      // Layers hidden in the studio don't go up at all
+      const { manifest, drop } = clientManifest(await readJson(path.join(src, d, 'louped.json')), hiddenSet(job));
+      await fs.writeFile(path.join(out, d, 'louped.json'), JSON.stringify(manifest));
+      for (const f of drop) if (/^(layers|records|images)\/[A-Za-z0-9._-]+$/.test(f)) await fs.rm(path.join(out, d, f), { force: true });
+      if (drop.size) console.log('    left out: ' + [...hiddenSet(job)].join(', '));
     }
     console.log('  ' + slug + '/  ' + (job.title || ''));
   }

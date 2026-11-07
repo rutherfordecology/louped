@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.11.0 — 2026-11-08
+
+- **Leave layers out of the client's view.** The studio lists a site's
+  layers under "In the client's view", each with a tick box, plus one for
+  the species records. Untick one and save, and it's gone from the
+  client's map. It isn't just switched off:
+  - a deploy doesn't send its files, and the package's manifest doesn't
+    name it;
+  - its source leaves the About page (unless a layer still shown uses it);
+  - the client preview shows the site the same way.
+  The data stays in the site folder, so ticking it back brings it back.
+  The list is kept in job.json (`hidden`), so a data update or merge
+  keeps it.
+- A deployed package no longer carries the "left out" and
+  "licence not stated" notes; those were for you only.
+
 ## v0.10.0 — 2026-11-08
 
 - **Merge a new package instead of replacing.** When you drop a new

@@ -11,6 +11,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { hiddenSet, clientManifest } from './hide.mjs';
 import { cfConfig, cfApply, cfCheck, cfRemove, parsePeople } from './cloudflare.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -34,7 +35,7 @@ async function siteInfo(slug) {
   const packs = [];
   for (const d of job.packages || ['package']) {
     const m = await readJson(path.join(dir, d, 'louped.json')).catch(() => null);
-    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [], merged: m.merged || null });
+    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ id: l.id, name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [], merged: m.merged || null });
   }
   return { slug, job, packages: packs };
 }
@@ -147,6 +148,7 @@ async function putJob(slug, input) {
     const a = Number(input.basemap.aerialLayer);
     job.basemap = a > 0 ? { aerialLayer: a } : undefined;
   }
+  if (Array.isArray(input.hidden)) job.hidden = [...new Set(input.hidden.filter(x => typeof x === 'string' && /^[A-Za-z0-9._:-]{1,80}$/.test(x)))];
   await fs.writeFile(jobPath, JSON.stringify(job, null, 2) + '\n');
   await copyViewer(slug);
 }
@@ -278,8 +280,14 @@ const server = http.createServer(async (req, res) => {
       if (rest === '' || rest === 'index.html') return serveFile(res, 'viewer/index.html');
       if (rest === 'job.json') return serveFile(res, 'sites/' + slug + '/job.json');
       const job = await readJson(path.join(SITES, slug, 'job.json')).catch(() => null);
-      const dir = rest.split('/')[0];
-      if (job && (job.packages || ['package']).includes(dir) && path.basename(rest) !== 'keys.json') return serveFile(res, 'sites/' + slug + '/' + rest);
+      const dir = rest.split('/')[0], file = rest.slice(dir.length + 1);
+      if (job && (job.packages || ['package']).includes(dir) && path.basename(rest) !== 'keys.json') {
+        // As a deploy sends it: hidden layers taken out
+        const m = await readJson(path.join(SITES, slug, dir, 'louped.json')).catch(() => null);
+        const { manifest, drop } = m ? clientManifest(m, hiddenSet(job)) : { manifest: null, drop: new Set() };
+        if (file === 'louped.json' && manifest) return send(res, 200, manifest);
+        if (!drop.has(file)) return serveFile(res, 'sites/' + slug + '/' + rest);
+      }
       return send(res, 404, 'Not found', 'text/plain');
     }
     if (req.method === 'GET' && /^\/preview\//.test(p)) return send(res, 404, 'Not found', 'text/plain');

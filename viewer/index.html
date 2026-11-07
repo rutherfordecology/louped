@@ -166,7 +166,7 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const VIEWER_VERSION = 'v0.10.0';
+const VIEWER_VERSION = 'v0.11.0';
 const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
 const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -187,6 +187,12 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
       const m = await getJSON(d + '/louped.json');
       if (m.format !== 'louped-package') throw new Error(d + '/louped.json isn\'t a Louped package');
       m.dir = d;
+      // Layers hidden in the studio (a deploy leaves them out of the package too)
+      const hide = new Set(job.hidden || []), goneSrc = new Set();
+      m.layers = (m.layers || []).filter(l => !hide.has(l.id) || !goneSrc.add(l.source));
+      if (hide.has('_records')) { (m.records || []).forEach(r => goneSrc.add(r.source)); m.records = []; }
+      const keptSrc = new Set([...m.layers.map(l => l.source), ...(m.records || []).map(r => r.source)]);
+      m.sources = (m.sources || []).filter(s => !goneSrc.has(s.key) || keptSrc.has(s.key));
       m.areaFc = m.areas ? await getJSON(d + '/' + m.areas.file) : null;
       // Image layers (pictures with bounds) have no GeoJSON to read
       m.layerFc = await Promise.all((m.layers || []).map(l => l.kind === 'image' ? null : getJSON(d + '/' + l.file)));

@@ -77,6 +77,11 @@ iframe { flex: 1; border: 0; width: 100%; background: var(--bg); }
         <div class="warnbox" id="licUnclear" hidden></div>
       </section>
       <section class="sec">
+        <div class="eyebrow">In the client's view</div>
+        <div id="showList" class="facts"></div>
+        <p class="note">Untick a layer to leave it out. It isn't just switched off: a deploy doesn't send it, and its source leaves the About page. The data stays here, so you can tick it back. Saved with <b>Save</b> below.</p>
+      </section>
+      <section class="sec">
         <div class="eyebrow">Wording</div>
         <label class="f">Title<input type="text" id="f_title"></label>
         <label class="f">Subtitle<input type="text" id="f_subtitle" placeholder="Optional"></label>
@@ -163,6 +168,11 @@ function show(s) {
   const unc = p ? p.licenceUnclear || [] : [];
   $('licUnclear').hidden = !unc.length;
   $('licUnclear').innerHTML = '<b>Licence not stated: decide before this site goes to anyone</b> (only you see this):<ul>' + unc.map(x => '<li>' + esc(x.name) + (x.note ? ': ' + esc(x.note) : '') + '</li>').join('') + '</ul>';
+  // Every layer once (a merged or multi-package site can repeat an id), then the species records
+  const hid = new Set(cur.job.hidden || []), seen = new Set(), rows = [];
+  cur.packages.forEach(pk => pk.layers.forEach(l => { if (l.id && !seen.has(l.id)) { seen.add(l.id); rows.push([l.id, l.name, l.group]); } }));
+  if (cur.packages.some(pk => pk.records.length)) rows.push(['_records', 'Species records (both species layers, the species list and their sources)', 'Species']);
+  $('showList').innerHTML = rows.length ? rows.map(([id, name, g]) => '<label class="row" style="font-size:13px;"><input type="checkbox" data-layer="' + esc(id) + '"' + (hid.has(id) ? '' : ' checked') + '> ' + esc(name) + (g ? ' <span class="note">' + esc(g) + '</span>' : '') + '</label>').join('') : '<div>No layers.</div>';
   $('saved').textContent = '';
   showOnline();
   const url = '/sites/' + cur.slug + '/';
@@ -176,6 +186,7 @@ $('saveBtn').addEventListener('click', async () => {
   if (!cur) return;
   const data = Object.fromEntries(FIELDS.map(k => [k, $('f_' + k).value]));
   data.basemap = { aerialLayer: $('f_aerial').value.trim() };
+  data.hidden = [...$('showList').querySelectorAll('input[data-layer]')].filter(c => !c.checked).map(c => c.dataset.layer);
   try { await api('PUT', '/api/sites/' + cur.slug + '/job', data); await loadSites(cur.slug); $('saved').textContent = 'Saved ' + new Date().toLocaleTimeString(); status(''); }
   catch (e) { status('Couldn\'t save: ' + e.message, true); }
 });
