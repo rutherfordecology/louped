@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.14.0 — 2026-11-08 (in inferrd.)
+
+- The viewer has moved into inferrd. (`inferrd/louped/index.html`), with
+  inferrd.'s new Louped tab (inferrd. v0.73.0): sites made, worded,
+  hidden-layer ticked and previewed straight from inferrd.'s map, in a
+  folder laid out as `sites/` here. v0.14.0 there adds a preview mode
+  (`#preview`: the files come from the Louped tab). `viewer/index.html`
+  here stays at v0.13.0 for the studio's deploys until publishing moves
+  into inferrd. too (phase 2); then the studio retires.
+
 ## v0.13.0 — 2026-11-08
 
 - **Packages straight from inferrd.** The studio takes inferrd.'s new
