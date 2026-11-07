@@ -34,7 +34,7 @@ async function siteInfo(slug) {
   const packs = [];
   for (const d of job.packages || ['package']) {
     const m = await readJson(path.join(dir, d, 'louped.json')).catch(() => null);
-    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ name: l.name, group: l.group, features: l.features })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [] });
+    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [] });
   }
   return { slug, job, packages: packs };
 }

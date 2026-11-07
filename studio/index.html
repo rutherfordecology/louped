@@ -152,7 +152,7 @@ function show(s) {
   $('f_aerial').value = cur.job.basemap && cur.job.basemap.aerialLayer || '';
   const p = cur.packages[0];
   $('facts').innerHTML = p ? '<div>Data from <b>' + esc(p.producer.tool + ' ' + p.producer.version) + '</b>, exported ' + esc(when(p.exported)) + '</div>' +
-    '<div>' + p.layers.length + (p.layers.length === 1 ? ' layer' : ' layers') + (p.layers.length ? ': ' + p.layers.map(l => esc(l.name) + ' <code>' + (l.features || 0) + '</code>').join(', ') : '') + '</div>' +
+    '<div>' + p.layers.length + (p.layers.length === 1 ? ' layer' : ' layers') + (p.layers.length ? ': ' + p.layers.map(l => esc(l.name) + ' <code>' + (l.kind === 'image' ? 'image' : (l.features || 0)) + '</code>').join(', ') : '') + '</div>' +
     '<div>' + p.records.reduce((t, r) => t + r.rows, 0).toLocaleString() + ' species records' + (p.records.length ? (p.records.every(r => r.citation) ? ', citable (GBIF DOI)' : ', <b>not all citable</b>: no GBIF DOI') : '') + '</div>' : '<div>No package.</div>';
   const left = p ? p.leftOut : [];
   $('leftOut').hidden = !left.length;

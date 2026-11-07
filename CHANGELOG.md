@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.0 — 2026-11-08
+
+- **Image layers (phase 2).** The viewer draws a package's image layers
+  (`kind: "image"`, PNGs in `images/` with their bounds), with the same
+  on/off switch, opacity slider and legend as the other layers, sharp
+  cells from zoom 19. From inferrd. v0.70.0: the LiDAR layer and the Earth
+  Engine layers. The studio lists them as "image".
+- Older sites keep their copy of the viewer until their next save or data
+  update in the studio; a deploy always uses the current viewer.
+
 ## v0.8.1 — 2026-11-08
 
 - **The studio without a terminal.** `studio/start-studio.vbs` starts it

@@ -166,7 +166,7 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const VIEWER_VERSION = 'v0.7.0';
+const VIEWER_VERSION = 'v0.9.0';
 const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
 const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -188,7 +188,8 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
       if (m.format !== 'louped-package') throw new Error(d + '/louped.json isn\'t a Louped package');
       m.dir = d;
       m.areaFc = m.areas ? await getJSON(d + '/' + m.areas.file) : null;
-      m.layerFc = await Promise.all((m.layers || []).map(l => getJSON(d + '/' + l.file)));
+      // Image layers (pictures with bounds) have no GeoJSON to read
+      m.layerFc = await Promise.all((m.layers || []).map(l => l.kind === 'image' ? null : getJSON(d + '/' + l.file)));
       m.recData = await Promise.all((m.records || []).map(r => getJSON(d + '/' + r.file)));
       packs.push(m);
     }
@@ -324,9 +325,19 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
         style: { c: '#ffffff', w: 3, o: 1 }, notes: '', legend: [] });
     }
     (p.layers || []).forEach((l, i) => {
-      L_.push({ key: pane('l_' + p.dir + '_' + l.id), name: l.name, group: l.group || 'Layers', on: l.on !== false, op: l.opacity ?? 1, kind: 'vector', fc: p.layerFc[i], style: l.style, notes: l.notes, legend: l.legend || [], src: l.source, pack: p });
+      const key = pane('l_' + p.dir + '_' + l.id);
+      if (l.kind === 'image') {
+        // Pictures on the web map's grid, each with its bounds; drawn crisp when zoomed right in
+        const cols = (l.legend || []).map(x => x[0]).filter(Boolean).slice(0, 4);
+        L_.push({ key, name: l.name, group: l.group || 'Layers', on: l.on !== false, op: l.opacity ?? 1, kind: 'image', notes: l.notes, legend: l.legend || [], src: l.source, pack: p,
+          layer: L.layerGroup((l.images || []).map(im => L.imageOverlay(p.dir + '/' + im.file, im.bounds, { pane: key, interactive: false, opacity: l.opacity ?? 1 }))),
+          swatch: 'background:' + (cols.length > 1 ? 'linear-gradient(90deg,' + cols.join(',') + ')' : cols[0] || '#888') });
+        return;
+      }
+      L_.push({ key, name: l.name, group: l.group || 'Layers', on: l.on !== false, op: l.opacity ?? 1, kind: 'vector', fc: p.layerFc[i], style: l.style, notes: l.notes, legend: l.legend || [], src: l.source, pack: p });
     });
   });
+  map.on('zoomend', () => L_.filter(e => e.kind === 'image').forEach(e => e.layer.eachLayer(o => { const el = o.getElement(); if (el) el.style.imageRendering = map.getZoom() >= 19 ? 'pixelated' : ''; })));
   L_.filter(e => e.kind === 'vector').forEach(e => {
     const r = L.canvas({ pane: e.key, padding: 0.3 });
     e.layer = L.geoJSON(e.fc, { renderer: r, interactive: false, style: f => pathStyle(sOf(e.style, f), e.op),
@@ -340,6 +351,7 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
     if (e.on && !map.hasLayer(e.layer)) e.layer.addTo(map); else if (!e.on && map.hasLayer(e.layer)) map.removeLayer(e.layer);
     if (e.kind === 'base') e.layer.setOpacity(e.op);
     else if (e.kind === 'records') e.layer.draw(e.op);
+    else if (e.kind === 'image') e.layer.eachLayer(o => o.setOpacity(e.op));
     else e.layer.eachLayer(l => l.setStyle(pathStyle(sOf(e.style, l.feature), e.op)));
   }
   const keyHtml = (e) => e.legendHtml || ((e.notes ? '<span>' + esc(e.notes) + '</span>' : '') + (e.legend && e.legend.length ? '<div class="keys">' + e.legend.map(([c, l]) => '<span><i class="lfill" style="background:' + esc(c) + '"></i>' + esc(l) + '</span>').join('') + '</div>' : ''));

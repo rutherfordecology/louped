@@ -2,8 +2,9 @@
 
 Status: phase 1 built, 2026-11-05 (v0.5.0): inferrd.'s Export for
 Louped (v0.62.0), the viewer and the studio, for vector layers and
-species records. Still to come: image layers (phase 2), the catchment
-engine writing packages (phase 3). Hosting: v0.6.0, Cloudflare Pages + Access.
+species records. Phase 2, image layers, built 2026-11-08 (v0.9.0, inferrd.
+v0.70.0): LiDAR and Earth Engine layers as PNGs on the web map's grid.
+Still to come: the catchment engine writing packages (phase 3). Hosting: v0.6.0, Cloudflare Pages + Access.
 
 ## What Louped is
 
@@ -106,7 +107,8 @@ flagged in the studio.
 | Potential vegetation, Vegetative Cover Map (Manaaki Whenua) | Landcare Data Use Licence: no passing to third parties | no |
 | GNS QMAP geology, faults, landslides (2023, 4th ed.) | CC BY 4.0, "© GNS Science 2023" | yes |
 | MPI Erosion Susceptibility Classification, and its LUC classes | not stated; © Landcare Research (NZLRI) | unclear |
-| LiDAR contours | CC BY 4.0 (LINZ) | yes |
+| LiDAR contours, LiDAR layer (picture) | CC BY 4.0 (LINZ) | yes |
+| Earth Engine layers (index, change, trend, land cover, canopy, loss, fire, water, slope, aspect, elevation) | open data, computed on Earth Engine under a non-commercial registration | unclear: unpaid work yes; paid work needs a commercial Earth Engine licence |
 | Species records | per record: CC0, CC BY or CC BY-NC | yes, with each record's licence |
 
 Landcare's own NZLRI layers on LRIS (LUC 2021 among them) are under the
