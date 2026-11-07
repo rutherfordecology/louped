@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.12.0 — 2026-11-08
+
+- **3D view in the client viewer.** A site whose package has LiDAR heights
+  (inferrd. v0.71.0) gets a **3D** button in the header. It opens the
+  same kind of model as inferrd.'s 3D view: the ground (or the surface:
+  crowns and roofs) as a block cut out of the landscape, with the map
+  draped over it as it is when 3D opens: the base map, every layer that's
+  on, at its opacity, and the species dots. Drag to turn, right-drag or two
+  fingers to move, scroll or pinch to zoom; Height × up to 5, Sides (the
+  wire cut-out) and Dark (black background, grey wire), both remembered.
+  three.js 0.147 and proj4 load only when 3D is opened.
+- The studio lists the heights in a site's facts and gives them a tick box,
+  "3D view (LiDAR heights)", under "In the client's view": untick it and
+  the heights aren't deployed and the button doesn't show.
+- A merged package with heights replaces the old heights; one without
+  keeps them.
+
 ## v0.11.0 — 2026-11-08
 
 - **Leave layers out of the client's view.** The studio lists a site's

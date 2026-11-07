@@ -113,6 +113,21 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
 .leaflet-popup-content .rec { padding: 3px 0; border-top: 1px solid #e3e8e4; white-space: pre-line; }
 .leaflet-control-attribution { font-size: 10px; }
 .fail { padding: 24px; max-width: 560px; }
+/* 3D view: over the map and panel, under the header */
+.v3d { position: fixed; inset: 44px 0 0 0; z-index: 2000; background: var(--panel); display: flex; flex-direction: column; }
+.v3d-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.v3d-bar b { font: 600 17px var(--f-display); margin-right: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.v3d-bar label { display: inline-flex; gap: 5px; align-items: center; white-space: nowrap; }
+.v3d-bar input[type=range] { width: 90px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { font: 600 12px var(--f-body); border: 0; background: var(--panel); color: var(--ink); padding: 4px 9px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.seg button:disabled { opacity: .4; cursor: default; }
+.v3d-view { flex: 1; min-height: 0; position: relative; }
+.v3d-view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.v3d-msg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; font-size: 13px; max-width: min(420px, 90%); text-align: center; }
+.v3d-foot { padding: 6px max(16px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink2); line-height: 1.45; }
 @media (max-width: 760px) {
   .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 50vh minmax(0, 1fr); }
   .panel { border-left: 0; border-top: 1px solid var(--line); }
@@ -124,7 +139,7 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
 
 <header class="brandbar">
   <div class="who"><a class="wordmark" href="https://www.rutherfordecology.co.nz/" target="_blank" rel="noopener"><strong>Rutherford</strong> <em>ecology</em></a><span class="what" id="what"></span></div>
-  <nav><button type="button" id="aboutBtn" aria-pressed="false">About</button></nav>
+  <nav><button type="button" id="v3dBtn" hidden title="The LiDAR heights in 3D, with the map as it is now draped over them">3D</button><button type="button" id="aboutBtn" aria-pressed="false">About</button></nav>
 </header>
 
 <div class="app">
@@ -163,10 +178,22 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
   </aside>
 </div>
 
+<div class="v3d" id="v3d" hidden role="dialog" aria-label="3D view">
+  <div class="v3d-bar">
+    <b id="v3dTitle">3D view</b>
+    <span class="seg" role="group" aria-label="Model"><button type="button" data-model="dem" title="The ground under the vegetation">Ground</button><button type="button" data-model="dsm" title="The top of everything: tree crowns, roofs">Surface</button></span>
+    <label>Height × <input type="range" id="v3dExag" min="1" max="5" step="0.5" value="1"><span id="v3dExagVal">1×</span></label>
+    <label><input type="checkbox" id="v3dSides"> Sides</label>
+    <label><input type="checkbox" id="v3dDark"> Dark</label>
+    <button class="btn" type="button" id="v3dClose">Close</button>
+  </div>
+  <div class="v3d-view" id="v3dView"><div class="v3d-msg" id="v3dMsg" hidden></div></div>
+  <div class="v3d-foot" id="v3dFoot"></div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const VIEWER_VERSION = 'v0.11.0';
+const VIEWER_VERSION = 'v0.12.0';
 const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
 const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -191,7 +218,8 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
       const hide = new Set(job.hidden || []), goneSrc = new Set();
       m.layers = (m.layers || []).filter(l => !hide.has(l.id) || !goneSrc.add(l.source));
       if (hide.has('_records')) { (m.records || []).forEach(r => goneSrc.add(r.source)); m.records = []; }
-      const keptSrc = new Set([...m.layers.map(l => l.source), ...(m.records || []).map(r => r.source)]);
+      if (hide.has('_terrain')) { (m.terrain || []).forEach(t => goneSrc.add(t.source)); m.terrain = []; }
+      const keptSrc = new Set([...m.layers.map(l => l.source), ...(m.records || []).map(r => r.source), ...(m.terrain || []).map(t => t.source)]);
       m.sources = (m.sources || []).filter(s => !goneSrc.has(s.key) || keptSrc.has(s.key));
       m.areaFc = m.areas ? await getJSON(d + '/' + m.areas.file) : null;
       // Image layers (pictures with bounds) have no GeoJSON to read
@@ -494,6 +522,343 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = (title.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'map') + '_records.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     });
     renderSpecies();
+  }
+
+  // ── 3D: the LiDAR heights, with the map as it is now draped over them ──
+  // Ported from inferrd.'s 3D view. Heights come in the package (terrain:
+  // PNGs on the NZTM grid, cm above -1000 m in RGB); the drape is redrawn
+  // from the layers that are on when it opens: base map tiles and pictures
+  // bent from the web map onto NZTM, outlines and dots from their coordinates.
+  const TER = packs.flatMap(p => (p.terrain || []).map(t => Object.assign({ dir: p.dir }, t)));
+  if (TER.length) setup3d(TER);
+  function setup3d(TER) {
+    const $3 = (id) => document.getElementById(id);
+    const el = $3('v3d'), view = $3('v3dView'), msg = $3('v3dMsg');
+    const src = { model: 'dem', exag: 1, sides: true, dark: false };
+    try { src.sides = localStorage.getItem('louped.v3dSides') !== '0'; src.dark = localStorage.getItem('louped.v3dDark') === '1'; } catch (e) {}
+    const bg = () => src.dark ? 0x000000 : 0xdfe6ea, wire = () => src.dark ? 0xc8c8c8 : 0x000000;
+    const say = (t) => { msg.hidden = !t; msg.textContent = t || ''; };
+    const hasDsm = TER.every(t => t.dsm);
+    let libs = null, v3 = null, sets = null, run = 0;
+    const script = (u) => new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = u; sc.onload = res; sc.onerror = () => rej(new Error('couldn\'t load ' + u.split('/').pop())); document.head.appendChild(sc); });
+    const loadLibs = () => libs || (libs = script('https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js')
+      .then(() => script('https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'))
+      .then(() => script('https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js'))
+      .then(() => proj4.defs('EPSG:2193', '+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 +y_0=10000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'))
+      .catch(e => { libs = null; throw e; }));
+    const toNz = (lng, lat) => proj4('EPSG:4326', 'EPSG:2193', [lng, lat]);
+    const toLl = (X, Y) => proj4('EPSG:2193', 'EPSG:4326', [X, Y]);
+    const merc = (lat) => { const s = Math.sin(lat * Math.PI / 180); return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI); };
+
+    async function heights(t, file) {
+      const r = await fetch(t.dir + '/' + file);
+      if (!r.ok) throw new Error(file + ': HTTP ' + r.status);
+      const im = await createImageBitmap(await r.blob(), { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+      const cv = document.createElement('canvas'); cv.width = t.W; cv.height = t.H;
+      const ctx = cv.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(im, 0, 0);
+      const px = ctx.getImageData(0, 0, t.W, t.H).data, Z = new Float32Array(t.W * t.H);
+      for (let i = 0; i < Z.length; i++) Z[i] = px[i * 4 + 3] < 128 ? NaN : ((px[i * 4] << 16) | (px[i * 4 + 1] << 8) | px[i * 4 + 2]) / 100 - 1000;
+      return Z;
+    }
+    async function loadSets() {
+      if (sets) return sets;
+      const out = [];
+      for (const t of TER) {
+        say('Reading the LiDAR heights' + (TER.length > 1 ? ' for ' + t.name : '') + '…');
+        const g = { x0: t.x0, y1: t.y1, res: t.res, W: t.W, H: t.H, x1: t.x0 + t.W * t.res, y0: t.y1 - t.H * t.res };
+        out.push({ t, g, dem: await heights(t, t.dem), dsm: t.dsm ? await heights(t, t.dsm) : null });
+      }
+      return (sets = out);
+    }
+
+    // Web map position (0–1 across the world) of each pixel centre of an
+    // oW × oH raster over the grid, exact every 16 pixels and interpolated
+    // between; relative to the first point (u0, v0) to stay precise.
+    function worldGrid(g, oW, oH) {
+      const S = 16, lw = Math.floor(oW / S) + 2, lh = Math.floor(oH / S) + 2;
+      const LU = new Float64Array(lw * lh), LV = new Float64Array(lw * lh), cw = g.W * g.res / oW, ch = g.H * g.res / oH;
+      for (let j = 0; j < lh; j++) for (let i = 0; i < lw; i++) {
+        const [lon, lat] = toLl(g.x0 + i * S * cw, g.y1 - j * S * ch);
+        LU[j * lw + i] = (lon + 180) / 360; LV[j * lw + i] = merc(lat);
+      }
+      const u0 = LU[0], v0 = LV[0], U = new Float32Array(oW * oH), V = new Float32Array(oW * oH);
+      for (let y = 0; y < oH; y++) {
+        const fy = (y + 0.5) / S, j = Math.floor(fy), b = fy - j;
+        for (let x = 0; x < oW; x++) {
+          const fx = (x + 0.5) / S, i = Math.floor(fx), a = fx - i, k = j * lw + i;
+          const w00 = (1 - a) * (1 - b), w10 = a * (1 - b), w01 = (1 - a) * b, w11 = a * b;
+          U[y * oW + x] = w00 * LU[k] + w10 * LU[k + 1] + w01 * LU[k + lw] + w11 * LU[k + lw + 1] - u0;
+          V[y * oW + x] = w00 * LV[k] + w10 * LV[k + 1] + w01 * LV[k + lw] + w11 * LV[k + lw + 1] - v0;
+        }
+      }
+      let uMin = Infinity, uMax = -Infinity, vMin = Infinity, vMax = -Infinity;
+      for (let k = 0; k < LU.length; k++) { uMin = Math.min(uMin, LU[k]); uMax = Math.max(uMax, LU[k]); vMin = Math.min(vMin, LV[k]); vMax = Math.max(vMax, LV[k]); }
+      return { oW, oH, U, V, u0, v0, uMin, uMax, vMin, vMax, cell: Math.max(cw, ch) };
+    }
+    // A picture covering web map u uL–uR, v vT–vB, resampled onto the grid
+    function warp(px, sw, sh, uL, vT, uR, vB, wg) {
+      const out = new Uint8ClampedArray(wg.oW * wg.oH * 4), ku = sw / (uR - uL), kv = sh / (vB - vT), du = wg.u0 - uL, dv = wg.v0 - vT;
+      for (let k = 0; k < wg.oW * wg.oH; k++) {
+        const x = Math.floor((du + wg.U[k]) * ku), y = Math.floor((dv + wg.V[k]) * kv);
+        if (x < 0 || y < 0 || x >= sw || y >= sh) continue;
+        const s = (y * sw + x) * 4;
+        out[k * 4] = px[s]; out[k * 4 + 1] = px[s + 1]; out[k * 4 + 2] = px[s + 2]; out[k * 4 + 3] = px[s + 3];
+      }
+      return new ImageData(out, wg.oW, wg.oH);
+    }
+    const img = (u) => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = u; });
+    async function warpTiles(layer, wg, lat, live) {
+      const o = layer.options, zMax = Math.min(19, o.maxNativeZoom ?? o.maxZoom ?? 19);
+      let z = Math.max(0, Math.min(zMax, Math.ceil(Math.log2(156543.03 * Math.cos(lat * Math.PI / 180) / wg.cell))));
+      const range = (z) => { const n = 2 ** z; return [Math.floor(wg.uMin * n), Math.floor(wg.uMax * n), Math.floor(wg.vMin * n), Math.floor(wg.vMax * n)]; };
+      let r = range(z);
+      while (z > 0 && (r[1] - r[0] + 1) * (r[3] - r[2] + 1) > 256) r = range(--z);
+      const [tx0, tx1, ty0, ty1] = r, n = 2 ** z, mos = document.createElement('canvas');
+      mos.width = (tx1 - tx0 + 1) * 256; mos.height = (ty1 - ty0 + 1) * 256;
+      const mctx = mos.getContext('2d', { willReadFrequently: true }), jobs = [];
+      let got = 0;
+      for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
+        const u = L.Util.template(layer._url, L.extend({}, o, { s: layer._getSubdomain({ x, y }), r: '', x, y, z }));
+        jobs.push(img(u).then(im => { if (im && live()) { mctx.drawImage(im, (x - tx0) * 256, (y - ty0) * 256, 256, 256); got++; } }));
+      }
+      await Promise.all(jobs);
+      if (!live() || !got) return null;
+      let px; try { px = mctx.getImageData(0, 0, mos.width, mos.height).data; } catch (e) { return null; }
+      return warp(px, mos.width, mos.height, tx0 / n, ty0 / n, (tx1 + 1) / n, (ty1 + 1) / n, wg);
+    }
+    async function warpOverlay(ov, wg) {
+      const im = await img(ov._url);
+      if (!im) return null;
+      const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+      const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(im, 0, 0);
+      let px; try { px = ctx.getImageData(0, 0, c.width, c.height).data; } catch (e) { return null; }
+      const b = ov.getBounds();
+      return warp(px, c.width, c.height, (b.getWest() + 180) / 360, merc(b.getNorth()), (b.getEast() + 180) / 360, merc(b.getSouth()), wg);
+    }
+    function drawPath(ctx, l, P, k) {
+      const o = l.options;
+      ctx.beginPath();
+      if (l instanceof L.CircleMarker) { const [x, y] = P(l.getLatLng()); ctx.arc(x, y, Math.max(1, l.getRadius() * k), 0, 2 * Math.PI); }
+      else {
+        const rings = [], walk = (a) => { if (!a.length) return; if (a[0] instanceof L.LatLng) rings.push(a); else a.forEach(walk); };
+        walk(l.getLatLngs());
+        rings.forEach(r => { r.forEach((p, j) => { const [x, y] = P(p); if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y); }); if (l instanceof L.Polygon) ctx.closePath(); });
+      }
+      if (o.fill) { ctx.globalAlpha = o.fillOpacity ?? 0.2; ctx.fillStyle = o.fillColor || o.color; ctx.fill('evenodd'); }
+      if (o.stroke !== false && o.weight > 0) {
+        ctx.globalAlpha = o.opacity ?? 1; ctx.strokeStyle = o.color; ctx.lineWidth = Math.max(1, o.weight * k); ctx.lineJoin = ctx.lineCap = 'round';
+        ctx.setLineDash(o.dashArray ? String(o.dashArray).split(/[ ,]+/).filter(Boolean).map(v => Number(v) * k) : []);
+        ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.globalAlpha = 1;
+    }
+    const paths = (layer, out = []) => { if (layer instanceof L.Path) out.push(layer); else if (layer && layer.eachLayer) layer.eachLayer(l => paths(l, out)); return out; };
+    // The map as it is now, bottom up, onto one area's grid, cut to the area
+    async function drape(d, Z, sc, live) {
+      const g = d.g, cv = document.createElement('canvas');
+      cv.width = Math.max(1, Math.round(g.W * sc)); cv.height = Math.max(1, Math.round(g.H * sc));
+      const ctx = cv.getContext('2d'), tcv = document.createElement('canvas');
+      tcv.width = cv.width; tcv.height = cv.height;
+      const tctx = tcv.getContext('2d');
+      const oc = Math.min(1, Math.sqrt(4e6 / (g.W * g.H))), oW = Math.max(1, Math.round(g.W * oc)), oH = Math.max(1, Math.round(g.H * oc));
+      const [, clat] = toLl((g.x0 + g.x1) / 2, (g.y0 + g.y1) / 2);
+      const box = L.latLngBounds([g.x0, g.x1].flatMap(X => [g.y0, g.y1].map(Y => { const [lo, la] = toLl(X, Y); return [la, lo]; })));
+      const P = (ll) => { const [X, Y] = toNz(ll.lng, ll.lat); return [(X - g.x0) / g.res * sc, (g.y1 - Y) / g.res * sc]; };
+      // Lines as thick as on the map now (as if the area filled 300 px when zoomed far out)
+      const mpp = Math.min(156543.03 * Math.cos(clat * Math.PI / 180) / 2 ** map.getZoom(), Math.max(g.W, g.H) * g.res / 300), k = mpp / (g.res / sc);
+      const used = [], failed = [], credits = [];
+      let wg = null;
+      const put = (im, op) => { const s = document.createElement('canvas'); s.width = oW; s.height = oH; s.getContext('2d').putImageData(im, 0, 0); tctx.globalAlpha = op; tctx.imageSmoothingEnabled = true; tctx.drawImage(s, 0, 0, tcv.width, tcv.height); tctx.globalAlpha = 1; };
+      for (const e of L_.filter(e => e.on).reverse()) {
+        tctx.clearRect(0, 0, tcv.width, tcv.height);
+        let drew = false;
+        if (e.kind === 'base' || e.kind === 'image') {
+          if (!wg) wg = worldGrid(g, oW, oH);
+          say('Copying ' + e.name.toLowerCase() + ' onto the model…');
+          const parts = e.kind === 'base' ? [e.layer] : e.layer.getLayers().filter(o => box.intersects(o.getBounds()));
+          for (const o of parts) {
+            const im = e.kind === 'base' ? await warpTiles(o, wg, clat, live) : await warpOverlay(o, wg);
+            if (!live()) return null;
+            if (!im) { failed.push(e.name); continue; }
+            put(im, e.op); drew = true;
+            if (o.options.attribution) credits.push(o.options.attribution);
+          }
+        } else {
+          for (const l of paths(e.layer)) {
+            const b = l instanceof L.CircleMarker ? L.latLngBounds([l.getLatLng(), l.getLatLng()]) : l.getBounds();
+            if (!b.isValid() || !box.intersects(b)) continue;
+            drawPath(tctx, l, P, k); drew = true;
+          }
+        }
+        if (!drew) continue;
+        ctx.drawImage(tcv, 0, 0);
+        if (e.kind !== 'base') used.push(e.name);
+      }
+      // Cut to the area: clear where there's no height
+      const m = document.createElement('canvas'); m.width = g.W; m.height = g.H;
+      const md = new Uint8ClampedArray(g.W * g.H * 4);
+      for (let i = 0; i < Z.length; i++) md[i * 4 + 3] = Z[i] === Z[i] ? 255 : 0;
+      m.getContext('2d').putImageData(new ImageData(md, g.W, g.H), 0, 0);
+      ctx.globalCompositeOperation = 'destination-in'; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(m, 0, 0, cv.width, cv.height);
+      ctx.globalCompositeOperation = 'source-over';
+      return { cv, used, failed, credits };
+    }
+    function mesh(d, Z, cx, cy, zBase, cv) {
+      const g = d.g, f = Math.max(1, Math.ceil(Math.max(g.W, g.H) / 700));
+      const nx = Math.floor((g.W - 1) / f) + 1, ny = Math.floor((g.H - 1) / f) + 1;
+      // Gaps (outside the area) filled from their neighbours so the cut edge doesn't drop away
+      let h = new Float32Array(nx * ny);
+      for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) h[y * nx + x] = Z[(y * f) * g.W + x * f];
+      for (let pass = 0; pass < 6; pass++) {
+        const nh = h.slice(); let left = 0;
+        for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
+          if (h[y * nx + x] === h[y * nx + x]) continue;
+          let sum = 0, n = 0;
+          for (let yy = Math.max(0, y - 1); yy <= Math.min(ny - 1, y + 1); yy++) for (let xx = Math.max(0, x - 1); xx <= Math.min(nx - 1, x + 1); xx++) { const v = h[yy * nx + xx]; if (v === v) { sum += v; n++; } }
+          if (n) nh[y * nx + x] = sum / n; else left++;
+        }
+        h = nh; if (!left) break;
+      }
+      const geo = new THREE.PlaneGeometry((nx - 1) * f * g.res, (ny - 1) * f * g.res, nx - 1, ny - 1);
+      geo.rotateX(-Math.PI / 2); // north is -z
+      const pos = geo.attributes.position, uv = geo.attributes.uv;
+      for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
+        const k = y * nx + x, v = h[k];
+        pos.setY(k, v === v ? v - zBase : 0);
+        uv.setXY(k, (x * f + 0.5) / g.W, 1 - (y * f + 0.5) / g.H);
+      }
+      geo.computeVertexNormals();
+      const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 8; tex.encoding = THREE.sRGBEncoding;
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide }));
+      const X0 = g.x0 + 0.5 * g.res, Y0 = g.y1 - 0.5 * g.res;
+      m.position.set(X0 + (nx - 1) * f * g.res / 2 - cx, 0, -(Y0 - (ny - 1) * f * g.res / 2 - cy));
+      return m;
+    }
+    function heightAt(d, Z, X, Y) {
+      const g = d.g, c = Math.floor((X - g.x0) / g.res), r = Math.floor((g.y1 - Y) / g.res), R = Math.max(1, Math.ceil(3 / g.res));
+      let best = NaN, bd = Infinity;
+      for (let rr = Math.max(0, r - R); rr <= Math.min(g.H - 1, r + R); rr++) for (let cc = Math.max(0, c - R); cc <= Math.min(g.W - 1, c + R); cc++) {
+        const v = Z[rr * g.W + cc], dd = (rr - r) ** 2 + (cc - c) ** 2;
+        if (v === v && dd < bd) { bd = dd; best = v; }
+      }
+      return best;
+    }
+    // The cut-out's sides: thin wire from the area's edge on the model down
+    // to the same outline on a flat base, with a vertical every `tick` metres
+    function sides(d, Z, cx, cy, zBase, yBase, tick) {
+      const gm = d.t.outline, rings = [];
+      if (gm && gm.type === 'Polygon') rings.push(...gm.coordinates);
+      else if (gm && gm.type === 'MultiPolygon') gm.coordinates.forEach(p => rings.push(...p));
+      if (!rings.length) return null;
+      const nz = rings.map(r => r.map(([lng, lat]) => toNz(lng, lat)));
+      const perim = nz.reduce((t, r) => t + r.reduce((s, p, i) => i ? s + Math.hypot(p[0] - r[i - 1][0], p[1] - r[i - 1][1]) : s, 0), 0);
+      const step = Math.max(d.g.res, perim / 4000), v = [];
+      nz.forEach(r => {
+        let prev = null, runL = 0, last = zBase;
+        const at = (X, Y) => { const z = heightAt(d, Z, X, Y); if (z === z) last = z; return [X - cx, last - zBase, -(Y - cy)]; };
+        for (let i = 1; i < r.length; i++) {
+          const [ax, ay] = r[i - 1], [bx, by] = r[i], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / step));
+          for (let j = i === 1 ? 0 : 1; j <= n; j++) {
+            const p = at(ax + (bx - ax) * j / n, ay + (by - ay) * j / n);
+            if (prev) { v.push(...prev, ...p, prev[0], yBase, prev[2], p[0], yBase, p[2]); runL += Math.hypot(p[0] - prev[0], p[2] - prev[2]); }
+            if (!prev || runL >= tick) { v.push(p[0], p[1], p[2], p[0], yBase, p[2]); runL = 0; }
+            prev = p;
+          }
+        }
+      });
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+      const w = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: wire() }));
+      w.userData.sides = true; w.visible = src.sides;
+      return w;
+    }
+    function clear() { v3.group.children.slice().forEach(m => { v3.group.remove(m); m.geometry.dispose(); if (m.material.map) m.material.map.dispose(); m.material.dispose(); }); }
+
+    async function build() {
+      const my = ++run, live = () => my === run && !el.hidden;
+      try {
+        const S = await loadSets();
+        if (!live()) return;
+        const model = src.model === 'dsm' && hasDsm ? 'dsm' : 'dem';
+        let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, zBase = Infinity, zTop = -Infinity;
+        S.forEach(d => {
+          const Z = d[model];
+          x0 = Math.min(x0, d.g.x0); x1 = Math.max(x1, d.g.x1); y0 = Math.min(y0, d.g.y0); y1 = Math.max(y1, d.g.y1);
+          for (let i = 0; i < Z.length; i++) { const v = Z[i]; if (v === v) { if (v < zBase) zBase = v; if (v > zTop) zTop = v; } }
+        });
+        if (!(zTop >= zBase)) { say('No LiDAR heights in this area.'); return; }
+        const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, used = [], failed = [], credits = [], drapes = [];
+        for (const d of S) {
+          const r = await drape(d, d[model], Math.min(3, 4096 / Math.max(d.g.W, d.g.H)), live);
+          if (!r) return;
+          drapes.push(r.cv); used.push(...r.used); failed.push(...r.failed); credits.push(...r.credits);
+        }
+        clear();
+        S.forEach((d, k) => v3.group.add(mesh(d, d[model], cx, cy, zBase, drapes[k])));
+        // The base a quarter of the relief below the lowest point (at least 4% of the width)
+        const span = Math.max(x1 - x0, y1 - y0), yBase = -Math.max(0.25 * (zTop - zBase), 0.04 * span);
+        S.forEach(d => { const w = sides(d, d[model], cx, cy, zBase, yBase, span / 40); if (w) v3.group.add(w); });
+        v3.group.scale.y = src.exag;
+        if (!v3.span) {
+          v3.span = span;
+          v3.camera.near = span / 1000; v3.camera.far = span * 20; v3.camera.updateProjectionMatrix();
+          v3.camera.position.set(0, span * 0.55, span * 0.8); // from the south, looking north and down
+          v3.controls.target.set(0, 0, 0); v3.controls.update();
+        }
+        say('');
+        const u = [...new Set(used)], f = [...new Set(failed)], c = [...new Set(credits)];
+        $3('v3dTitle').textContent = '3D: ' + [...new Set(S.map(d => d.t.name))].join(', ') + ' · ' + (model === 'dsm' ? 'surface' : 'ground');
+        $3('v3dFoot').innerHTML = 'Drag to turn, right-drag (or two fingers) to move, scroll or pinch to zoom. ' +
+          'Heights: LiDAR, ' + [...new Set(S.map(d => d.t.survey))].map(esc).join('; ') + ' (Toitū Te Whenua LINZ, CC BY 4.0). ' +
+          'Draped: ' + (u.length ? u.map(esc).join(', ') + ', over the base map' : 'the base map') + ', as on the map now; change the layers there and open 3D again to redraw. ' +
+          (f.length ? 'Couldn\'t copy ' + f.map(esc).join(', ') + '. ' : '') + (c.length ? 'Tiles: ' + c.join('; ') + '.' : '');
+      } catch (e) {
+        if (my === run) say('Couldn\'t draw the 3D view: ' + (e && e.message || e));
+      }
+    }
+    function sync() {
+      el.querySelectorAll('[data-model]').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.model === (hasDsm ? src.model : 'dem'))); b.disabled = b.dataset.model === 'dsm' && !hasDsm; });
+      $3('v3dSides').checked = src.sides; $3('v3dDark').checked = src.dark;
+      $3('v3dExag').value = src.exag; $3('v3dExagVal').textContent = src.exag + '×';
+    }
+    async function open() {
+      el.hidden = false; sync();
+      say('Loading the 3D viewer…');
+      try { await loadLibs(); } catch (e) { say('Couldn\'t load the 3D viewer: ' + e.message); return; }
+      if (el.hidden) return;
+      if (!v3) {
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setClearColor(bg());
+        const scene = new THREE.Scene(), group = new THREE.Group(); scene.add(group);
+        const camera = new THREE.PerspectiveCamera(40, 1, 1, 1e5);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49; // not under the ground
+        v3 = { renderer, scene, group, camera, controls, span: 0, raf: 0 };
+        renderer.domElement.addEventListener('webglcontextlost', ev => { ev.preventDefault(); cancelAnimationFrame(v3.raf); run++; say('The 3D view ran out of graphics memory. Close it and open it again.'); });
+        new ResizeObserver(() => { const w = view.clientWidth, h = view.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }).observe(view);
+        view.insertBefore(renderer.domElement, msg);
+      }
+      cancelAnimationFrame(v3.raf);
+      const tick = () => { v3.raf = requestAnimationFrame(tick); v3.controls.update(); v3.renderer.render(v3.scene, v3.camera); };
+      tick();
+      v3.span = 0; // frame the model afresh each time it opens
+      say('Building the model…');
+      await build();
+    }
+    function close() { el.hidden = true; run++; if (v3) cancelAnimationFrame(v3.raf); $3('v3dBtn').focus(); }
+    const btn = $3('v3dBtn');
+    btn.hidden = false;
+    btn.addEventListener('click', open);
+    $3('v3dClose').addEventListener('click', close);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !el.hidden) close(); });
+    el.querySelectorAll('[data-model]').forEach(b => b.addEventListener('click', () => { if (b.disabled || src.model === b.dataset.model) return; src.model = b.dataset.model; sync(); say('Building the model…'); build(); }));
+    $3('v3dExag').addEventListener('input', ev => { src.exag = Number(ev.target.value); $3('v3dExagVal').textContent = src.exag + '×'; if (v3) v3.group.scale.y = src.exag; });
+    $3('v3dSides').addEventListener('change', ev => { src.sides = ev.target.checked; try { localStorage.setItem('louped.v3dSides', src.sides ? '1' : '0'); } catch (e) {} if (v3) v3.group.children.forEach(m => { if (m.userData.sides) m.visible = src.sides; }); });
+    $3('v3dDark').addEventListener('change', ev => { src.dark = ev.target.checked; try { localStorage.setItem('louped.v3dDark', src.dark ? '1' : '0'); } catch (e) {} if (v3) { v3.renderer.setClearColor(bg()); v3.group.children.forEach(m => { if (m.userData.sides) m.material.color.setHex(wire()); }); } });
   }
 
   // ── About: your text, then every source and licence ──

@@ -161,7 +161,7 @@ function show(s) {
   const p = cur.packages[0];
   $('facts').innerHTML = p ? '<div>Data from <b>' + esc(p.producer.tool + ' ' + p.producer.version) + '</b>, exported ' + esc(when(p.exported)) + (p.merged && p.merged.length > 1 ? ' (' + p.merged.length + ' exports merged)' : '') + '</div>' +
     '<div>' + p.layers.length + (p.layers.length === 1 ? ' layer' : ' layers') + (p.layers.length ? ': ' + p.layers.map(l => esc(l.name) + ' <code>' + (l.kind === 'image' ? 'image' : (l.features || 0)) + '</code>').join(', ') : '') + '</div>' +
-    '<div>' + p.records.reduce((t, r) => t + r.rows, 0).toLocaleString() + ' species records' + (p.records.length ? (p.records.every(r => r.citation) ? ', citable (GBIF DOI)' : ', <b>not all citable</b>: no GBIF DOI') : '') + '</div>' : '<div>No package.</div>';
+    '<div>' + p.records.reduce((t, r) => t + r.rows, 0).toLocaleString() + ' species records' + ((p.terrain || []).length ? '; LiDAR heights for 3D (' + p.terrain.map(t => esc(t.name)).join(', ') + ')' : '') + (p.records.length ? (p.records.every(r => r.citation) ? ', citable (GBIF DOI)' : ', <b>not all citable</b>: no GBIF DOI') : '') + '</div>' : '<div>No package.</div>';
   const left = p ? p.leftOut : [];
   $('leftOut').hidden = !left.length;
   $('leftOut').innerHTML = '<b>Left out of the package</b> (only you see this):<ul>' + left.map(x => '<li>' + esc(x.name) + ': ' + esc(x.reason) + '</li>').join('') + '</ul>';
@@ -171,6 +171,7 @@ function show(s) {
   // Every layer once (a merged or multi-package site can repeat an id), then the species records
   const hid = new Set(cur.job.hidden || []), seen = new Set(), rows = [];
   cur.packages.forEach(pk => pk.layers.forEach(l => { if (l.id && !seen.has(l.id)) { seen.add(l.id); rows.push([l.id, l.name, l.group]); } }));
+  if (cur.packages.some(pk => (pk.terrain || []).length)) rows.push(['_terrain', '3D view (LiDAR heights)', 'LiDAR']);
   if (cur.packages.some(pk => pk.records.length)) rows.push(['_records', 'Species records (both species layers, the species list and their sources)', 'Species']);
   $('showList').innerHTML = rows.length ? rows.map(([id, name, g]) => '<label class="row" style="font-size:13px;"><input type="checkbox" data-layer="' + esc(id) + '"' + (hid.has(id) ? '' : ' checked') + '> ' + esc(name) + (g ? ' <span class="note">' + esc(g) + '</span>' : '') + '</label>').join('') : '<div>No layers.</div>';
   $('saved').textContent = '';

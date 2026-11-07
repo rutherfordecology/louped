@@ -35,7 +35,7 @@ async function siteInfo(slug) {
   const packs = [];
   for (const d of job.packages || ['package']) {
     const m = await readJson(path.join(dir, d, 'louped.json')).catch(() => null);
-    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ id: l.id, name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [], merged: m.merged || null });
+    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ id: l.id, name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), terrain: (m.terrain || []).map(t => ({ name: t.name, survey: t.survey, dsm: !!t.dsm })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [], merged: m.merged || null });
   }
   return { slug, job, packages: packs };
 }
@@ -126,6 +126,12 @@ async function mergePackage(slug, files) {
     do file = 'records/occurd-' + n++ + '.json'; while (m.records.some(x => x.file === file));
     if (files[r.file]) await put(file, b64(r.file));
     m.records.push(Object.assign({}, r, { file }));
+  }
+  // LiDAR heights: a package that has them replaces the old ones whole
+  if (add.terrain && add.terrain.length) {
+    for (const t of m.terrain || []) for (const f of [t.dem, t.dsm]) if (f) await fs.rm(path.join(tmp, f), { force: true });
+    for (const t of add.terrain) for (const f of [t.dem, t.dsm]) if (f && files[f]) await put(f, b64(f));
+    m.terrain = add.terrain;
   }
   const join = (a, b, k) => { const out = (a || []).filter(x => !(b || []).some(y => y[k] === x[k])); return out.concat(b || []); };
   m.sources = join(m.sources, add.sources, 'key');
