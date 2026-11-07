@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.10.0 — 2026-11-08
+
+- **Merge a new package instead of replacing.** When you drop a new
+  "for Louped" zip on a site, the studio now asks: **Replace** (as
+  before: the new export becomes the site's data) or **Merge** (add it to
+  what is there). A merge:
+  - adds the new areas to the old ones, skipping any that are the same shape;
+  - replaces a layer that has the same id, and adds new layers at the top;
+  - replaces a records file with the same name, and adds the others;
+  - joins the sources, left-out and licence-unclear lists;
+  - widens the map extent to cover both.
+  The studio's facts show how many exports were merged.
+- The viewer counts a GBIF record once, even when two merged exports both
+  carry it.
+- The title and wording are kept either way.
+
 ## v0.9.1 — 2026-11-08
 
 - **Preview as the client sees it.** The studio's "Open in a tab" is now

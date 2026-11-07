@@ -91,7 +91,10 @@ iframe { flex: 1; border: 0; width: 100%; background: var(--bg); }
       </section>
       <section class="sec">
         <div class="eyebrow">Update the data</div>
-        <label class="drop" id="updDrop">Drop a newer <b>.louped.zip</b> to replace this site's data. Your wording stays.<input type="file" id="updFile" accept=".zip" hidden></label>
+        <label class="row" style="font-size:13px;"><input type="radio" name="updMode" value="replace" checked> Replace the data with the new package</label>
+        <label class="row" style="font-size:13px;"><input type="radio" name="updMode" value="merge"> Add the new package to the data</label>
+        <p class="note" id="updNote"></p>
+        <label class="drop" id="updDrop">Drop a <b>.louped.zip</b> here, or click to choose it. Your wording stays.<input type="file" id="updFile" accept=".zip" hidden></label>
       </section>
       <section class="sec">
         <div class="eyebrow">Online</div>
@@ -151,7 +154,7 @@ function show(s) {
   FIELDS.forEach(k => { $('f_' + k).value = cur.job[k] || ''; });
   $('f_aerial').value = cur.job.basemap && cur.job.basemap.aerialLayer || '';
   const p = cur.packages[0];
-  $('facts').innerHTML = p ? '<div>Data from <b>' + esc(p.producer.tool + ' ' + p.producer.version) + '</b>, exported ' + esc(when(p.exported)) + '</div>' +
+  $('facts').innerHTML = p ? '<div>Data from <b>' + esc(p.producer.tool + ' ' + p.producer.version) + '</b>, exported ' + esc(when(p.exported)) + (p.merged && p.merged.length > 1 ? ' (' + p.merged.length + ' exports merged)' : '') + '</div>' +
     '<div>' + p.layers.length + (p.layers.length === 1 ? ' layer' : ' layers') + (p.layers.length ? ': ' + p.layers.map(l => esc(l.name) + ' <code>' + (l.kind === 'image' ? 'image' : (l.features || 0)) + '</code>').join(', ') : '') + '</div>' +
     '<div>' + p.records.reduce((t, r) => t + r.rows, 0).toLocaleString() + ' species records' + (p.records.length ? (p.records.every(r => r.citation) ? ', citable (GBIF DOI)' : ', <b>not all citable</b>: no GBIF DOI') : '') + '</div>' : '<div>No package.</div>';
   const left = p ? p.leftOut : [];
@@ -178,15 +181,21 @@ $('saveBtn').addEventListener('click', async () => {
 });
 
 // Unzip in the browser, send the files as base64
-async function sendPackage(slug, file) {
+async function sendPackage(slug, file, merge) {
   status('Reading ' + file.name + '…');
   const zip = await JSZip.loadAsync(file), files = {};
   for (const f of Object.values(zip.files)) if (!f.dir) files[f.name.replace(/^\.?\//, '')] = await f.async('base64');
-  status('Saving…');
-  await api('POST', '/api/sites/' + slug + '/package', { files });
+  status(merge ? 'Adding…' : 'Saving…');
+  await api('POST', '/api/sites/' + slug + '/package', { files, merge: !!merge });
   await loadSites(slug);
-  status('Data from ' + file.name + ' is in ' + slug + '.');
+  status((merge ? 'Added ' + file.name + ' to ' : 'Data from ' + file.name + ' is in ') + slug + '.');
 }
+const updMode = () => document.querySelector('input[name=updMode]:checked').value;
+const updNote = () => { $('updNote').textContent = updMode() === 'merge'
+  ? 'Areas, layers and species records from the new package are added. A layer that\'s in both, or an occurd. file with the same name, is replaced by the new one. A record in two files is counted once.'
+  : 'Everything from the old package goes; the site shows only the new one.'; };
+document.querySelectorAll('input[name=updMode]').forEach(r => r.addEventListener('change', updNote));
+updNote();
 function dropZone(zone, input, handler) {
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('over'));
@@ -202,7 +211,7 @@ dropZone($('newDrop'), $('newFile'), async (file) => {
 });
 dropZone($('updDrop'), $('updFile'), async (file) => {
   if (!cur) return;
-  try { await sendPackage(cur.slug, file); } catch (e) { status('Couldn\'t use ' + file.name + ': ' + e.message, true); }
+  try { await sendPackage(cur.slug, file, updMode() === 'merge'); } catch (e) { status('Couldn\'t use ' + file.name + ': ' + e.message, true); }
 });
 // ── Online ──
 let online = { sites: [], cloudflare: false, owners: [], url: '' };

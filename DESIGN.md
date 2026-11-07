@@ -29,7 +29,8 @@ text, contact, date.
 3. **Publish.** Louped writes a finished site folder, one per job, for
    example `waimata-2026/`.
 4. **Update.** Export again and drop the new package in. The data is
-   replaced; the title and wording are kept.
+   replaced, or merged with what is there (v0.10.0); the title and
+   wording are kept.
 
 A site is a snapshot. It shows what was true when the package was
 exported, and it says that date. It is not live.

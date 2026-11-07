@@ -166,7 +166,7 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const VIEWER_VERSION = 'v0.9.0';
+const VIEWER_VERSION = 'v0.10.0';
 const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
 const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -236,11 +236,12 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
   };
 
   // Records first (they draw on top), then the areas, then each package's layers in its order
-  const RECS = [];
+  const RECS = [], recSeen = new Set();
   packs.forEach(p => (p.recData || []).forEach((d, i) => {
     const c = Object.fromEntries(d.cols.map((k, j) => [k, j]));
-    d.rows.forEach(r => RECS.push({ id: r[c.gbifID], lat: r[c.lat], lng: r[c.lng], sp: r[c.species] || r[c.scientificName], sn: r[c.scientificName], vn: r[c.vernacularName], kingdom: r[c.kingdom], phylum: r[c.phylum], cls: r[c.class], order: r[c.order], family: r[c.family],
-      year: r[c.year], date: r[c.eventDate], unc: r[c.uncertainty_m], basis: r[c.basisOfRecord], ds: r[c.datasetName], st: r[c.nztcs_status], cat: r[c.nztcs_category], sy: r[c.nztcs_year], src: p.records[i] }));
+    // A GBIF record in two files (merged exports) is counted once
+    d.rows.forEach(r => { const id = r[c.gbifID]; if (id != null && id !== '') { if (recSeen.has(String(id))) return; recSeen.add(String(id)); } RECS.push({ id: r[c.gbifID], lat: r[c.lat], lng: r[c.lng], sp: r[c.species] || r[c.scientificName], sn: r[c.scientificName], vn: r[c.vernacularName], kingdom: r[c.kingdom], phylum: r[c.phylum], cls: r[c.class], order: r[c.order], family: r[c.family],
+      year: r[c.year], date: r[c.eventDate], unc: r[c.uncertainty_m], basis: r[c.basisOfRecord], ds: r[c.datasetName], st: r[c.nztcs_status], cat: r[c.nztcs_category], sy: r[c.nztcs_year], src: p.records[i] }); });
   }));
 
   // Occurd's taxon groups and colours (TAXON_COLOURS and getTaxonGroup, as in the catchment maps)

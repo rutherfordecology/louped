@@ -34,7 +34,7 @@ async function siteInfo(slug) {
   const packs = [];
   for (const d of job.packages || ['package']) {
     const m = await readJson(path.join(dir, d, 'louped.json')).catch(() => null);
-    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [] });
+    if (m) packs.push({ dir: d, producer: m.producer, exported: m.exported, title: m.title, layers: (m.layers || []).map(l => ({ name: l.name, group: l.group, features: l.features, kind: l.kind || 'vector', images: (l.images || []).length })), records: (m.records || []).map(r => ({ name: r.name, rows: r.rows, citation: r.citation })), leftOut: m.leftOut || [], licenceUnclear: m.licenceUnclear || [], merged: m.merged || null });
   }
   return { slug, job, packages: packs };
 }
@@ -68,6 +68,74 @@ async function putPackage(slug, files) {
     job.packages = ['package'];
     await fs.writeFile(jobPath, JSON.stringify(job, null, 2) + '\n');
   }
+  await copyViewer(slug);
+}
+
+// Merges a new package into the site's package instead of replacing it:
+//   areas    added, each shape once
+//   layers   a layer with the same id is replaced by the new one; others added
+//   records  a file with the same name is replaced; others added (the viewer
+//            counts each GBIF record once across files)
+//   sources, leftOut, licenceUnclear   joined, the new one winning
+// The manifest keeps the newest export date and a `merged` list of exports.
+async function mergePackage(slug, files) {
+  const dir = path.join(SITES, slug), pkg = path.join(dir, 'package');
+  const old = await readJson(path.join(pkg, 'louped.json')).catch(() => null);
+  if (!old) return putPackage(slug, files); // nothing to merge into
+  if (!files || typeof files !== 'object' || !files['louped.json']) throw new Error('not a Louped package: it has no louped.json');
+  const add = JSON.parse(Buffer.from(files['louped.json'], 'base64').toString('utf8'));
+  if (add.format !== 'louped-package') throw new Error('louped.json isn\'t a Louped package');
+  if (add.formatVersion > 1) throw new Error('this package is format ' + add.formatVersion + '; this Louped reads format 1. Update Louped.');
+  const bad = Object.keys(files).filter(p => !pkgPathOk(p));
+  if (bad.length) throw new Error('unexpected files in the package: ' + bad.slice(0, 5).join(', '));
+  const tmp = path.join(dir, 'package.new');
+  await fs.rm(tmp, { recursive: true, force: true });
+  await fs.cp(pkg, tmp, { recursive: true });
+  const put = async (p, buf) => { const out = path.join(tmp, p); await fs.mkdir(path.dirname(out), { recursive: true }); await fs.writeFile(out, buf); };
+  const b64 = (p) => Buffer.from(files[p], 'base64');
+  const filesOf = (l) => l.kind === 'image' ? (l.images || []).map(i => i.file) : [l.file];
+  const m = JSON.parse(JSON.stringify(old));
+  // Areas: each shape once
+  if (add.areas && files[add.areas.file]) {
+    const a0 = await readJson(path.join(pkg, old.areas ? old.areas.file : 'layers/areas.geojson')).catch(() => ({ type: 'FeatureCollection', features: [] }));
+    const a1 = JSON.parse(b64(add.areas.file).toString('utf8'));
+    const seen = new Set(a0.features.map(f => JSON.stringify(f.geometry)));
+    a1.features.forEach(f => { const k = JSON.stringify(f.geometry); if (!seen.has(k)) { seen.add(k); a0.features.push(f); } });
+    m.areas = { file: 'layers/areas.geojson', count: a0.features.length };
+    await put('layers/areas.geojson', JSON.stringify(a0));
+  }
+  // Layers: same id replaced (its old files removed), others added, new ones on top
+  const taken = new Set();
+  for (const l of add.layers || []) {
+    const i = m.layers.findIndex(x => x.id === l.id);
+    if (i >= 0) { for (const f of filesOf(m.layers[i])) await fs.rm(path.join(tmp, f), { force: true }); m.layers.splice(i, 1); }
+  }
+  m.layers.forEach(l => filesOf(l).forEach(f => taken.add(f)));
+  for (const l of add.layers || []) for (const f of filesOf(l)) {
+    if (taken.has(f)) throw new Error('layer file ' + f + ' clashes with one already here');
+    if (files[f]) await put(f, b64(f));
+  }
+  m.layers = (add.layers || []).concat(m.layers);
+  // Records: same file name replaced, others added under a free file name
+  m.records = m.records || [];
+  for (const r of add.records || []) {
+    const i = m.records.findIndex(x => x.name === r.name);
+    if (i >= 0) { await fs.rm(path.join(tmp, m.records[i].file), { force: true }); m.records.splice(i, 1); }
+    let n = 1, file;
+    do file = 'records/occurd-' + n++ + '.json'; while (m.records.some(x => x.file === file));
+    if (files[r.file]) await put(file, b64(r.file));
+    m.records.push(Object.assign({}, r, { file }));
+  }
+  const join = (a, b, k) => { const out = (a || []).filter(x => !(b || []).some(y => y[k] === x[k])); return out.concat(b || []); };
+  m.sources = join(m.sources, add.sources, 'key');
+  m.leftOut = join(m.leftOut, add.leftOut, 'name');
+  m.licenceUnclear = join(m.licenceUnclear, add.licenceUnclear, 'name');
+  if (old.bbox && add.bbox) m.bbox = [Math.min(old.bbox[0], add.bbox[0]), Math.min(old.bbox[1], add.bbox[1]), Math.max(old.bbox[2], add.bbox[2]), Math.max(old.bbox[3], add.bbox[3])];
+  m.merged = (old.merged || [{ producer: old.producer, exported: old.exported, title: old.title }]).concat([{ producer: add.producer, exported: add.exported, title: add.title }]);
+  if ((add.exported || '') > (m.exported || '')) { m.exported = add.exported; m.producer = add.producer; }
+  await put('louped.json', JSON.stringify(m, null, 2));
+  await fs.rm(pkg, { recursive: true, force: true });
+  await fs.rename(tmp, pkg);
   await copyViewer(slug);
 }
 
@@ -165,7 +233,8 @@ const server = http.createServer(async (req, res) => {
       if (!m[2] && req.method === 'GET') { const s = await siteInfo(slug); return s ? send(res, 200, s) : send(res, 404, { error: 'no such site' }); }
       if (m[2] === '/package' && req.method === 'POST') {
         await fs.mkdir(path.join(SITES, slug), { recursive: true });
-        await putPackage(slug, JSON.parse((await body(req)).toString('utf8')).files);
+        const input = JSON.parse((await body(req)).toString('utf8'));
+        if (input.merge) await mergePackage(slug, input.files); else await putPackage(slug, input.files);
         return send(res, 200, await siteInfo(slug));
       }
       if (m[2] === '/job' && req.method === 'PUT') {
