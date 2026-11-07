@@ -1,0 +1,18 @@
+# The louped-admin Worker: inferrd.'s Louped tab publishes through it.
+# Deploy: npx wrangler@4.157.0 deploy --config host/admin/wrangler.toml
+# Secrets (wrangler secret put … --config host/admin/wrangler.toml):
+#   ADMIN_KEY      the Louped key you enter once in inferrd.'s Louped tab
+#   CF_API_TOKEN   optional: lets the tab set who may open each site
+name = "louped-admin"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+HOST = "louped.pages.dev"
+ACCOUNT_ID = "d9dea1d905a41d11bd26677fc9ed79ce"
+OWNERS = "rutherfordecology@gmail.com"
+
+[[kv_namespaces]]
+binding = "SITES"
+id = "1299c30880954a32955c45c1b01b1f57"

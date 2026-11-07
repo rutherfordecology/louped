@@ -1,0 +1,11 @@
+# The `louped` Cloudflare Pages project (https://louped.pages.dev/), deployed
+# by studio/deploy.mjs (npm run online) with `wrangler pages deploy dist`.
+# dist/_worker.js (from host/site/_worker.js) serves sites published from
+# inferrd.'s Louped tab out of Workers KV, and everything else from dist/.
+name = "louped"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "SITES"
+id = "1299c30880954a32955c45c1b01b1f57"

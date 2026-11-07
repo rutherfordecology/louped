@@ -69,6 +69,8 @@ async function build(list) {
   if (!list.sites.length) console.log('  (no sites: the landing page only)');
   await fs.rm(DIST, { recursive: true, force: true });
   await fs.mkdir(DIST, { recursive: true });
+  // Serves sites published from inferrd.'s Louped tab (Workers KV), then these files
+  await fs.copyFile(path.join(ROOT, 'host', 'site', '_worker.js'), path.join(DIST, '_worker.js'));
   await fs.writeFile(path.join(DIST, 'index.html'), PAGE('Client maps', 'Open the link you were sent for your map. For access, contact Rutherford Ecology.'));
   await fs.writeFile(path.join(DIST, '404.html'), PAGE('Not found', 'There is no map at this address. Check the link you were sent.'));
   // No search engines; data files always checked for a newer copy

@@ -11,6 +11,52 @@ Nothing goes through GitHub: `sites/`, `dist/` and `online.json` are
 git-ignored. The LINZ key (`assets/keys.json`) is never deployed, so hosted
 sites use Esri base maps.
 
+## From inferrd.'s Louped tab (v0.15.0)
+
+Sites made in inferrd.'s **Louped** tab go online from the tab itself
+(section 6 · Online), with no deploy:
+
+- **louped-admin** (`host/admin/`, a Worker at
+  `https://louped-admin.rutherfordecology.workers.dev/`) takes the site's
+  files from the tab and writes them to Workers KV (namespace id in
+  `wrangler.toml`). It answers only inferrd.'s own pages
+  (rutherfordecology.github.io, and localhost:7899 and :7883 for testing)
+  and only with your **Louped key**.
+- The `louped` Pages project serves them: `dist/_worker.js` (copied from
+  `host/site/_worker.js` by every `npm run online`) looks a path up in KV
+  first and falls back to the static sites in `dist/`, so sites put online
+  by the studio keep working.
+- KV keys: `cur:<site>` says which version is live; `f:<site>:<v>:<path>`
+  holds each file. A new version is written beside the old one and switched
+  to in one step (commit), then the old one is deleted, so a client never
+  sees half a site.
+- Free limits: 1 GB of KV, 1000 writes and deletes a day (each file put online is one, and
+  so is each file of the version it replaces), 25 MiB a file.
+
+**Your Louped key** is `loupedAdminKey` in `cloudflare.json` (git-ignored).
+Enter it once in the tab; that browser keeps it. To change it:
+`npx -y wrangler@4.157.0 secret put ADMIN_KEY --config host/admin/wrangler.toml`,
+then update `cloudflare.json` and enter it again in the tab.
+
+**Who can see each site.** Without a Cloudflare API token the domain-wide
+"Allow Members" Access application covers every site, so only you can open
+a new one until you add its own Access application by hand (Each client
+site, step 2, below). To let the tab do that, make a token (My Profile →
+API Tokens → Custom token, **Account → Access: Apps and Policies → Edit**,
+your account only) and give it to louped-admin:
+
+```
+npx -y wrangler@4.157.0 secret put CF_API_TOKEN --config host/admin/wrangler.toml
+```
+
+Then the tab's list of people (emails, or whole domains) or "anyone with the
+link" makes or updates the site's Access application when you put it
+online, and Take offline can delete it. `OWNERS` in
+`host/admin/wrangler.toml` is always added, so you're never locked out.
+
+To change the Workers: `npx -y wrangler@4.157.0 deploy --config host/admin/wrangler.toml`
+for louped-admin; `npm run online` for the Pages side.
+
 ## Once
 
 1. Sign in: `npx -y wrangler@4.157.0 login` (the account that has

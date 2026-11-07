@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.15.0 — 2026-11-08 (hosting for inferrd.)
+
+- **Sites go online from inferrd.'s Louped tab** (inferrd. v0.74.0), with
+  no deploy. New `host/admin/worker.js` (the louped-admin Worker) takes a
+  site's files from the tab and writes them to Workers KV, a whole version
+  at a time, switched to in one step; only inferrd.'s own pages and only
+  with your Louped key. New `host/site/_worker.js`, copied into `dist/` by
+  `npm run online`, serves those sites on louped.pages.dev and falls back
+  to the studio's static sites. With an optional Cloudflare token it also
+  sets who may open each site (a list of people, or anyone with the link).
+  Set-up and limits: HOSTING.md. The studio stays until phase 3 (own
+  domain), then retires.
+
 ## v0.14.0 — 2026-11-08 (in inferrd.)
 
 - The viewer has moved into inferrd. (`inferrd/louped/index.html`), with

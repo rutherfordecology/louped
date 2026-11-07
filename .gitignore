@@ -6,3 +6,4 @@ sites/
 online.json
 cloudflare.json
 dist/
+.wrangler/
