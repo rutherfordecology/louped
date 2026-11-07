@@ -166,7 +166,7 @@ input[type=search] { width: 100%; font: 12.5px var(--f-body); color: var(--ink);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script>
-const VIEWER_VERSION = 'v0.5.0';
+const VIEWER_VERSION = 'v0.7.0';
 const LOOKLIKE = 'https://occurd.rutherfordecology.co.nz/looklike/';
 const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -483,7 +483,9 @@ const paras = (text) => String(text || '').split(/\n\s*\n/).map(p => p.trim()).f
   document.getElementById('about').innerHTML = paras(job.about) +
     '<div><b>Sources</b><ul>' + sources.filter(s => !seenSrc.has(s.key) && seenSrc.add(s.key)).map(s =>
       '<li>' + (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.name) + '</a>' : esc(s.name)) +
-      (s.attribution ? '. ' + esc(s.attribution) : '') + (s.note ? '. ' + esc(s.note) : '') +
+      (s.attribution ? '. ' + esc(s.attribution) : '') +
+      (s.licence ? '. Licence: ' + (s.licenceUrl ? '<a href="' + esc(s.licenceUrl) + '" target="_blank" rel="noopener">' + esc(s.licence) + '</a>' : esc(s.licence)) : '') +
+      (s.note ? '. ' + esc(s.note) : '') +
       (s.citation ? '<div class="cite">' + esc(s.citation).replace(/(https:\/\/doi\.org\/\S+)/, '<a href="$1" target="_blank" rel="noopener">$1</a>') + '</div>' : '') + '</li>').join('') + '</ul></div>' +
     '<p>Species records are shown at the location their source publishes, with no extra blurring. Threat status is the New Zealand Threat Classification System (NZTCS) as matched in occurd. Layer outlines are published GIS layers, not legal or survey boundaries.</p>' +
     '<p>Base maps: aerial photos from ' + (keys.lds && bm.aerialLayer ? 'the LINZ Data Service (layer ' + esc(bm.aerialLayer) + '), CC BY 4.0' : 'Esri World Imagery (Esri, Maxar, Earthstar Geographics)') +

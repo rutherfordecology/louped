@@ -74,6 +74,7 @@ iframe { flex: 1; border: 0; width: 100%; background: var(--bg); }
         <h2 id="editName"></h2>
         <div class="facts" id="facts"></div>
         <div class="warnbox" id="leftOut" hidden></div>
+        <div class="warnbox" id="licUnclear" hidden></div>
       </section>
       <section class="sec">
         <div class="eyebrow">Wording</div>
@@ -142,6 +143,9 @@ function show(s) {
   const left = p ? p.leftOut : [];
   $('leftOut').hidden = !left.length;
   $('leftOut').innerHTML = '<b>Left out of the package</b> (only you see this):<ul>' + left.map(x => '<li>' + esc(x.name) + ': ' + esc(x.reason) + '</li>').join('') + '</ul>';
+  const unc = p ? p.licenceUnclear || [] : [];
+  $('licUnclear').hidden = !unc.length;
+  $('licUnclear').innerHTML = '<b>Licence not stated: decide before this site goes to anyone</b> (only you see this):<ul>' + unc.map(x => '<li>' + esc(x.name) + (x.note ? ': ' + esc(x.note) : '') + '</li>').join('') + '</ul>';
   $('saved').textContent = '';
   const url = '/sites/' + cur.slug + '/';
   $('purl').textContent = url;

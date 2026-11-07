@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.0 — 2026-11-08
+
+- **Licences on client sites.** The viewer's About view now gives each
+  source's licence, linked, from the package (inferrd. v0.69.0 and later).
+- **Studio flags layers with no licence stated.** A package's
+  `licenceUnclear` list shows under the site's facts, so you decide before
+  the site goes to anyone. Layers whose licence bars passing them on are
+  left out in inferrd. and listed under "Left out of the package".
+- DESIGN.md records the licence of every layer inferrd. can export.
+
 ## v0.6.0 — 2026-11-05
 
 - **Client sites online on Cloudflare Pages, behind Cloudflare Access.**

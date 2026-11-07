@@ -88,6 +88,31 @@ never overwrites it:
 - The project rules stay: Rutherford Ecology branding, records at their
   published coordinates, every record linked to its source and licence.
 
+## Layer licences
+
+Checked 8 November 2026 against each publisher's metadata. inferrd.'s
+Export for Louped applies this table (`LOUPED_LICENCES` in its
+index.html): "no" layers are left out, "unclear" ones are packaged and
+flagged in the studio.
+
+| Layer | Licence | Share with a client |
+| --- | --- | --- |
+| GDC TRMP layers, GDC parks and reserves | CC BY 4.0 | yes |
+| QEII open space covenants | CC BY 4.0 (mind the Privacy Act 2020) | yes |
+| NIWA NZ large river catchments | CC BY 4.0 | yes |
+| NIWA river catchments, all sizes | not stated (staff account) | unclear |
+| LCDB v6, PAN-NZ (Manaaki Whenua) | CC BY 4.0 | yes |
+| Threatened Environment Classification 2012 | CC BY 3.0 NZ | yes |
+| Potential vegetation, Vegetative Cover Map (Manaaki Whenua) | Landcare Data Use Licence: no passing to third parties | no |
+| GNS QMAP geology, faults, landslides (2023, 4th ed.) | CC BY 4.0, "© GNS Science 2023" | yes |
+| MPI Erosion Susceptibility Classification, and its LUC classes | not stated; © Landcare Research (NZLRI) | unclear |
+| LiDAR contours | CC BY 4.0 (LINZ) | yes |
+| Species records | per record: CC0, CC BY or CC BY-NC | yes, with each record's licence |
+
+Landcare's own NZLRI layers on LRIS (LUC 2021 among them) are under the
+Landcare Data Use Licence, so the ESC's "not stated" leans towards asking
+MPI or Landcare before sharing it.
+
 ## Not decided yet
 
 1. ~~Who can see a site~~: settled in v0.6.0. Cloudflare Pages behind
