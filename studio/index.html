@@ -111,7 +111,7 @@ iframe { flex: 1; border: 0; width: 100%; background: var(--bg); }
     <section class="sec"><div class="status" id="status" hidden></div></section>
   </div>
   <div class="preview">
-    <div class="bar" id="pbar" hidden><span id="purl"></span><span class="row"><button class="btn" type="button" id="reloadBtn">Reload</button><a class="btn" id="openBtn" target="_blank" rel="noopener">Open in a tab</a></span></div>
+    <div class="bar" id="pbar" hidden><span id="purl"></span><span class="row"><button class="btn" type="button" id="reloadBtn">Reload</button><a class="btn" id="openBtn" target="_blank" rel="noopener" title="In a new tab, exactly as a client gets it: the current viewer and the hosted base maps (Esri, not your LINZ key). Nothing is deployed.">Preview as the client sees it</a><a class="btn" id="liveBtn" target="_blank" rel="noopener" hidden title="The site as it is online now (you'll be asked to sign in)">Open the live site</a></span></div>
     <iframe id="frame" title="Site preview" hidden></iframe>
     <div class="empty" id="pempty">Choose a site, or start one from a package, to see it here.</div>
   </div>
@@ -164,7 +164,7 @@ function show(s) {
   showOnline();
   const url = '/sites/' + cur.slug + '/';
   $('purl').textContent = url;
-  $('openBtn').href = url;
+  $('openBtn').href = '/preview/site/' + cur.slug + '/';
   $('frame').src = url + '?t=' + Date.now();
 }
 $('reloadBtn').addEventListener('click', () => { if (cur) $('frame').src = '/sites/' + cur.slug + '/?t=' + Date.now(); });
@@ -223,6 +223,7 @@ async function showOnline() {
   if (!cur) return;
   const on = online.sites.includes(cur.slug), a = cur.job.access || {};
   const live = online.url + cur.slug + '/';
+  $('liveBtn').hidden = !on; $('liveBtn').href = live;
   $('onState').innerHTML = on ? '<div><b>Online</b> at <a href="' + esc(live) + '" target="_blank" rel="noopener">' + esc(live) + '</a></div><div>Changes here go up when you press Update online.</div>' : '<div><b>Not online.</b> Only you can see it, here.</div>';
   document.querySelector('input[name=acc][value=' + (a.mode === 'link' ? 'link' : 'people') + ']').checked = true;
   $('accPeople').value = [...(a.emails || []), ...(a.domains || [])].join('\n');

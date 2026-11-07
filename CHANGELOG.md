@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.1 — 2026-11-08
+
+- **Preview as the client sees it.** The studio's "Open in a tab" is now
+  "Preview as the client sees it": it opens the site in a new tab built
+  the way a deploy builds it (the current viewer, the site's wording and
+  data, and no LINZ key, so the hosted Esri base maps), at
+  `/preview/site/<site>/`. Nothing is deployed.
+- **Open the live site** sits beside it once the site is online.
+
 ## v0.9.0 — 2026-11-08
 
 - **Image layers (phase 2).** The viewer draws a package's image layers

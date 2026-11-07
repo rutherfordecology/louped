@@ -200,6 +200,20 @@ const server = http.createServer(async (req, res) => {
       }
       return send(res, 405, { error: 'method not allowed' });
     }
+    // The client's view, built as a deploy builds it: the current viewer, the
+    // site's job.json and package folders, and no LINZ key (the viewer asks
+    // for ../../assets/keys.json, which here is /preview/assets/: not found).
+    if (req.method === 'GET' && (m = p.match(/^\/preview\/site\/([^/]+)\/(.*)$/))) {
+      const [, slug, rest] = m;
+      if (!slugOk(slug) || rest.split('/').some(s => s === '..' || s.startsWith('.'))) return send(res, 404, 'Not found', 'text/plain');
+      if (rest === '' || rest === 'index.html') return serveFile(res, 'viewer/index.html');
+      if (rest === 'job.json') return serveFile(res, 'sites/' + slug + '/job.json');
+      const job = await readJson(path.join(SITES, slug, 'job.json')).catch(() => null);
+      const dir = rest.split('/')[0];
+      if (job && (job.packages || ['package']).includes(dir) && path.basename(rest) !== 'keys.json') return serveFile(res, 'sites/' + slug + '/' + rest);
+      return send(res, 404, 'Not found', 'text/plain');
+    }
+    if (req.method === 'GET' && /^\/preview\//.test(p)) return send(res, 404, 'Not found', 'text/plain');
     if (req.method === 'GET' && /^\/(sites|assets|viewer)\//.test(p)) return serveFile(res, p.slice(1));
     send(res, 404, 'Not found', 'text/plain');
   } catch (e) {
