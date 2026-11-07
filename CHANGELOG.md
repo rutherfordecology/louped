@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.1 — 2026-11-08
+
+- **The studio without a terminal.** `studio/start-studio.vbs` starts it
+  with no window, logging to `run.log`, so a bookmark to
+  http://localhost:7884/ works. HOSTING.md has the one-line command that
+  starts it at every Windows sign-in.
+
 ## v0.8.0 — 2026-11-08
 
 - **Put sites online from the studio.** A site's new **Online** section

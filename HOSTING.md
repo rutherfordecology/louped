@@ -33,6 +33,23 @@ access → Restrict previews) and `louped.pages.dev` added to the
 (members of the Cloudflare account). Zero Trust asks for a plan before
 more applications can be made: choose **Free** (up to 50 people).
 
+## The studio without a terminal (v0.8.1)
+
+`studio/start-studio.vbs` starts the studio with no window, so a bookmark to
+http://localhost:7884/ works. Its output goes to `run.log`. To start it at
+every Windows sign-in, put a shortcut to it in the Startup folder once, in
+PowerShell:
+
+```
+$s=(New-Object -ComObject WScript.Shell).CreateShortcut("$([Environment]::GetFolderPath('Startup'))\Louped studio.lnk"); $s.TargetPath="$env:SystemRoot\System32\wscript.exe"; $s.Arguments='"C:\Users\User\tools\catchment_reports\studio\start-studio.vbs"'; $s.Save()
+```
+
+To stop it starting, delete `Louped studio.lnk` from the Startup folder
+(Win+R, `shell:startup`). To stop it now, end the `node.exe` that is
+running `studio\server.mjs` in Task Manager (Details tab, Command line
+column). After changing the studio's code, stop it and double-click
+`start-studio.vbs` to restart it.
+
 ## From the studio (v0.8.0)
 
 The studio can do the per-site steps below for you: under **Online** on a
