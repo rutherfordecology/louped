@@ -1,0 +1,5 @@
+{
+  "apiToken": "a Cloudflare API token with Account > Access: Apps and Policies > Edit",
+  "accountId": "your Cloudflare account ID (can be left out if the token sees one account)",
+  "ownerEmails": ["you@example.com"]
+}

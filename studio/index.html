@@ -93,6 +93,20 @@ iframe { flex: 1; border: 0; width: 100%; background: var(--bg); }
         <div class="eyebrow">Update the data</div>
         <label class="drop" id="updDrop">Drop a newer <b>.louped.zip</b> to replace this site's data. Your wording stays.<input type="file" id="updFile" accept=".zip" hidden></label>
       </section>
+      <section class="sec">
+        <div class="eyebrow">Online</div>
+        <div class="facts" id="onState"></div>
+        <div class="eyebrow" style="margin-top:4px;">Who can see it</div>
+        <label class="row" style="font-size:13px;"><input type="radio" name="acc" value="people" checked> Only these people (they sign in with a code sent to their email)</label>
+        <label class="f">Emails, or whole domains such as <code>catchmentgroup.org.nz</code>, one a line<textarea id="accPeople" placeholder="someone@example.com&#10;catchmentgroup.org.nz"></textarea></label>
+        <p class="note" id="accOwners"></p>
+        <label class="row" style="font-size:13px;"><input type="radio" name="acc" value="link"> Anyone with the link (no sign-in)</label>
+        <div class="warnbox" id="accLinkWarn" hidden></div>
+        <div class="row"><button class="btn" type="button" id="accSave">Save who can see it</button><span class="note" id="accSaved"></span></div>
+        <label class="row" id="accManualRow" style="font-size:12.5px;" hidden><input type="checkbox" id="accManual"> I've made this site's Access application in Cloudflare (HOSTING.md)</label>
+        <div class="row"><button class="btn primary" type="button" id="onBtn">Put online</button><button class="btn" type="button" id="offBtn" hidden>Take offline</button></div>
+        <pre id="onLog" hidden style="white-space:pre-wrap;font:11.5px var(--f-data);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px;margin:0;max-height:220px;overflow:auto;"></pre>
+      </section>
     </div>
     <section class="sec"><div class="status" id="status" hidden></div></section>
   </div>
@@ -147,6 +161,7 @@ function show(s) {
   $('licUnclear').hidden = !unc.length;
   $('licUnclear').innerHTML = '<b>Licence not stated: decide before this site goes to anyone</b> (only you see this):<ul>' + unc.map(x => '<li>' + esc(x.name) + (x.note ? ': ' + esc(x.note) : '') + '</li>').join('') + '</ul>';
   $('saved').textContent = '';
+  showOnline();
   const url = '/sites/' + cur.slug + '/';
   $('purl').textContent = url;
   $('openBtn').href = url;
@@ -188,6 +203,66 @@ dropZone($('newDrop'), $('newFile'), async (file) => {
 dropZone($('updDrop'), $('updFile'), async (file) => {
   if (!cur) return;
   try { await sendPackage(cur.slug, file); } catch (e) { status('Couldn\'t use ' + file.name + ': ' + e.message, true); }
+});
+// ── Online ──
+let online = { sites: [], cloudflare: false, owners: [], url: '' };
+const accMode = () => document.querySelector('input[name=acc]:checked').value;
+// A name anyone could guess (words only, no run of mixed letters and digits)
+const guessable = (slug) => !/(?=[a-z0-9]*\d)(?=[a-z0-9]*[a-z])[a-z0-9]{5,}/.test(slug.split('-').pop());
+function accUi() {
+  if (!cur) return;
+  const link = accMode() === 'link';
+  $('accPeople').disabled = link;
+  $('accLinkWarn').hidden = !link;
+  $('accLinkWarn').innerHTML = 'Anyone the link is passed to can open it, and search engines are told not to list it. ' +
+    (guessable(cur.slug) ? '<b>"' + esc(cur.slug) + '" could be guessed:</b> for a link-only site, start a new site with a name ending in random letters and digits, e.g. ' + esc(cur.slug) + '-k7q3vx.' : 'The name ends in random characters, so it can\'t easily be guessed.');
+}
+document.querySelectorAll('input[name=acc]').forEach(r => r.addEventListener('change', accUi));
+async function showOnline() {
+  try { online = await api('GET', '/api/online'); } catch (e) { return; }
+  if (!cur) return;
+  const on = online.sites.includes(cur.slug), a = cur.job.access || {};
+  const live = online.url + cur.slug + '/';
+  $('onState').innerHTML = on ? '<div><b>Online</b> at <a href="' + esc(live) + '" target="_blank" rel="noopener">' + esc(live) + '</a></div><div>Changes here go up when you press Update online.</div>' : '<div><b>Not online.</b> Only you can see it, here.</div>';
+  document.querySelector('input[name=acc][value=' + (a.mode === 'link' ? 'link' : 'people') + ']').checked = true;
+  $('accPeople').value = [...(a.emails || []), ...(a.domains || [])].join('\n');
+  $('accOwners').textContent = online.cloudflare ? (online.owners.length ? 'Always included: ' + online.owners.join(', ') + ' (cloudflare.json).' : 'Put your own email in cloudflare.json (ownerEmails) so you can always get in.') :
+    'No cloudflare.json, so this is saved here only: set the same people on the site\'s Access application in Cloudflare (HOSTING.md).';
+  $('accSaved').textContent = a.applied ? 'Set on Cloudflare ' + when(a.applied) : '';
+  $('accManualRow').hidden = online.cloudflare;
+  $('onBtn').textContent = on ? 'Update online' : 'Put online';
+  $('offBtn').hidden = !on;
+  $('onBtn').disabled = $('offBtn').disabled = !!online.deploying;
+  accUi();
+}
+$('accSave').addEventListener('click', async () => {
+  if (!cur) return;
+  $('accSaved').textContent = 'Saving…';
+  try {
+    const r = await api('PUT', '/api/sites/' + cur.slug + '/access', { mode: accMode(), people: $('accPeople').value });
+    await loadSites(cur.slug);
+    status(r.applied ? 'Who can see ' + cur.slug + ' is set on Cloudflare. It takes effect at once.' : 'Saved here. Set the same on the site\'s Access application in Cloudflare.');
+  } catch (e) { $('accSaved').textContent = ''; status('Couldn\'t set who can see it: ' + e.message, true); }
+});
+async function deployRun(url, data, what) {
+  $('onBtn').disabled = $('offBtn').disabled = true;
+  $('onLog').hidden = false; $('onLog').textContent = what + '… (this takes up to a minute)';
+  try {
+    const r = await api('POST', url, data);
+    $('onLog').textContent = r.log || '';
+    status(r.ok ? what + ': done.' + (r.accessRemoved ? ' Its Access application is deleted too.' : '') : what + ' failed: see the log.', !r.ok);
+  } catch (e) { $('onLog').textContent = e.message; status(what + ' failed: ' + e.message, true); }
+  await showOnline();
+}
+$('onBtn').addEventListener('click', () => {
+  if (!cur) return;
+  if (!online.cloudflare && !$('accManual').checked) { status('Make the site\'s Access application in Cloudflare first, then tick the box. Never put a site online without one.', true); return; }
+  if (accMode() === 'link' && !confirm('Anyone with the link will be able to open ' + cur.slug + '. Put it online?')) return;
+  deployRun('/api/sites/' + cur.slug + '/online', { accessConfirmed: online.cloudflare || $('accManual').checked }, online.sites.includes(cur.slug) ? 'Updating ' + cur.slug + ' online' : 'Putting ' + cur.slug + ' online');
+});
+$('offBtn').addEventListener('click', () => {
+  if (!cur || !confirm('Take ' + cur.slug + ' offline? Its link stops working at once. Your copy here stays.')) return;
+  deployRun('/api/sites/' + cur.slug + '/offline', { removeAccess: online.cloudflare && confirm('Also delete its Access application on Cloudflare? (Keep it if you\'ll put the site back.)') }, 'Taking ' + cur.slug + ' offline');
 });
 loadSites().catch(e => status('The studio server isn\'t answering: ' + e.message, true));
 </script>

@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.8.0 — 2026-11-08
+
+- **Put sites online from the studio.** A site's new **Online** section
+  shows whether it's online and its address, with **Put online**,
+  **Update online** and **Take offline**. They run the same deploy as
+  `npm run online` and show its log. One deploy runs at a time.
+- **Who can see it, set from the studio.** Choose "Only these people"
+  (emails, or whole email domains) or "Anyone with the link". With a
+  Cloudflare API token in the git-ignored `cloudflare.json` (HOSTING.md),
+  saving makes or updates the site's Cloudflare Access application, and
+  your own emails (`ownerEmails`) are always included. A link-only site
+  gets a Bypass policy; the studio warns when its name could be guessed.
+- **No site goes online unprotected.** Put online refuses a site with no
+  Access application on Cloudflare, or, without a token, until you tick
+  that you made one by hand.
+- Taking the last site offline now deploys the landing page alone, instead
+  of failing on an empty list.
+
 ## v0.7.0 — 2026-11-08
 
 - **Licences on client sites.** The viewer's About view now gives each

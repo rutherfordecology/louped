@@ -10,6 +10,8 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
+import { cfConfig, cfApply, cfCheck, cfRemove, parsePeople } from './cloudflare.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITES = path.join(ROOT, 'sites');
@@ -81,6 +83,50 @@ async function putJob(slug, input) {
   await copyViewer(slug);
 }
 
+// ── Online: the deploy script, and Cloudflare Access, from the studio ──
+const LIST = path.join(ROOT, 'online.json');
+const loadList = async () => { const l = await readJson(LIST).catch(() => ({})); return { project: l.project || 'louped', sites: Array.isArray(l.sites) ? l.sites : [] }; };
+let deploying = false;
+// Runs studio/deploy.mjs with fixed arguments and a checked site name; one at a time.
+function runDeploy(args) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [path.join(ROOT, 'studio', 'deploy.mjs'), ...args], { cwd: ROOT, env: process.env });
+    let out = '';
+    const take = (d) => { out += d.toString().replace(/\x1b\[[0-9;]*[A-Za-z]/g, ''); };
+    child.stdout.on('data', take); child.stderr.on('data', take);
+    child.on('close', (code) => resolve({ ok: code === 0, log: out.trim().slice(-6000) }));
+    child.on('error', (e) => resolve({ ok: false, log: e.message }));
+  });
+}
+async function deploySites(steps) {
+  if (deploying) throw new Error('a deploy is already running');
+  deploying = true;
+  try {
+    let log = '';
+    for (const args of steps) {
+      const r = await runDeploy(args);
+      log += (log ? '\n' : '') + r.log;
+      if (!r.ok) return { ok: false, log };
+    }
+    return { ok: true, log };
+  } finally { deploying = false; }
+}
+async function putAccess(slug, input) {
+  const jobPath = path.join(SITES, slug, 'job.json');
+  const job = await readJson(jobPath);
+  const mode = input.mode === 'link' ? 'link' : 'people';
+  const { emails, domains, bad } = parsePeople(input.people);
+  if (bad.length) throw new Error('not an email or a domain: ' + bad.slice(0, 5).join(', '));
+  job.access = Object.assign({}, job.access, { mode, emails, domains });
+  await fs.writeFile(jobPath, JSON.stringify(job, null, 2) + '\n');
+  if (!(await cfConfig())) return { applied: false };
+  const { project } = await loadList();
+  job.access.appId = await cfApply(project, slug, job.access, job.access.appId);
+  job.access.applied = new Date().toISOString();
+  await fs.writeFile(jobPath, JSON.stringify(job, null, 2) + '\n');
+  return { applied: true };
+}
+
 async function serveFile(res, rel) {
   const full = path.resolve(ROOT, rel);
   if (!full.startsWith(ROOT + path.sep)) return send(res, 403, { error: 'forbidden' });
@@ -103,7 +149,11 @@ const server = http.createServer(async (req, res) => {
       list.sort((a, b) => (b.packages[0]?.exported || '').localeCompare(a.packages[0]?.exported || ''));
       return send(res, 200, list);
     }
-    if ((m = p.match(/^\/api\/sites\/([^/]+)(\/package|\/job)?$/))) {
+    if (p === '/api/online' && req.method === 'GET') {
+      const list = await loadList(), cfg = await cfConfig();
+      return send(res, 200, { project: list.project, url: 'https://' + list.project + '.pages.dev/', sites: list.sites, cloudflare: !!cfg, owners: cfg ? cfg.ownerEmails : [], deploying });
+    }
+    if ((m = p.match(/^\/api\/sites\/([^/]+)(\/package|\/job|\/access|\/online|\/offline)?$/))) {
       const slug = m[1];
       if (!slugOk(slug)) return send(res, 400, { error: 'a site name is lower-case letters, numbers and dashes' });
       // Writes only from the studio page itself: other web pages open in the
@@ -122,6 +172,31 @@ const server = http.createServer(async (req, res) => {
         if (!(await exists(path.join(SITES, slug, 'job.json')))) return send(res, 404, { error: 'no such site' });
         await putJob(slug, JSON.parse((await body(req)).toString('utf8')));
         return send(res, 200, await siteInfo(slug));
+      }
+      if (m[2] && m[2] !== '/package' && !(await exists(path.join(SITES, slug, 'job.json')))) return send(res, 404, { error: 'no such site' });
+      if (m[2] === '/access' && req.method === 'PUT') {
+        const r = await putAccess(slug, JSON.parse((await body(req)).toString('utf8')));
+        return send(res, 200, Object.assign(r, { site: await siteInfo(slug) }));
+      }
+      // Put online (or update): only once the site's path has its own Access
+      // application, checked on Cloudflare when the studio has a token, else
+      // confirmed by hand.
+      if (m[2] === '/online' && req.method === 'POST') {
+        const input = JSON.parse((await body(req)).toString('utf8') || '{}');
+        const { project } = await loadList(), job = await readJson(path.join(SITES, slug, 'job.json'));
+        const chk = await cfCheck(project, slug, job.access && job.access.appId);
+        if (chk.configured && !chk.exists) return send(res, 409, { error: 'set who can see it first: this site has no Access application on Cloudflare yet' });
+        if (!chk.configured && input.accessConfirmed !== true) return send(res, 409, { error: 'confirm you have made its Access application in Cloudflare' });
+        return send(res, 200, await deploySites([['add', slug], []]));
+      }
+      if (m[2] === '/offline' && req.method === 'POST') {
+        const input = JSON.parse((await body(req)).toString('utf8') || '{}');
+        const r = await deploySites([['remove', slug], []]);
+        if (r.ok && input.removeAccess) {
+          const { project } = await loadList(), job = await readJson(path.join(SITES, slug, 'job.json'));
+          r.accessRemoved = await cfRemove(project, slug, job.access && job.access.appId);
+        }
+        return send(res, 200, r);
       }
       return send(res, 405, { error: 'method not allowed' });
     }

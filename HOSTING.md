@@ -33,6 +33,33 @@ access → Restrict previews) and `louped.pages.dev` added to the
 (members of the Cloudflare account). Zero Trust asks for a plan before
 more applications can be made: choose **Free** (up to 50 people).
 
+## From the studio (v0.8.0)
+
+The studio can do the per-site steps below for you: under **Online** on a
+site, choose who can see it, then **Put online**, **Update online** or
+**Take offline**. Those buttons run the same deploy as `npm run online`.
+
+To let the studio set who can see each site, make `cloudflare.json` in the
+repo root once (git-ignored; copy `cloudflare.example.json`):
+
+1. Cloudflare dashboard → My Profile → API Tokens → **Create Token** →
+   Custom token. Permission: **Account → Access: Apps and Policies → Edit**,
+   for your account only. Copy the token into `apiToken`.
+2. `accountId`: on the dashboard's account home page (Account ID). It can
+   be left out if the token sees only one account.
+3. `ownerEmails`: the email(s) you sign in with. They are added to every
+   site, so a site's own Access application never locks you out.
+
+With it, **Save who can see it** makes or updates the site's Access
+application on Cloudflare (a list of people, or anyone with the link), and
+**Put online** refuses a site that has none. Without it, the studio saves
+the list locally and asks you to confirm you made the application by hand.
+Restart the studio after making `cloudflare.json`.
+
+"Anyone with the link" sets the site's policy to Bypass: no sign-in. Give
+such a site a name ending in random characters (`waimata-k7q3vx`), so it
+can't be guessed.
+
 ## Each client site
 
 1. Make it in the studio (`npm run studio`) and check it there.

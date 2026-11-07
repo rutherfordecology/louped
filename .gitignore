@@ -4,4 +4,5 @@ site.json
 assets/keys.json
 sites/
 online.json
+cloudflare.json
 dist/

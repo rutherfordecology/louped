@@ -63,7 +63,9 @@ async function copyDir(from, to) {
 }
 
 async function build(list) {
-  if (!list.sites.length) throw new Error('the online list is empty: npm run online -- add <site>');
+  // An empty list still deploys: the landing and not-found pages only, so the
+  // last site can be taken offline.
+  if (!list.sites.length) console.log('  (no sites: the landing page only)');
   await fs.rm(DIST, { recursive: true, force: true });
   await fs.mkdir(DIST, { recursive: true });
   await fs.writeFile(path.join(DIST, 'index.html'), PAGE('Client maps', 'Open the link you were sent for your map. For access, contact Rutherford Ecology.'));
