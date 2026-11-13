@@ -42,6 +42,9 @@ async function cf(env, method, url, body) {
   if (!r.ok || j.success === false) throw new Error('Cloudflare: ' + ((j.errors || []).map(e => e.message).join('; ') || 'HTTP ' + r.status));
   return j.result;
 }
+// A site's Access application covers its address with and without the
+// closing slash: without it, /<site> fell under the domain-wide sign-in
+// before the site Worker could redirect it to /<site>/.
 const appDomain = (env, slug) => env.HOST + '/' + slug + '/';
 async function findApp(env, slug) {
   const want = appDomain(env, slug).replace(/\/$/, '');
@@ -66,7 +69,7 @@ async function applyAccess(env, slug, access) {
     ? { name: 'louped ' + slug + ': anyone with the link', decision: 'bypass', include: [{ everyone: {} }], precedence: 1 }
     : { name: 'louped ' + slug + ': people', decision: 'allow', precedence: 1,
         include: [...new Set([...owners, ...emails])].map(email => ({ email: { email } })).concat(domains.map(domain => ({ email_domain: { domain } }))) };
-  const body = { name: 'louped ' + slug, type: 'self_hosted', domain: dom, destinations: [{ type: 'public', uri: dom }], session_duration: '168h', app_launcher_visible: false, policies: [policy] };
+  const body = { name: 'louped ' + slug, type: 'self_hosted', domain: dom, destinations: [{ type: 'public', uri: dom }, { type: 'public', uri: dom.replace(/\/$/, '') }], session_duration: '168h', app_launcher_visible: false, policies: [policy] };
   const app = await findApp(env, slug);
   const out = app ? await cf(env, 'PUT', '/accounts/' + env.ACCOUNT_ID + '/access/apps/' + app.id, body) : await cf(env, 'POST', '/accounts/' + env.ACCOUNT_ID + '/access/apps', body);
   return out.id;

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.18.0 — 2026-11-13
+
+- **A site's address works without the closing slash.** Each site's
+  Access application now covers louped.pages.dev/<site> as well as
+  louped.pages.dev/<site>/. Before, the address without the slash fell
+  under the domain-wide sign-in, so a site open to anyone with the link
+  still asked for a sign-in. (v0.16.0 and v0.17.0 are viewer releases in
+  inferrd.) Sites already online pick it up when they're put online again.
+
 ## v0.15.0 — 2026-11-08 (hosting for inferrd.)
 
 - **Sites go online from inferrd.'s Louped tab** (inferrd. v0.74.0), with
